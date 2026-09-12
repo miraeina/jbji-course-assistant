@@ -4,7 +4,7 @@ export type CourseKind='common'|'shared'|'major'|'optional'|'general';
 export type TimetableEvent={
   id:string; year:number; title:string; english?:string; day:number; start:number; span:number;
   room?:string; majors:Major[]|'all'; groups?:string[]; kind:CourseKind; weeks?:string; note?:string;
-  track?:DegreeTrack; teacher?:string; listedOnly?:boolean;
+  track?:DegreeTrack; teacher?:string; listedOnly?:boolean; courseKey?:string; selectionKey?:string; shortTitle?:string;
 };
 
 const y1English:TimetableEvent[]=[
@@ -22,7 +22,28 @@ const y1English:TimetableEvent[]=[
   ['E12','英语写作 I','English Writing I',1,7,2,'N426','Stat3'],['E12','英语阅读 I','English Reading I',4,0,2,'N426','Stat3'],['E12','英语听说 I','Listening & Speaking English I',4,2,2,'N423','Stat3'],
 ].map((x,index)=>({id:`y1-en-${index}`,year:1,title:x[1] as string,english:x[2] as string,day:x[3] as number,start:x[4] as number,span:x[5] as number,room:x[6] as string,majors:[String(x[7]).replace(/\d/g,'') as Major],groups:[x[7] as string],kind:'common',weeks:'4–18周',note:x[0] as string}));
 
-export const timetableEvents:TimetableEvent[]=[
+// Separate English modules and IELTS teaching groups from PDF pages 2–3.
+const y2English:TimetableEvent[] = [
+  ...(['mi','es'] as const).flatMap(audience=>[
+    {key:'culture',title:'英美历史与文化',english:'The History and Culture of UK and USA',room:'N432',teacher:'Canyu Dai'},
+    {key:'identity',title:'社会身份与幸福感',english:'Identity and Wellbeing',room:'N426',teacher:'Robert'},
+    {key:'practical',title:'实用英语',english:'Practical English',room:'N423',teacher:'Joanne'},
+  ].map(course=>({id:`y2-${course.key}-${audience}`,courseKey:`y2-${course.key}`,year:2,title:course.title,english:course.english,day:0,start:audience==='mi'?2:0,span:2,room:course.room,teacher:course.teacher,majors:(audience==='mi'?['MAM','ICS']:['Econ','Stat']) as Major[],kind:'optional' as const,weeks:'1–18周',note:'周一教学班'}))),
+  {id:'y2-culture-evening',courseKey:'y2-culture',year:2,title:'英美历史与文化',english:'The History and Culture of UK and USA',day:2,start:9,span:2,room:'N426',teacher:'Canyu Dai',majors:'all',kind:'optional',weeks:'1–18周',note:'周三晚教学班'},
+  ...(['mi','es'] as const).map(audience=>({id:`y2-literature-${audience}`,courseKey:'y2-literature',year:2,title:'英美文学里的生态',english:'English Literature and the Environment',day:4,start:audience==='mi'?5:7,span:2,room:'N426',teacher:'Dawid',majors:(audience==='mi'?['MAM','ICS']:['Econ','Stat']) as Major[],kind:'optional' as const,weeks:'1–18周'})),
+  ...[
+    {group:'MAM1',e:'E1',day:1,start:2,room:'N432',teacher:'Henry'},
+    {group:'MAM2',e:'E2',day:1,start:2,room:'N426',teacher:'Laurence'},
+    {group:'ICS1',e:'E3',day:1,start:5,room:'N432',teacher:'Henry'},
+    {group:'ICS2',e:'E4',day:1,start:5,room:'N426',teacher:'Laurence'},
+    {group:'Econ1',e:'E5',day:4,start:5,room:'N432',teacher:'Henry'},
+    {group:'Econ2',e:'E6',day:2,start:0,room:'N423',teacher:'Laurence'},
+    {group:'Stat1',e:'E7',day:2,start:5,room:'N432',teacher:'Henry'},
+    {group:'Stat2',e:'E8',day:2,start:5,room:'N423',teacher:'Laurence'},
+  ].map(item=>({id:`y2-ielts-${item.e.toLowerCase()}`,courseKey:'y2-ielts',year:2,title:'雅思课程',english:'IELTS Course',day:item.day,start:item.start,span:2,room:item.room,teacher:item.teacher,majors:[item.group.replace(/\d/g,'') as Major],groups:[item.group],kind:'optional' as const,weeks:'1–18周',note:item.e})),
+];
+
+const sourceEvents:TimetableEvent[]=[
   ...y1English,
   {id:'y1-pe',year:1,title:'体育 I',english:'P.E I',day:0,start:0,span:2,room:'体育场馆',majors:['MAM','ICS'],kind:'shared',weeks:'4–18周'},
   {id:'y1-found-mi-1',year:1,title:'微积分数学基础 / 序列与级数',english:'MFC / SAS',day:0,start:2,span:2,room:'N315',majors:['MAM','ICS'],kind:'shared',weeks:'4–16周',track:'dual'},
@@ -81,16 +102,7 @@ export const timetableEvents:TimetableEvent[]=[
   {id:'y2-micro',year:2,title:'中级微观经济学',english:'Intermediate Microeconomics',day:0,start:5,span:3,room:'Econ N310 / Stat N410',majors:['Econ','Stat'],kind:'shared',weeks:'1–18周'},
   {id:'y2-money',year:2,title:'货币金融学',english:'Monetary Finance',day:2,start:5,span:3,room:'知产207',majors:['Econ'],kind:'major',weeks:'1–18周'},
   {id:'y2-statsoft',year:2,title:'统计软件',english:'Statistics Software',day:3,start:9,span:3,room:'N504',majors:['Stat'],kind:'major',weeks:'1–18周'},
-  {id:'y2-opt-mi-am',year:2,title:'英语选修（三选一）',english:'UK & USA / Identity / Practical English',day:0,start:2,span:2,room:'N432 / N426 / N423',majors:['MAM','ICS'],kind:'optional',weeks:'1–18周'},
-  {id:'y2-opt-es-am',year:2,title:'英语选修（三选一）',english:'UK & USA / Identity / Practical English',day:0,start:0,span:2,room:'N432 / N426 / N423',majors:['Econ','Stat'],kind:'optional',weeks:'1–18周'},
-  {id:'y2-opt-all',year:2,title:'英美历史与文化（选修）',english:'The History and Culture of UK and USA',day:2,start:9,span:2,room:'N426',majors:'all',kind:'optional',weeks:'1–18周'},
-  {id:'y2-opt-literature-mi',year:2,title:'环境主题英语文学（选修）',english:'English Literature and the Environment',day:4,start:5,span:2,room:'N426',majors:['MAM','ICS'],kind:'optional',weeks:'1–18周'},
-  {id:'y2-opt-literature-es',year:2,title:'环境主题英语文学（选修）',english:'English Literature and the Environment',day:4,start:7,span:2,room:'N426',majors:['Econ','Stat'],kind:'optional',weeks:'1–18周'},
-  {id:'y2-ielts-12',year:2,title:'雅思课程',english:'IELTS Course',day:1,start:2,span:2,room:'E1 N432 / E2 N426',majors:['MAM'],groups:['MAM1','MAM2'],kind:'common',weeks:'1–18周'},
-  {id:'y2-ielts-34',year:2,title:'雅思课程',day:1,start:5,span:2,room:'E3 N432 / E4 N426',majors:['ICS'],groups:['ICS1','ICS2'],kind:'common',weeks:'1–18周'},
-  {id:'y2-ielts-5',year:2,title:'雅思课程',day:4,start:5,span:2,room:'E5 N432',majors:['Econ'],groups:['Econ1'],kind:'common',weeks:'1–18周'},
-  {id:'y2-ielts-6',year:2,title:'雅思课程',day:2,start:0,span:2,room:'E6 N423',majors:['Econ'],groups:['Econ2'],kind:'common',weeks:'1–18周'},
-  {id:'y2-ielts-78',year:2,title:'雅思课程',day:2,start:5,span:2,room:'E7 N432 / E8 N423',majors:['Stat'],groups:['Stat1','Stat2'],kind:'common',weeks:'1–18周'},
+  ...y2English,
 
   {id:'y3-marx',year:3,title:'马克思主义基本原理',english:'Outline of Marxism Basic Principles',day:0,start:5,span:3,room:'Econ/Stat N315 · MAM/ICS N217',majors:'all',kind:'common',weeks:'1–18周'},
   {id:'y3-ipco-es-tue',year:3,title:'整数规划及组合优化 / 博弈论与多准则决策',english:'IPCO / GTMCD',day:1,start:0,span:2,room:'N415',majors:['Econ','Stat'],kind:'shared',weeks:'1–16周',track:'dual'},
@@ -130,6 +142,32 @@ export const timetableEvents:TimetableEvent[]=[
   {id:'y4-macro',year:4,title:'宏观经济学导论',english:'Introduction to Macroeconomics (O)',day:0,start:5,span:3,room:'N412',majors:['MAM'],kind:'optional',weeks:'1–18周'},
   {id:'y4-data',year:4,title:'数据分析',english:'Data Analysis (O)',day:2,start:5,span:3,room:'N431',majors:['ICS'],kind:'optional',weeks:'1–18周'},
 ];
+
+// Teaching-week allocation from the module tables on source PDF pages 1, 3 and 4.
+const rotatingModules:Record<number,{code:string;title:string;english:string;weeks:string;teacher:string}[]>={
+  1:[
+    {code:'MFC',title:'微积分数学基础',english:'Mathematical Foundations for Calculus',weeks:'4–12周',teacher:'Amin Farjudian & Shenggang Hu'},
+    {code:'SAS',title:'序列与级数',english:'Sequences and Series',weeks:'13–16周',teacher:'Haoren Xiong'},
+  ],
+  2:[
+    {code:'FM',title:'金融数学',english:'Financial Mathematics',weeks:'1–4、13–16周',teacher:'Jia Shao'},
+    {code:'MVA',title:'多元微积分与向量分析',english:'Multivariable & Vector Analysis',weeks:'5–12周',teacher:'Maryam Parvizi & Michel van Garrel'},
+  ],
+  3:[
+    {code:'IPCO',title:'整数规划及组合优化',english:'Integer Programming & Combinatorial Optimisation',weeks:'1–4、9–12周',teacher:'Daniel Jones & Sergey Shpectorov'},
+    {code:'GTMCD',title:'博弈论与多准则决策',english:'Game Theory and Multi Criteria Decision Making',weeks:'5–8、13–16周',teacher:'Yi Zhang & Daniel Jones'},
+  ],
+};
+export const timetableEvents:TimetableEvent[]=sourceEvents.flatMap(event=>{
+  if(event.track!=='dual'||!rotatingModules[event.year])return [event];
+  const session=event.title.includes('Seminar')?'Seminar':event.title.includes('Q&A')?'Q&A':'';
+  return rotatingModules[event.year].map(module=>({...event,
+    id:`${event.id}-${module.code.toLowerCase()}`,courseKey:`y${event.year}-${module.code.toLowerCase()}`,
+    title:session?`${module.title} · ${session}`:module.title,
+    shortTitle:session?`${module.code} · ${session}`:module.code,
+    english:`${module.code} · ${module.english}`,weeks:module.weeks,teacher:module.teacher,
+  }));
+});
 
 export const majors:{id:Major;label:string;name:string}[]=[
   {id:'MAM',label:'MAM',name:'数学与应用数学'}, {id:'ICS',label:'ICS',name:'信息与计算科学'},

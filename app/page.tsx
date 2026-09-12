@@ -1,81 +1,19 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
+import { academicCalendar, getAcademicState, dateForWeekDay, formatShortDate, weekDateRange, formatCalendarDate, getDailySchedule, advanceCalendarView, emptyScheduleMessage, detectConflicts, weekNumbers, type ConflictDetail } from './schedule-logic';
+import Materials from './materials';
+import { ThemePicker } from './theme';
+import ElectivePanel from './elective-panel';
+import { electiveOptions, electiveProfile, electiveStorageKey, isElective, parseElectiveSelections, selectedSchedule, toggleElective, type ElectiveOption } from './elective-logic';
 import { majors, timetableEvents, times, type DegreeTrack, type Major, type TimetableEvent } from './timetable-data';
 
 type DisplaySource='base'|'retake'|'preview';
 type DisplayEvent=TimetableEvent&{displaySource?:DisplaySource;retakeKey?:string};
 type LaidEvent=DisplayEvent&{lane:number;laneCount:number};
 type CourseCategory='uob'|'jnu'|'english'|'general';
-type SidebarMode='current'|'retake';
+type SidebarMode='current'|'retake'|'elective';
 type RetakeOption={key:string;year:number;title:string;english?:string;groups:string[];events:TimetableEvent[]};
-type ConflictSeverity='hard'|'partial';
-type ConflictDetail={key:string;first:DisplayEvent;second:DisplayEvent;day:number;firstSession:number;lastSession:number;weeks:number[];severity:ConflictSeverity};
-type AcademicState={today:Date;currentWeek:number|null;weekday:number|null;phase:'before'|'teaching'|'review'|'between'|'break';daysUntilStart:number};
-
-const academicCalendar={
-  academicYear:'2026–2027',
-  semesterLabel:'第一学期',
-  weekOneStart:'2026-09-06',
-  studentStart:'2026-09-07',
-  semesterEnd:'2027-01-23',
-  winterBreakStart:'2027-01-25',
-  totalWeeks:20,
-  reviewExamWeeks:[17,18,19,20],
-} as const;
-const oneDay=24*60*60*1000;
-
-function calendarDate(value:string){
-  const [year,month,day]=value.split('-').map(Number);
-  return new Date(Date.UTC(year,month-1,day,4));
-}
-
-function shanghaiToday(){
-  const parts=Object.fromEntries(new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Shanghai',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()).filter((part)=>part.type!=='literal').map((part)=>[part.type,part.value]));
-  return calendarDate(`${parts.year}-${parts.month}-${parts.day}`);
-}
-
-function addDays(date:Date,days:number){
-  return new Date(date.getTime()+days*oneDay);
-}
-
-function daysBetween(first:Date,second:Date){
-  return Math.round((second.getTime()-first.getTime())/oneDay);
-}
-
-function getAcademicState():AcademicState{
-  const today=shanghaiToday();
-  const weekOneStart=calendarDate(academicCalendar.weekOneStart);
-  const studentStart=calendarDate(academicCalendar.studentStart);
-  const semesterEnd=calendarDate(academicCalendar.semesterEnd);
-  const winterBreakStart=calendarDate(academicCalendar.winterBreakStart);
-  const jsDay=today.getUTCDay();
-  const weekday=jsDay>=1&&jsDay<=5?jsDay-1:null;
-  if(today<studentStart)return {today,currentWeek:null,weekday,phase:'before',daysUntilStart:daysBetween(today,studentStart)};
-  if(today<=semesterEnd){
-    const currentWeek=Math.min(academicCalendar.totalWeeks,Math.floor(daysBetween(weekOneStart,today)/7)+1);
-    return {today,currentWeek,weekday,phase:academicCalendar.reviewExamWeeks.includes(currentWeek as 17|18|19|20)?'review':'teaching',daysUntilStart:0};
-  }
-  return {today,currentWeek:null,weekday,phase:today<winterBreakStart?'between':'break',daysUntilStart:0};
-}
-
-function dateForWeekDay(week:number,day:number){
-  return addDays(calendarDate(academicCalendar.weekOneStart),(week-1)*7+day+1);
-}
-
-function formatCalendarDate(date:Date){
-  return `${date.getUTCMonth()+1}月${date.getUTCDate()}日`;
-}
-
-function formatShortDate(date:Date){
-  return `${date.getUTCMonth()+1}/${date.getUTCDate()}`;
-}
-
-function weekDateRange(week:number){
-  const start=addDays(calendarDate(academicCalendar.weekOneStart),(week-1)*7);
-  return `${formatCalendarDate(start)}–${formatCalendarDate(addDays(start,6))}`;
-}
-
 function arrange(events:DisplayEvent[]):LaidEvent[]{
   const result:LaidEvent[]=[];
   for(let day=0;day<5;day++){
@@ -102,6 +40,7 @@ function arrange(events:DisplayEvent[]):LaidEvent[]{
 const categoryLabels:Record<CourseCategory,string>={uob:'伯大',jnu:'暨大',english:'英语',general:'通识课'};
 
 function courseCategory(event:TimetableEvent):CourseCategory{
+  if(event.year===2&&isElective(event))return 'english';
   const searchable=`${event.title} ${event.english||''}`.toLowerCase();
   if(/英语|雅思|英美历史|english|ielts|history and culture of uk/.test(searchable))return 'english';
   if(/思想道德|中国近代史|马克思主义|体育|军事理论|心理健康|艺术体验/.test(event.title))return 'general';
@@ -110,6 +49,7 @@ function courseCategory(event:TimetableEvent):CourseCategory{
 }
 
 function retakeOptionKey(event:TimetableEvent){
+  if(isElective(event))return `${event.year}:elective:${event.selectionKey||event.id}`;
   return `${event.year}:${event.title}:${event.groups?.slice().sort().join('+')||'all'}`;
 }
 
@@ -122,33 +62,6 @@ function buildRetakeOptions(year:number,major:Major):RetakeOption[]{
     else grouped.set(key,{key,year:event.year,title:event.title,english:event.english,groups:event.groups||[],events:[event]});
   });
   return Array.from(grouped.values()).sort((a,b)=>b.year-a.year||a.title.localeCompare(b.title,'zh-CN')||a.key.localeCompare(b.key));
-}
-
-function weekNumbers(weeks?:string){
-  const result=new Set<number>();
-  if(!weeks)return new Set(Array.from({length:18},(_,index)=>index+1));
-  const rangePattern=/(\d+)\s*[–—-]\s*(\d+)/g;
-  let match:RegExpExecArray|null;
-  while((match=rangePattern.exec(weeks))){for(let value=Number(match[1]);value<=Number(match[2]);value++)result.add(value)}
-  if(result.size===0){for(const value of weeks.match(/\d+/g)||[])result.add(Number(value))}
-  return result.size?result:new Set(Array.from({length:18},(_,index)=>index+1));
-}
-
-function detectConflicts(baseEvents:TimetableEvent[],retakeEvents:DisplayEvent[]):ConflictDetail[]{
-  const conflicts:ConflictDetail[]=[];
-  const compare=(first:DisplayEvent,second:DisplayEvent)=>{
-    if(first.day!==second.day)return;
-    const start=Math.max(first.start,second.start); const end=Math.min(first.start+first.span,second.start+second.span);
-    if(start>=end)return;
-    const firstWeeks=weekNumbers(first.weeks); const secondWeeks=weekNumbers(second.weeks);
-    const weeks=Array.from(firstWeeks).filter((week)=>secondWeeks.has(week)).sort((a,b)=>a-b);
-    if(!weeks.length)return;
-    const partial=start>first.start||end<first.start+first.span||weeks.length<firstWeeks.size;
-    conflicts.push({key:`${first.id}:${second.id}:${start}`,first,second,day:first.day,firstSession:start+1,lastSession:end,weeks,severity:partial?'partial':'hard'});
-  };
-  retakeEvents.forEach((retake)=>baseEvents.forEach((base)=>compare(retake,{...base,displaySource:'base'})));
-  retakeEvents.forEach((first,index)=>retakeEvents.slice(index+1).forEach((second)=>{if(first.retakeKey!==second.retakeKey)compare(first,second)}));
-  return conflicts;
 }
 
 function formatWeekList(weeks:number[]){
@@ -207,6 +120,9 @@ function uniqueValues(values:(string|undefined)[]){
   return Array.from(new Set(values.filter((value):value is string=>Boolean(value))));
 }
 
+function courseHeading(course:TimetableEvent){return course.shortTitle||course.title}
+function courseSubtitle(course:TimetableEvent){return course.shortTitle?course.title.split(' · ')[0]:course.english}
+
 function eventDetails(event:TimetableEvent){
   return [event.teacher&&`教师：${event.teacher}`,event.room&&`教室：${event.room}`,event.weeks&&`周次：${event.weeks}`].filter(Boolean).join(' · ');
 }
@@ -258,42 +174,45 @@ function downloadFile(url:string,fileName:string){
   document.body.appendChild(link); link.click(); link.remove();
 }
 
-function icsEscape(value:string){
-  return value.replace(/\\/g,'\\\\').replace(/\r?\n/g,'\\n').replace(/,/g,'\\,').replace(/;/g,'\\;');
+export default function App(){
+  const [materials,setMaterials]=useState(()=>window.location.hash==='#materials');
+  const scrollPosition=useRef(0);
+  const showingMaterials=useRef(materials);
+  useEffect(()=>{
+    const remember=()=>{if(!showingMaterials.current)scrollPosition.current=window.scrollY};
+    const update=()=>{
+      const next=window.location.hash==='#materials';
+      const returning=showingMaterials.current&&!next;
+      showingMaterials.current=next; setMaterials(next);
+      if(next)window.requestAnimationFrame(()=>window.scrollTo({top:0,behavior:'instant'}));
+      else if(returning)window.requestAnimationFrame(()=>window.scrollTo({top:scrollPosition.current,behavior:'instant'}));
+    };
+    window.addEventListener('scroll',remember,{passive:true});
+    window.addEventListener('hashchange',update);
+    return ()=>{window.removeEventListener('hashchange',update);window.removeEventListener('scroll',remember)};
+  },[]);
+  return <><div hidden={materials}><Home/></div>{materials&&<Materials/>}</>;
 }
 
-function icsLocalDateTime(date:Date,time:string){
-  const year=date.getUTCFullYear(); const month=String(date.getUTCMonth()+1).padStart(2,'0'); const day=String(date.getUTCDate()).padStart(2,'0');
-  return `${year}${month}${day}T${time.replace(':','')}00`;
-}
-
-function buildCalendarFile(events:DisplayEvent[],calendarName:string){
-  const stamp=new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d{3}Z$/,'Z');
-  const lines=[
-    'BEGIN:VCALENDAR','VERSION:2.0','CALSCALE:GREGORIAN','METHOD:PUBLISH','PRODID:-//JBJI Course Assistant//CN',
-    `X-WR-CALNAME:${icsEscape(calendarName)}`,'X-WR-TIMEZONE:Asia/Shanghai',
-    'BEGIN:VTIMEZONE','TZID:Asia/Shanghai','X-LIC-LOCATION:Asia/Shanghai','BEGIN:STANDARD','TZOFFSETFROM:+0800','TZOFFSETTO:+0800','TZNAME:CST','DTSTART:19700101T000000','END:STANDARD','END:VTIMEZONE',
-  ];
-  events.forEach((event)=>{
-    const occupied=times.slice(event.start,event.start+event.span).filter((session)=>session[1]&&session[2]);
-    if(!occupied.length)return;
-    const startTime=occupied[0][1]; const endTime=occupied[occupied.length-1][2];
-    Array.from(weekNumbers(event.weeks)).filter((week)=>week>=1&&week<=academicCalendar.totalWeeks).sort((a,b)=>a-b).forEach((week)=>{
-      const date=dateForWeekDay(week,event.day);
-      const description=[`第${week}周`,event.weeks&&`原课表周次：${event.weeks}`,event.teacher&&`教师：${event.teacher}`,`类别：${categoryLabels[courseCategory(event)]}`,'数据来自学院课表与校历；节假日、停课及临时调课以学校最新通知为准。'].filter(Boolean).join('；');
-      lines.push('BEGIN:VEVENT',`UID:${event.id}-${week}@jbji-course-assistant`,`DTSTAMP:${stamp}`,`DTSTART;TZID=Asia/Shanghai:${icsLocalDateTime(date,startTime)}`,`DTEND;TZID=Asia/Shanghai:${icsLocalDateTime(date,endTime)}`,`SUMMARY:${icsEscape(`${event.displaySource==='retake'?'[重修] ':''}${event.title}`)}`,`LOCATION:${icsEscape(event.room||'教室待通知')}`,`DESCRIPTION:${icsEscape(description)}`,'END:VEVENT');
-    });
-  });
-  lines.push('END:VCALENDAR');
-  return `\uFEFF${lines.join('\r\n')}`;
-}
-
-export default function Home(){
+function Home(){
   const [savedPreferences]=useState(loadPreferences);
   const [track,setTrack]=useState<DegreeTrack>(savedPreferences.track); const [year,setYear]=useState(savedPreferences.year); const [major,setMajor]=useState<Major>(savedPreferences.major); const [classNo,setClassNo]=useState(savedPreferences.classNo);
+  const [sidebarOpen,setSidebarOpen]=useState(false);
+  const [identityOpen,setIdentityOpen]=useState(()=>{try{return !window.localStorage.getItem(preferencesKey)}catch{return true}});
+  const [mobileView,setMobileView]=useState<'day'|'week'>('day');
+  const [now,setNow]=useState(()=>new Date());
+  const academicState=useMemo(()=>getAcademicState(now),[now]);
+  const todayIndex=(academicState.today.getUTCDay()+6)%7;
+  const [mobileDay,setMobileDay]=useState(todayIndex);
   const [sidebarMode,setSidebarMode]=useState<SidebarMode>('current');
   const [selectedRetakeKeys,setSelectedRetakeKeys]=useState<string[]>(loadRetakes);
   const [previewRetakeKey,setPreviewRetakeKey]=useState<string|null>(null);
+  const [electiveSelections,setElectiveSelections]=useState(()=>{try{return parseElectiveSelections(localStorage.getItem(electiveStorageKey))}catch{return {}}});
+  const [previewElectiveKey,setPreviewElectiveKey]=useState<string|null>(null);
+  const profile=electiveProfile(track,year,major,classNo);
+  const hasElectives=year===2||year===4;
+  useEffect(()=>{try{localStorage.setItem(electiveStorageKey,JSON.stringify(electiveSelections))}catch{/* Keep session selections when storage is unavailable. */}},[electiveSelections]);
+  useEffect(()=>{setPreviewElectiveKey(null);setPreviewRetakeKey(null);setCourseQuery('');setSelectedCategory('all');setSelectedDay('all');setSidebarMode(year===2||year===4?'elective':'current')},[profile,year]);
   const selectedMajor=majors.find((item)=>item.id===major)!;
   const classCount=year===1?3:year===2?2:0;
   useEffect(()=>{if(classCount&&classNo>classCount)setClassNo(1)},[classCount,classNo]);
@@ -314,23 +233,49 @@ export default function Home(){
     if(event.groups&&classCount&&!event.groups.includes(`${major}${classNo}`))return false;
     return true;
   }),[track,year,major,classNo,classCount]);
-  const scheduled=useMemo(()=>filtered.filter((event)=>!event.listedOnly),[filtered]);
+  const electiveChoices=useMemo(()=>electiveOptions(filtered),[filtered]);
+  const selectedElectiveKeys=(electiveSelections[profile]||[]).filter(key=>electiveChoices.some(option=>option.key===key));
+  const scheduled=selectedSchedule(filtered,selectedElectiveKeys);
+  const selectedElectiveIds=new Set(scheduled.filter(isElective).map(event=>event.id));
   const courses=useMemo(()=>Array.from(new Map(filtered.map((event)=>[event.title,event])).values()).sort((a,b)=>a.kind.localeCompare(b.kind)||a.title.localeCompare(b.title,'zh-CN')),[filtered]);
   const groupLabel=classCount?`${selectedMajor.label}${classNo}`:selectedMajor.label;
   const scheduleRef=useRef<HTMLElement>(null);
   const [selectedDay,setSelectedDay]=useState<number|'all'>('all');
   const [selectedCategory,setSelectedCategory]=useState<CourseCategory|'all'>('all');
   const [courseQuery,setCourseQuery]=useState('');
-  const [academicState]=useState(getAcademicState);
+
   const [selectedWeek,setSelectedWeek]=useState<number|'all'>(()=>getAcademicState().currentWeek??'all');
+  const previousAcademic=useRef(academicState);
+  useEffect(()=>{
+    let timer:ReturnType<typeof setTimeout>;
+    const refresh=()=>{
+      clearTimeout(timer);
+      const next=new Date();setNow(next);
+      // Refresh on minute boundaries, including midnight; catch up after sleep/backgrounding.
+      timer=setTimeout(refresh,60000-next.getTime()%60000);
+    };
+    const visible=()=>{if(document.visibilityState==='visible')refresh()};
+    refresh();window.addEventListener('focus',refresh);document.addEventListener('visibilitychange',visible);
+    return ()=>{clearTimeout(timer);window.removeEventListener('focus',refresh);document.removeEventListener('visibilitychange',visible)};
+  },[]);
+  useEffect(()=>{
+    const previous=previousAcademic.current;
+    if(previous.today.getTime()!==academicState.today.getTime()){
+      const next=advanceCalendarView(previous,academicState,{week:selectedWeek,day:mobileDay,filterDay:selectedDay});
+      setSelectedWeek(next.week);setMobileDay(next.day);setSelectedDay(next.filterDay);
+    }
+    previousAcademic.current=academicState;
+  },[academicState,selectedWeek,mobileDay,selectedDay]);
   const [retakeYear,setRetakeYear]=useState<number|'all'>('all');
   const [retakeCategory,setRetakeCategory]=useState<Exclude<CourseCategory,'uob'>|'all'>('all');
   const [retakeDay,setRetakeDay]=useState<number|'all'>('all');
   const [retakeQuery,setRetakeQuery]=useState('');
-  const [exporting,setExporting]=useState<'png'|'pdf'|'ics'|null>(null);
+  const [exporting,setExporting]=useState<'png'|'pdf'|null>(null);
   const [exportMessage,setExportMessage]=useState('');
   const [localReviews,setLocalReviews]=useState<LocalReviewMap>(loadLocalReviews);
   const [reviewCourse,setReviewCourse]=useState<TimetableEvent|null>(null);
+  const [editingReview,setEditingReview]=useState(false);
+  const detailCloseRef=useRef<HTMLButtonElement>(null);
   const [reviewText,setReviewText]=useState('');
   const [reviewMessage,setReviewMessage]=useState('');
   const reviewTextareaRef=useRef<HTMLTextAreaElement>(null);
@@ -339,7 +284,7 @@ export default function Home(){
   },[localReviews]);
   useEffect(()=>{
     if(!reviewCourse)return;
-    reviewTextareaRef.current?.focus();
+    detailCloseRef.current?.focus();
     const closeOnEscape=(event:KeyboardEvent)=>{if(event.key==='Escape')setReviewCourse(null)};
     const previousOverflow=document.body.style.overflow;
     document.body.style.overflow='hidden';
@@ -352,9 +297,11 @@ export default function Home(){
   const retakeOptions=useMemo(()=>buildRetakeOptions(year,major),[year,major]);
   const activeSelectedOptions=retakeOptions.filter((option)=>selectedRetakeKeys.includes(option.key));
   const selectedRetakeEvents:DisplayEvent[]=activeSelectedOptions.flatMap((option)=>option.events.map((event)=>({...event,displaySource:'retake' as const,retakeKey:option.key})));
+  const dailySchedule=getDailySchedule([...scheduled,...selectedRetakeEvents],now,times);
   const previewOption=previewRetakeKey&&!selectedRetakeKeys.includes(previewRetakeKey)?retakeOptions.find((option)=>option.key===previewRetakeKey):undefined;
   const previewRetakeEvents:DisplayEvent[]=previewOption?previewOption.events.map((event)=>({...event,displaySource:'preview' as const,retakeKey:previewOption.key})):[];
-  const conflicts=detectConflicts(scheduled,selectedRetakeEvents);
+  const conflicts=detectConflicts(scheduled,selectedRetakeEvents,selectedElectiveIds).filter(issue=>selectedWeek==='all'||issue.weeks.includes(selectedWeek));
+  const electivePreview=electiveChoices.find(option=>option.key===previewElectiveKey&&!selectedElectiveKeys.includes(option.key));
   const hardConflictEventIds=new Set(conflicts.filter((conflict)=>conflict.severity==='hard').flatMap((conflict)=>[conflict.first.id,conflict.second.id]));
   const partialConflictEventIds=new Set(conflicts.filter((conflict)=>conflict.severity==='partial').flatMap((conflict)=>[conflict.first.id,conflict.second.id]));
   const displayedDays=selectedDay==='all'?[0,1,2,3,4]:[selectedDay];
@@ -373,7 +320,7 @@ export default function Home(){
     if(sidebarMode==='current'&&normalizedQuery&&!`${event.title} ${event.english||''}`.toLocaleLowerCase('zh-CN').includes(normalizedQuery))return false;
     return true;
   });
-  const visiblePreviewEvents=previewRetakeEvents.filter((event)=>(selectedWeek==='all'||weekNumbers(event.weeks).has(selectedWeek))&&(selectedDay==='all'||event.day===selectedDay));
+  const visiblePreviewEvents=[...previewRetakeEvents,...(electivePreview?.events.filter(event=>!event.listedOnly).map(event=>({...event,displaySource:'preview' as const}))||[])].filter((event)=>(selectedWeek==='all'||weekNumbers(event.weeks).has(selectedWeek))&&(selectedDay==='all'||event.day===selectedDay));
   const displayedEvents=arrange([...matchingEvents.map((event)=>({...event,displaySource:'base' as const})),...visibleRetakeEvents,...visiblePreviewEvents]);
   const sidebarCourses=Array.from(new Map(matchingEvents.map((event)=>[event.title,event])).values()).sort((a,b)=>a.title.localeCompare(b.title,'zh-CN'));
   const normalizedRetakeQuery=retakeQuery.trim().toLocaleLowerCase('zh-CN');
@@ -391,8 +338,23 @@ export default function Home(){
   const selectedWeekIsReview=selectedWeek!=='all'&&academicCalendar.reviewExamWeeks.includes(selectedWeek as 17|18|19|20);
 
   function changeSidebarMode(mode:SidebarMode){
-    setSidebarMode(mode); setPreviewRetakeKey(null);
-    if(mode==='retake'){setSelectedDay('all');setSelectedCategory('all');setCourseQuery('')}
+    setSidebarMode(mode); setPreviewRetakeKey(null);setPreviewElectiveKey(null);
+    if(mode!=='current'){setSelectedDay('all');setSelectedCategory('all');setCourseQuery('')}
+  }
+
+  function chooseElective(option:ElectiveOption){
+    setElectiveSelections(current=>({...current,[profile]:toggleElective(current[profile]||[],option,electiveChoices)}));
+    setPreviewElectiveKey(null);
+  }
+  function electiveConflicts(option:ElectiveOption){
+    const alternativeIds=new Set(electiveChoices.filter(item=>item.courseKey===option.courseKey).flatMap(item=>item.events.map(event=>event.id)));
+    const candidateIds=new Set(option.events.map(event=>event.id));
+    return detectConflicts([...scheduled.filter(event=>!alternativeIds.has(event.id)),...option.events],selectedRetakeEvents,new Set([...selectedElectiveIds,...candidateIds])).filter(issue=>candidateIds.has(issue.first.id)||candidateIds.has(issue.second.id));
+  }
+  function openElectives(){setSidebarOpen(true);changeSidebarMode('elective')}
+  function previewElective(option:ElectiveOption){
+    setPreviewElectiveKey(option.key);setPreviewRetakeKey(null);setSelectedDay('all');
+    if(window.matchMedia('(max-width:700px)').matches){setMobileView('week');setSidebarOpen(false)}
   }
 
   function toggleRetake(option:RetakeOption){
@@ -404,7 +366,7 @@ export default function Home(){
     const otherSelected=selectedRetakeEvents.filter((event)=>event.retakeKey!==option.key);
     const candidate=option.events.map((event)=>({...event,displaySource:'retake' as const,retakeKey:option.key}));
     const candidateIds=new Set(candidate.map((event)=>event.id));
-    return detectConflicts(scheduled,[...otherSelected,...candidate]).filter((conflict)=>candidateIds.has(conflict.first.id)||candidateIds.has(conflict.second.id));
+    return detectConflicts(scheduled,[...otherSelected,...candidate],selectedElectiveIds).filter((conflict)=>candidateIds.has(conflict.first.id)||candidateIds.has(conflict.second.id));
   }
 
   function showCurrentWeek(){
@@ -413,29 +375,21 @@ export default function Home(){
   }
 
   function showToday(){
-    if(!academicState.currentWeek||academicState.weekday===null)return;
-    setSelectedWeek(academicState.currentWeek); setSelectedDay(academicState.weekday); setSidebarMode('current');
-  }
-
-  function exportCalendar(){
-    setExporting('ics'); setExportMessage('正在生成日历…');
-    try{
-      const calendarName=`JBJI ${selectedMajor.label}${classCount?classNo:''} ${degreeLabels[track]}课表`;
-      const content=buildCalendarFile([...scheduled.map((event)=>({...event,displaySource:'base' as const})),...selectedRetakeEvents],calendarName);
-      const url=URL.createObjectURL(new Blob([content],{type:'text/calendar;charset=utf-8'}));
-      downloadFile(url,`${calendarName}-2026-27第一学期.ics`); window.setTimeout(()=>URL.revokeObjectURL(url),0);
-      setExportMessage('日历已导出');
-    }catch(error){
-      console.error(error); setExportMessage('日历导出失败');
-    }finally{
-      setExporting(null);
-    }
+    if(!academicState.currentWeek)return;
+    setSelectedWeek(academicState.currentWeek);setSelectedDay(academicState.weekday??'all');setMobileDay(todayIndex);setMobileView('day');setSidebarMode('current');setSelectedCategory('all');setCourseQuery('');
   }
 
   async function renderScheduleCanvas(){
     if(!scheduleRef.current)throw new Error('找不到课表区域');
     await document.fonts?.ready;
     const clone=scheduleRef.current.cloneNode(true) as HTMLElement;
+    clone.classList.add('exportLayout');
+    clone.querySelectorAll('.previewBlock').forEach(element=>element.remove());
+    const exportEvents=arrange(displayedEvents.filter(event=>event.displaySource!=='preview'));
+    clone.querySelectorAll<HTMLElement>('.courseBlock').forEach(element=>{
+      const event=exportEvents.find(item=>item.id===element.dataset.eventId);
+      if(event){element.style.width=`calc((100% - 6px) / ${event.laneCount})`;element.style.marginLeft=`calc(${event.lane} * (100% / ${event.laneCount}) + 3px)`}
+    });
     clone.querySelectorAll<HTMLElement>('[data-export-exclude]').forEach((element)=>element.remove());
     clone.querySelectorAll<HTMLElement>('[data-export-only]').forEach((element)=>{element.style.display='block'});
     Object.assign(clone.style,{position:'fixed',left:'-10000px',top:'0',width:'1240px',maxWidth:'none',margin:'0',boxShadow:'none',zIndex:'-1'});
@@ -444,11 +398,20 @@ export default function Home(){
     const tableScroll=clone.querySelector<HTMLElement>('.tableScroll');
     if(tableScroll)tableScroll.style.overflow='visible';
     const timetable=clone.querySelector<HTMLElement>('.timetable');
-    if(timetable)timetable.style.gridTemplateRows='50px repeat(12,66px)';
+    if(timetable)timetable.style.gridTemplateRows='52px repeat(12,80px)';
     document.body.appendChild(clone);
     try{
+      // Resolve intrinsic dimensions explicitly: canvas renderers may ignore object-fit.
+      await Promise.all(Array.from(clone.querySelectorAll<HTMLImageElement>('img')).map(async(image)=>{
+        await image.decode();
+        if(!image.naturalWidth||!image.naturalHeight)throw new Error('图片尚未加载完成');
+        const height=360;
+        image.style.width=`${height*image.naturalWidth/image.naturalHeight}px`;
+        image.style.height=`${height}px`;
+        image.style.maxWidth='none';
+      }));
       const {default:html2canvas}=await import('html2canvas');
-      return await html2canvas(clone,{backgroundColor:'#ffffff',scale:2,useCORS:true,logging:false});
+      return await html2canvas(clone,{backgroundColor:'#ffffff',scale:3,useCORS:true,logging:false,windowWidth:1440});
     }finally{
       clone.remove();
     }
@@ -480,7 +443,8 @@ export default function Home(){
     }
   }
 
-  function openReview(course:TimetableEvent){
+  function openReview(course:TimetableEvent,edit=false){
+    setEditingReview(edit);
     const saved=localReviews[reviewCourseKey(course)];
     setReviewCourse(course);
     setReviewText(saved?.text||'');
@@ -497,36 +461,59 @@ export default function Home(){
     setReviewMessage('评价已保存到当前浏览器，可随时回来修改。');
   }
 
-  return <main>
-    <header className="topbar"><a className="brand" href="#top" aria-label="JBJI课表助手首页"><span className="brandMark"><img className="brandLogo" src="./jbji-logo.png" alt="暨南大学与伯明翰大学院徽"/></span><span className="brandCopy"><strong>JBJI课表助手</strong><small>2026/2027 FALL SEMESTER</small></span></a><div className="topbarMascot" aria-label="JBJI 奶龙吉祥物"><img src="./jbji-nailong-guardian.png" alt="印有暨南大学伯明翰大学联合学院标识的奶龙"/></div></header>
-    <section className="hero" id="top"><div className="heroBackdrop" aria-hidden="true"><img src="./jbji-banner.jpg" alt=""/></div><div className="heroCopy"><p className="eyebrow">JBJI PERSONAL TIMETABLE</p><h1>一张课表，<br/>看清你的暨伯学期。</h1><p className="lead">选择学位类型、年级、专业与班级，只保留与你相关的课程。双学位与单学位的伯大数学模块会自动切换。</p><div className="heroRule"><span>数学交叉</span><span>双校培养</span><span>四个本科专业</span></div></div><div className="heroStat"><span>当前组合</span><strong>{courses.length}</strong><small>COURSES</small></div></section>
-    <section className="filterPanel" aria-label="课表筛选">
+  function renderEmpty(day?:number){
+    if(year===4&&!selectedElectiveKeys.length&&!selectedRetakeEvents.length)return <div className="emptyState"><strong>尚未添加选修课</strong><p>从本专业可选课程中，安排你的本学期课表。</p><button onClick={openElectives}>选择课程</button></div>;
+    const info=emptyScheduleMessage([...scheduled,...selectedRetakeEvents],selectedWeek,day);
+    const activate=()=>{
+      setSelectedDay('all');setSelectedCategory('all');setCourseQuery('');
+      if(info.action==='start'&&info.firstWeek!==null)setSelectedWeek(info.firstWeek);
+      if(info.action==='semester')setSelectedWeek('all');
+      if(info.action==='week')setMobileView('week');
+    };
+    return <div className="emptyState"><img src="./jbji-nailong-guardian.png" alt=""/><strong>{info.title}</strong><p>{info.detail}</p><button onClick={activate}>{info.action==='start'?`查看第 ${info.firstWeek} 周`:info.action==='semester'?'查看整学期':info.action==='week'?'查看本周':'清除筛选'}</button></div>;
+  }
+
+  return <main className={`mobileView-${mobileView}`}>
+    <header className="topbar" id="top"><a className="brand" href="#top" aria-label="JBJI课表助手首页"><span className="brandMark"><img className="brandLogo" src="./jbji-logo.png" alt="暨南大学与伯明翰大学院徽"/></span><span className="brandCopy"><strong>JBJI 课表助手</strong><small>2026–27 第一学期</small></span></a><nav className="topLinks"><ThemePicker/><a href="#materials">原始资料</a><a href="#help">使用帮助</a><a href="https://github.com/miraeina/jbji-course-assistant" target="_blank" rel="noreferrer">GitHub ↗</a></nav></header>
+    <button className="identityToggle mobileOnly" aria-expanded={identityOpen} aria-controls="identity-filters" onClick={()=>setIdentityOpen(!identityOpen)}>{degreeLabels[track]} · 大{['一','二','三','四'][year-1]} · {groupLabel}<span>{identityOpen?'收起':'切换'}⌄</span></button>
+    <section id="identity-filters" className={`filterPanel ${identityOpen?'identityOpen':'identityClosed'}`} aria-label="课表筛选">
       <div className="filterGroup trackGroup"><span>学位类型</span><div className="segmented">{(['dual','single'] as DegreeTrack[]).map((item)=><button key={item} className={track===item?'active':''} onClick={()=>setTrack(item)}><b>{degreeLabels[item]}</b><small>{item==='dual'?'JNU + UoB':'JNU Degree'}</small></button>)}</div></div>
       <div className="filterGroup"><span>年级</span><div className="segmented">{[1,2,3,4].map((item)=><button key={item} className={year===item?'active':''} onClick={()=>setYear(item)}>大{['一','二','三','四'][item-1]}</button>)}</div></div>
       <div className="filterGroup majorGroup"><span>专业</span><div className="segmented">{majors.map((item)=><button key={item.id} className={major===item.id?'active':''} onClick={()=>setMajor(item.id)}><b>{item.label}</b><small>{item.name}</small></button>)}</div></div>
       {classCount>0&&<div className="filterGroup classGroup"><span>班级</span><div className="segmented">{Array.from({length:classCount},(_,i)=>i+1).map((item)=><button key={item} className={classNo===item?'active':''} onClick={()=>setClassNo(item)}>{item} 班</button>)}</div></div>}
+      <button className="identityDone mobileOnly" onClick={()=>setIdentityOpen(false)}>完成，查看课表</button>
     </section>
-    <section className="contextBar"><span>正在查看</span><strong>{degreeLabels[track]} · 大{['一','二','三','四'][year-1]} · {selectedMajor.name}{classCount?` · ${classNo} 班`:''}</strong><small>{track==='single'&&year<=3?'已替换为单学位伯大必修模块':year===1?'英语分组已按 E1–E12 对应到专业班级':year===2?'雅思分组已按 E1–E8 对应到专业班级':'本年级不区分英语班级组'}</small></section>
     <section className="calendarPanel" aria-label="校历与教学周">
       <div className="calendarStatus"><span>{academicCalendar.academicYear} · {academicCalendar.semesterLabel}</span><strong>{calendarStatus}</strong><small>{selectedWeek==='all'?'当前显示整学期全部有效周次':`正在查看第 ${selectedWeek} 周 · ${weekDateRange(selectedWeek)}`}{selectedWeekIsReview?' · 校历标记为复习考试周':''}</small></div>
       <div className="calendarControls">
-        <label htmlFor="week-select"><span>查看周次</span><select id="week-select" value={selectedWeek} onChange={(event)=>{setSelectedWeek(event.target.value==='all'?'all':Number(event.target.value));setSelectedDay('all')}}><option value="all">整学期</option>{Array.from({length:academicCalendar.totalWeeks},(_,index)=>index+1).map((week)=><option value={week} key={week}>第 {week} 周 · {weekDateRange(week)}</option>)}</select></label>
+        <button aria-label="上一周" disabled={selectedWeek==='all'||selectedWeek<=1} onClick={()=>{if(selectedWeek!=='all'){setSelectedWeek(selectedWeek-1);setSelectedDay('all')}}}>‹</button><label htmlFor="week-select"><span>查看周次</span><select aria-label="查看周次" id="week-select" value={selectedWeek} onChange={(event)=>{setSelectedWeek(event.target.value==='all'?'all':Number(event.target.value));setSelectedDay('all')}}><option value="all">整学期</option>{Array.from({length:academicCalendar.totalWeeks},(_,index)=>index+1).map((week)=><option value={week} key={week}>第 {week} 周 · {weekDateRange(week)}</option>)}</select></label><button aria-label="下一周" disabled={selectedWeek==='all'||selectedWeek>=academicCalendar.totalWeeks} onClick={()=>{if(selectedWeek!=='all'){setSelectedWeek(selectedWeek+1);setSelectedDay('all')}}}>›</button>
         <button onClick={showCurrentWeek} disabled={!academicState.currentWeek}>本周</button><button className="primary" onClick={showToday} disabled={!academicState.currentWeek||academicState.weekday===null}>今天</button>
       </div>
     </section>
-    <section className="scheduleSection" ref={scheduleRef}><div className="scheduleBody">
-      <aside className="courseSidebar" aria-label="浏览和筛选课程" data-export-exclude>
+    <section className="todayPanel" aria-label="今天与下一节课">
+      <div className="todaySummary"><span>{formatCalendarDate(academicState.today)} · 周{['日','一','二','三','四','五','六'][academicState.today.getUTCDay()]}</span><strong>{dailySchedule.today.length?`今天 ${dailySchedule.today.length} 堂课`:'今天没有课'}</strong><small>{dailySchedule.today.length?`还有 ${dailySchedule.remaining.length} 堂未结束`:'按当前身份及已加入课程计算'}</small></div>
+      <div className="nextLesson">{[{label:'正在上课',items:dailySchedule.active},{label:'下一节课',items:dailySchedule.next}].filter(group=>group.items.length).map(group=><div className="lessonGroup" key={group.label}><span>{group.label}</span>{group.items.map(item=><button key={item.event.id} onClick={()=>openReview(item.event)}><strong>{courseHeading(item.event)}</strong>{item.event.shortTitle&&<small>{courseSubtitle(item.event)}</small>}<small>{formatCalendarDate(item.date)} · {times[item.event.start][1]}–{times[item.event.start+item.event.span-1][2]} · {item.event.room||'教室待通知'}</small></button>)}</div>)}{!dailySchedule.active.length&&!dailySchedule.next.length&&<p>{scheduled.length||selectedRetakeEvents.length?'本学期没有后续已排课程':'加入选修课后，这里会显示上课安排'}</p>}</div>
+    </section>
+    <div className="mobileNavigation mobileOnly">
+      <div className="viewSwitch"><button aria-pressed={mobileView==='day'} onClick={()=>{setMobileView('day');setSelectedDay('all')}}>日</button><button aria-pressed={mobileView==='week'} onClick={()=>{setMobileView('week');setSelectedDay('all')}}>周</button><button onClick={()=>{showCurrentWeek();setMobileDay(todayIndex);setMobileView('day')}}>回到今天</button></div>
+      {mobileView==='day'&&<div className="dayPicker" aria-label="选择星期">{['一','二','三','四','五','六','日'].map((name,day)=><button key={day} aria-pressed={mobileDay===day} onClick={()=>{setMobileDay(day);setSelectedDay('all')}}><span>{name}{day===todayIndex&&selectedWeek===academicState.currentWeek?' · 今':''}</span><small>{selectedWeek==='all'?'':formatShortDate(dateForWeekDay(selectedWeek,day===6?-1:day))}</small></button>)}</div>}
+    </div>
+    {sidebarOpen&&<button className="sheetBackdrop mobileOnly" aria-label="关闭课程面板" onClick={()=>{setSidebarOpen(false);setPreviewRetakeKey(null);setPreviewElectiveKey(null)}}/>}
+    <section className="scheduleSection" ref={scheduleRef}><p className="exportContext" data-export-only>{academicCalendar.academicYear} 学年第一学期 · {degreeLabels[track]} · 大{['一','二','三','四'][year-1]} · {selectedMajor.name}{classCount?` · ${classNo} 班`:''}<br/>{selectedWeek==='all'?'整学期':`第 ${selectedWeek} 周 · ${weekDateRange(selectedWeek)}`}{selectedDay!=='all'?` · ${weekdayNames[selectedDay]}`:''}{courseQuery||selectedCategory!=='all'?' · 已应用课程筛选':''}{hasElectives?` · 已选 ${selectedElectiveKeys.length} 门选修`:''}</p><div className={`scheduleBody ${sidebarOpen?"sidebarOpen":"sidebarClosed"}`}>
+      <aside hidden={!sidebarOpen} id="course-panel" className="courseSidebar" aria-label="浏览和筛选课程" data-export-exclude>
+        <button className="sheetClose mobileOnly" onClick={()=>{setSidebarOpen(false);setPreviewRetakeKey(null);setPreviewElectiveKey(null)}}>完成 · 关闭面板</button>
         <div className="sidebarHead sidebarTabs" role="tablist" aria-label="课程面板">
+          {hasElectives&&<button role="tab" aria-selected={sidebarMode==='elective'} className={sidebarMode==='elective'?'active':''} onClick={()=>changeSidebarMode('elective')}>选修课<span>{selectedElectiveKeys.length}</span></button>}
           <button role="tab" aria-selected={sidebarMode==='current'} className={sidebarMode==='current'?'active':''} onClick={()=>changeSidebarMode('current')}>本学期课程<span>{sidebarCourses.length}</span></button>
           <button role="tab" aria-selected={sidebarMode==='retake'} className={sidebarMode==='retake'?'active':''} onClick={()=>changeSidebarMode('retake')}>重修课程<span>{activeSelectedOptions.length}</span></button>
         </div>
         <div className="sidebarPanel">
-          {sidebarMode==='current'?<>
+          {sidebarMode==='elective'&&hasElectives?<ElectivePanel key={profile} options={electiveChoices} selected={selectedElectiveKeys} year={year} issuesFor={electiveConflicts} onToggle={chooseElective} onPreview={previewElective} onDetails={course=>openReview(course)}/>:sidebarMode==='current'?<>
             <label className="courseSearch" htmlFor="course-search"><span>搜索课程</span><input id="course-search" type="search" value={courseQuery} onChange={(event)=>setCourseQuery(event.target.value)} placeholder="搜索中文名或英文名" autoComplete="off"/></label>
             <div className="sidebarFilter"><span>课程类别</span><div className="filterPills"><button className={selectedCategory==='all'?'active':''} aria-pressed={selectedCategory==='all'} onClick={()=>setSelectedCategory('all')}>全部</button>{(Object.keys(categoryLabels) as CourseCategory[]).map((category)=><button className={selectedCategory===category?'active':''} aria-pressed={selectedCategory===category} onClick={()=>setSelectedCategory(category)} key={category}>{categoryLabels[category]}</button>)}</div></div>
             <div className="sidebarFilter"><span>上课日</span><div className="filterPills"><button className={selectedDay==='all'?'active':''} aria-pressed={selectedDay==='all'} onClick={()=>setSelectedDay('all')}>全部</button>{weekdayNames.map((day,index)=><button className={selectedDay===index?'active':''} aria-pressed={selectedDay===index} onClick={()=>setSelectedDay(index)} key={day}>{['一','二','三','四','五'][index]}</button>)}</div></div>
             {(selectedDay!=='all'||selectedCategory!=='all'||courseQuery)&&<button className="clearFilters" onClick={()=>{setSelectedDay('all');setSelectedCategory('all');setCourseQuery('')}}>清除全部筛选</button>}
-            <div className="sidebarCourseList" aria-live="polite">{sidebarCourses.map((course)=><button className={`sidebarCourseCard category-${courseCategory(course)} ${normalizedQuery===course.title.toLocaleLowerCase('zh-CN')?'selected':''}`} onClick={()=>setCourseQuery(course.title)} key={course.title}><span>{categoryLabels[courseCategory(course)]}{audienceLabel(course)&&` · ${audienceLabel(course)}`}</span><strong>{course.title}</strong>{course.english&&<small>{course.english}</small>}<em>{courseScheduleDetails(course,matchingEvents)}</em>{course.room&&<i>教室：{course.room}</i>}</button>)}{sidebarCourses.length===0&&<p className="sidebarEmpty">没有符合条件的课程</p>}</div>
+            <div className="sidebarCourseList" aria-live="polite">{sidebarCourses.map((course)=><button className={`sidebarCourseCard category-${courseCategory(course)} ${normalizedQuery===course.title.toLocaleLowerCase('zh-CN')?'selected':''}`} onClick={()=>setCourseQuery(course.title)} key={course.title}><span>{categoryLabels[courseCategory(course)]}{audienceLabel(course)&&` · ${audienceLabel(course)}`}</span><strong>{courseHeading(course)}</strong>{courseSubtitle(course)&&<small>{courseSubtitle(course)}</small>}<em>{courseScheduleDetails(course,matchingEvents)}</em>{course.room&&<i>教室：{course.room}</i>}</button>)}{sidebarCourses.length===0&&<p className="sidebarEmpty">没有符合条件的课程</p>}</div>
           </>:<>
             <div className="retakeIntro"><strong>加入低年级现行课程</strong><p>重修生按今年低年级课表上课。可选暨大课程；伯大课程不提供重修。</p></div>
             <label className="courseSearch" htmlFor="retake-search"><span>搜索重修课程</span><input id="retake-search" type="search" value={retakeQuery} onChange={(event)=>setRetakeQuery(event.target.value)} placeholder="搜索课程名称或班组" autoComplete="off"/></label>
@@ -544,45 +531,54 @@ export default function Home(){
           </>}
         </div>
       </aside>
-      <div className="timetablePanel"><div className="sectionHead"><div><p className="eyebrow">{degreeLabels[track].toUpperCase()} · YEAR {year} · {groupLabel}</p><h2>{selectedMajor.name} · {degreeLabels[track]}课表</h2></div><div className="sectionTools"><div className="legend"><span><i className="dot uob"/>伯大</span><span><i className="dot jnu"/>暨大</span><span><i className="dot english"/>英语</span><span><i className="dot general"/>通识课</span></div><div className="exportActions" data-export-exclude><button disabled={exporting!==null} onClick={exportCalendar}>{exporting==='ics'?'生成中…':'导出日历'}</button><button disabled={exporting!==null} onClick={()=>exportSchedule('png')}>{exporting==='png'?'生成中…':'导出图片'}</button><button className="primary" disabled={exporting!==null} onClick={()=>exportSchedule('pdf')}>{exporting==='pdf'?'生成中…':'导出 PDF'}</button><span className="exportStatus" role="status" aria-live="polite">{exportMessage}</span></div></div></div>
-      <div className={`conflictSummary ${conflicts.length?'hasConflicts':'clear'}`}>
-        <div className="conflictSummaryLead"><strong>{conflicts.length?`发现 ${conflicts.length} 处重修冲突`:activeSelectedOptions.length?'已加入的重修课程暂无冲突':'尚未加入重修课程'}</strong><span>{conflicts.length?'红色表示整段冲突，橙色表示部分节次或部分周次重叠。':activeSelectedOptions.length?`当前已加入 ${activeSelectedOptions.length} 门重修课程。`:'可在左侧“重修课程”中选择低年级课程。'}</span></div>
-        {conflicts.length>0&&<div className="conflictList">{conflicts.map((conflict)=><button key={conflict.key} className={conflict.severity} onClick={()=>setSelectedDay(conflict.day)}><b>{conflict.first.title} × {conflict.second.title}</b><span>{weekdayNames[conflict.day]} · 第{conflict.firstSession}{conflict.lastSession>conflict.firstSession?`–${conflict.lastSession}`:''}节 · {formatWeekList(conflict.weeks)}</span></button>)}</div>}
+      <div className="timetablePanel"><div className="sectionHead"><div><p className="eyebrow">{degreeLabels[track].toUpperCase()} · YEAR {year} · {groupLabel}</p><h2>{selectedMajor.name} · {degreeLabels[track]}课表</h2></div><div className="sectionTools"><div className="panelActions" data-export-exclude>{hasElectives&&<button className="electivePrimary" aria-controls="course-panel" onClick={openElectives}>{year===2?'英语选课':'选择课程'} · {selectedElectiveKeys.length}</button>}<button aria-expanded={sidebarOpen} aria-controls="course-panel" onClick={()=>{setSidebarOpen(!sidebarOpen);changeSidebarMode('current');setCourseQuery('');setSelectedCategory('all');setSelectedDay('all');setPreviewRetakeKey(null)}}>{sidebarOpen?'收起面板':'查找课程'}</button><button onClick={()=>{setSidebarOpen(true);changeSidebarMode('retake')}}>重修安排{activeSelectedOptions.length?` · ${activeSelectedOptions.length}`:''}</button></div><div className="legend"><span><i className="dot uob"/>伯大</span><span><i className="dot jnu"/>暨大</span><span><i className="dot english"/>英语</span><span><i className="dot general"/>通识课</span></div><div className="exportActions" data-export-exclude><details className="exportMenu"><summary>导出课表</summary><div><button disabled={exporting!==null||(!scheduled.length&&!selectedRetakeEvents.length)} onClick={()=>exportSchedule('png')}>{exporting==='png'?'生成中…':'导出图片'}</button><button disabled={exporting!==null||(!scheduled.length&&!selectedRetakeEvents.length)} onClick={()=>exportSchedule('pdf')}>{exporting==='pdf'?'生成中…':'导出 PDF'}</button></div></details><span className="exportStatus" role="status" aria-live="polite">{exportMessage}</span></div></div></div>
+      {hasElectives&&<div className="electiveSummary" data-export-exclude><span>{year===2?`固定课程已载入 · 已选 ${selectedElectiveKeys.length} 门英语课`:`已选 ${selectedElectiveKeys.length} / ${electiveChoices.length} 门可选课程`}<small>用于个人排课，正式选课以学校系统为准。</small></span><button onClick={openElectives}>{selectedElectiveKeys.length?'管理已选课程':'添加选修课'}</button></div>}
+      {electivePreview&&<div className="electivePreviewNotice" data-export-exclude><span>正在预览：{electivePreview.events[0].title}<small>尚未加入，不会出现在导出课表中。{selectedWeek!=='all'&&!electivePreview.events.some(event=>weekNumbers(event.weeks).has(selectedWeek))?'本周未开课，可切换到整学期查看。':''}</small></span><button onClick={()=>chooseElective(electivePreview)}>加入课表</button><button onClick={()=>setPreviewElectiveKey(null)}>结束预览</button></div>}
+      <div hidden={!conflicts.length} className={`conflictSummary ${conflicts.length?'hasConflicts':'clear'}`}>
+        <div className="conflictSummaryLead"><strong>{conflicts.length?`发现 ${conflicts.length} 处课程冲突`:activeSelectedOptions.length?'已加入的重修课程暂无冲突':'尚未加入重修课程'}</strong><span>{conflicts.length?'红色表示整段冲突，橙色表示部分节次或部分周次重叠。':activeSelectedOptions.length?`当前已加入 ${activeSelectedOptions.length} 门重修课程。`:'可在左侧“重修课程”中选择低年级课程。'}</span></div>
+        {conflicts.length>0&&<div className="conflictList">{conflicts.map((conflict)=><button key={conflict.key} className={conflict.severity} onClick={()=>setSelectedDay(conflict.day)}><b>{courseHeading(conflict.first)} × {courseHeading(conflict.second)}</b><span>{weekdayNames[conflict.day]} · 第{conflict.firstSession}{conflict.lastSession>conflict.firstSession?`–${conflict.lastSession}`:''}节 · {formatWeekList(conflict.weeks)}</span></button>)}</div>}
       </div>
-      <div className="scheduleContent"><div className="tableScroll"><div className="timetable" style={{gridTemplateColumns:displayedDays.length===1?'72px minmax(480px,1fr)':'72px repeat(5,minmax(165px,1fr))',minWidth:displayedDays.length===1?'620px':'960px'}}><div className="corner">节次</div>{displayedDays.map((day,index)=><div className="dayHead" style={{gridColumn:index+2}} key={day}>{weekdayNames[day]}<small>{selectedWeek==='all'?weekdayShort[day]:formatShortDate(dateForWeekDay(selectedWeek,day))}</small></div>)}
+      <div className="dayAgenda mobileOnly" data-export-exclude>
+        <h3>{selectedWeek==='all'?'整学期':`第 ${selectedWeek} 周`} · 周{['一','二','三','四','五','六','日'][mobileDay]}</h3>
+        {displayedEvents.filter(event=>event.day===mobileDay&&event.displaySource!=='preview').sort((a,b)=>a.start-b.start).map(event=><button key={`${event.displaySource}-${event.id}`} className={`agendaCard category-${courseCategory(event)} ${hardConflictEventIds.has(event.id)?'agendaConflict':partialConflictEventIds.has(event.id)?'agendaPartial':''}`} onClick={()=>openReview(event)}><span className="agendaTime">{times[event.start]?.[1]}<small>{times[event.start+event.span-1]?.[2]}</small></span><span><strong>{courseHeading(event)}</strong>{event.shortTitle&&<small>{courseSubtitle(event)}</small>}<small>{event.room||'教室待通知'}</small><small>{event.displaySource==='retake'?'重修 · ':isElective(event)?'选修 · ':''}{hardConflictEventIds.has(event.id)?'课程冲突':partialConflictEventIds.has(event.id)?'部分冲突':categoryLabels[courseCategory(event)]}</small></span></button>)}
+        {!displayedEvents.some(event=>event.day===mobileDay&&event.displaySource!=='preview')&&renderEmpty(mobileDay)}
+      </div>
+      <div className="scheduleContent"><div className="tableScroll" hidden={displayedEvents.length===0}><div className="timetable" style={{gridTemplateColumns:displayedDays.length===1?'72px minmax(480px,1fr)':'72px repeat(5,minmax(165px,1fr))',minWidth:displayedDays.length===1?'620px':'960px'}}><div className="corner">节次</div>{displayedDays.map((day,index)=><div className="dayHead" style={{gridColumn:index+2}} key={day}>{weekdayNames[day]}<small>{selectedWeek==='all'?weekdayShort[day]:formatShortDate(dateForWeekDay(selectedWeek,day))}</small></div>)}
         {times.map(([session,from,to],index)=><div className={`timeCell ${session==='5'?'break':''}`} style={{gridRow:index+2}} key={session}><strong>{session}</strong><span>{from}</span>{to&&<small>{to}</small>}</div>)}
         {times.map((_,row)=>displayedDays.map((day,index)=><div className={`gridCell ${row===4?'break':''}`} style={{gridColumn:index+2,gridRow:row+2}} key={`${day}-${row}`}/>))}
         {displayedEvents.map((event)=>{
           const hasHard=hardConflictEventIds.has(event.id); const hasPartial=!hasHard&&partialConflictEventIds.has(event.id);
-          return <article className={`courseBlock category-${courseCategory(event)} ${event.displaySource==='retake'?'retakeBlock':''} ${event.displaySource==='preview'?'previewBlock':''} ${hasHard?'conflictBlock':hasPartial?'partialConflictBlock':''}`} style={{gridColumn:displayedDays.indexOf(event.day)+2,gridRow:`${event.start+2} / span ${event.span}`,width:`calc((100% - 6px) / ${event.laneCount})`,marginLeft:`calc(${event.lane} * (100% / ${event.laneCount}) + 3px)`}} key={`${event.displaySource}-${event.id}`} title={event.note}><span className="courseTag">{event.displaySource==='retake'?'重修 · ':event.displaySource==='preview'?'重修预览 · ':''}{categoryLabels[courseCategory(event)]}{event.note&&` · ${event.note}`}{trackLabel(event)&&` · ${trackLabel(event)}`}{audienceLabel(event)&&` · (${audienceLabel(event)})`}</span><strong>{event.title}</strong>{event.english&&<small className="courseEnglish">{event.english}</small>}{eventDetails(event)&&<small className="courseDetails">{eventDetails(event)}</small>}</article>;
+          return <article className={`courseBlock ${event.shortTitle?'abbreviatedModule':''} ${event.shortTitle&&event.span===1?'shortModuleSession':''} category-${courseCategory(event)} ${event.displaySource==='retake'?'retakeBlock':''} ${event.displaySource==='preview'?'previewBlock':''} ${hasHard?'conflictBlock':hasPartial?'partialConflictBlock':''}`} style={{gridColumn:displayedDays.indexOf(event.day)+2,gridRow:`${event.start+2} / span ${event.span}`,width:`calc((100% - 6px) / ${event.laneCount})`,marginLeft:`calc(${event.lane} * (100% / ${event.laneCount}) + 3px)`}} key={`${event.displaySource}-${event.id}`} data-event-id={event.id} title="查看课程详情与评价" role="button" tabIndex={0} onClick={()=>openReview(event)} onKeyDown={(key)=>{if(key.key==='Enter'||key.key===' '){key.preventDefault();openReview(event)}}}><span className="courseTag">{event.displaySource==='retake'?'重修 · ':event.displaySource==='preview'?'课程预览 · ':isElective(event)?'选修 · ':''}{categoryLabels[courseCategory(event)]}{event.note&&` · ${event.note}`}{trackLabel(event)&&` · ${trackLabel(event)}`}{audienceLabel(event)&&` · (${audienceLabel(event)})`}</span><strong>{courseHeading(event)}</strong>{courseSubtitle(event)&&<small className="courseEnglish">{courseSubtitle(event)}</small>}{eventDetails(event)&&<small className="courseDetails">{eventDetails(event)}</small>}</article>;
         })}
       </div></div>
-      {displayedEvents.length===0&&<div className="emptyState">{selectedWeek!=='all'?`第 ${selectedWeek} 周没有符合当前条件的课程。`:'没有找到符合当前筛选条件的课程，请尝试切换类别或清除搜索内容。'}</div>}</div></div></div>
+      {displayedEvents.length===0&&renderEmpty(selectedDay==='all'?undefined:selectedDay)}</div></div></div>
       <p className="exportFootnote" data-export-only>JBJI STUDENT TIMETABLE · 2026–27 学年第一学期 · 依据学院课表及学校校历生成，最终安排以学院最新通知为准。</p>
     </section>
-    <section className="courseSection">
+    <details className="courseSection"><summary>全部课程与评价 · {courses.length} 门</summary>
       <div className="sectionHead compact"><div><p className="eyebrow">COURSE OVERVIEW & REVIEWS</p><h2>本组合课程与评价</h2><p className="sectionHint">纯文字评价试用版 · 当前内容只保存在本机浏览器</p></div><strong className="countBadge">{courses.length} 门</strong></div>
       <div className="courseList">{courses.map((course)=>{
         const review=localReviews[reviewCourseKey(course)];
         return <article className={`courseItem category-${courseCategory(course)}`} key={course.title}>
-          <div><span>{categoryLabels[courseCategory(course)]}{trackLabel(course)&&` · ${trackLabel(course)}`}{audienceLabel(course)&&` · (${audienceLabel(course)})`}</span><strong>{course.title}</strong>{course.english&&<small className="courseEnglish">{course.english}</small>}{courseDetails(course,filtered)&&<small className="courseDetails">{courseDetails(course,filtered)}</small>}</div>
+          <div><span>{categoryLabels[courseCategory(course)]}{trackLabel(course)&&` · ${trackLabel(course)}`}{audienceLabel(course)&&` · (${audienceLabel(course)})`}</span><strong>{courseHeading(course)}</strong>{courseSubtitle(course)&&<small className="courseEnglish">{courseSubtitle(course)}</small>}{courseDetails(course,filtered)&&<small className="courseDetails">{courseDetails(course,filtered)}</small>}</div>
           {review&&<p className="localReviewPreview">“{review.text}”</p>}
-          <div className="courseItemActions"><small>{review?`本机已保存 · ${formatReviewDate(review.updatedAt)}`:'还没有本机评价'}</small><button type="button" onClick={()=>openReview(course)}>{review?'查看 / 修改评价':'写评价'}</button></div>
+          <div className="courseItemActions"><small>{review?`本机已保存 · ${formatReviewDate(review.updatedAt)}`:'还没有本机评价'}</small><button type="button" onClick={()=>openReview(course,true)}>{review?'查看 / 修改评价':'写评价'}</button></div>
         </article>;
       })}</div>
-    </section>
-    <aside className="notice"><strong>使用说明</strong><p>双学位模式采用原课表中的 All Progs 数学模块；单学位模式会移除这些模块及其 Seminar，并换成单学位授课安排中的 RA、SAS、FM、MVA、GTMCD 与 IPCO。教学周和实际日期依据 2026–2027 学年校历计算；校历未列出的节假日、停课及临时调课仍以学校和学院最新通知为准。</p></aside>
+    </details>
+    <aside className="notice" id="help"><strong>使用说明</strong><p>双学位模式采用原课表中的 All Progs 数学模块；单学位模式会移除这些模块及其 Seminar，并换成单学位授课安排中的 RA、SAS、FM、MVA、GTMCD 与 IPCO。教学周和实际日期依据 2026–2027 学年校历计算；校历未列出的节假日、停课及临时调课仍以学校和学院最新通知为准。</p></aside>
     <footer><span>JBJI STUDENT TIMETABLE · 非官方学生工具</span><span>数据来源：双学位总课表、单学位伯大必修课程安排及 2026–2027 学年校历</span><a href="https://birmingham.jnu.edu.cn/" target="_blank" rel="noreferrer">学院官网 ↗</a></footer>
     {reviewCourse&&<div className="reviewOverlay" onMouseDown={()=>setReviewCourse(null)}>
       <section className="reviewDialog" role="dialog" aria-modal="true" aria-labelledby="review-dialog-title" onMouseDown={(event)=>event.stopPropagation()}>
-        <header><div><p>COURSE REVIEW</p><h2 id="review-dialog-title">{reviewCourse.title}</h2>{reviewCourse.english&&<small>{reviewCourse.english}</small>}</div><button type="button" aria-label="关闭评价窗口" onClick={()=>setReviewCourse(null)}>×</button></header>
-        <p className="reviewLocalNotice"><strong>本机试用版</strong> 评价仅保存在当前浏览器，暂不会上传、公开或被其他用户看到。</p>
+        <header><div><p>课程详情与评价</p><h2 id="review-dialog-title">{courseHeading(reviewCourse)}</h2>{courseSubtitle(reviewCourse)&&<small>{courseSubtitle(reviewCourse)}</small>}</div><button ref={detailCloseRef} type="button" aria-label="关闭课程详情" onClick={()=>setReviewCourse(null)}>×</button></header>
+        <dl className="detailFacts"><div><dt>上课时间</dt><dd>{reviewCourse.listedOnly?'尚未排定':`${weekdayNames[reviewCourse.day]} · ${times[reviewCourse.start]?.[1]}–${times[reviewCourse.start+reviewCourse.span-1]?.[2]} · 第 ${reviewCourse.start+1}–${reviewCourse.start+reviewCourse.span} 节`}</dd></div><div><dt>教室</dt><dd>{reviewCourse.room||'待通知'}</dd></div><div><dt>教师</dt><dd>{reviewCourse.teacher||'原始资料未注明'}</dd></div><div><dt>周次</dt><dd>{reviewCourse.weeks||'按学期安排'}</dd></div>{reviewCourse.note&&<div><dt>备注</dt><dd>{reviewCourse.note}</dd></div>}</dl>
+        {!editingReview&&<div className="reviewReadOnly">{localReviews[reviewCourseKey(reviewCourse)]&&<p>{localReviews[reviewCourseKey(reviewCourse)].text}</p>}<button onClick={()=>setEditingReview(true)}>{localReviews[reviewCourseKey(reviewCourse)]?'修改我的评价':'写课程评价'}</button></div>}
+        {editingReview&&<><p className="reviewLocalNotice"><strong>本机试用版</strong> 评价仅保存在当前浏览器，暂不会上传、公开或被其他用户看到。</p>
         <form onSubmit={saveReview}>
           <label htmlFor="course-review-text">写下你的课程体验、学习建议或需要注意的事项</label>
           <textarea ref={reviewTextareaRef} id="course-review-text" value={reviewText} onChange={(event)=>{setReviewText(event.target.value);setReviewMessage('')}} minLength={5} maxLength={1000} rows={8} placeholder="例如：课程节奏如何、作业量怎样、哪些内容值得提前准备……"/>
           <div className="reviewFormMeta"><span>{reviewText.length} / 1000</span><span role="status" aria-live="polite">{reviewMessage}</span></div>
           <div className="reviewActions"><button type="button" onClick={()=>setReviewCourse(null)}>取消</button><button className="primary" type="submit">{localReviews[reviewCourseKey(reviewCourse)]?'保存修改':'提交评价'}</button></div>
-        </form>
+        </form></>}
       </section>
     </div>}
   </main>;

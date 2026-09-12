@@ -296,3 +296,193 @@ footer a:hover { text-decoration:underline; }
 @media(max-width:520px) {
   .topbarMascot { display:none; }
 }
+
+/* Personal timetable: compact, mascot-led workspace. */
+[hidden] { display:none!important; }
+:root { --paper:#f7f8fa; --ink:#28323c; --muted:#737b84; --line:#e8ebef; --orange:#db791d; }
+.topbar { border-top:0; box-shadow:none; min-height:76px; padding:8px max(24px,calc((100vw - 1400px)/2)); }
+.brandCopy { border:0; padding:0; }
+.brandCopy strong { font-family:inherit; font-size:19px; }
+.brandCopy small { font-size:11px; font-weight:400; letter-spacing:0; }
+.topLinks { display:flex; gap:24px; font-size:13px; }
+.topLinks a { color:var(--muted); text-decoration:none; }
+.filterPanel,.calendarPanel,.scheduleSection,.courseSection,.notice { width:min(1400px,calc(100% - 48px)); }
+.filterPanel { margin-top:18px; padding:14px 18px; border:1px solid var(--line); border-radius:14px; box-shadow:none; gap:20px; align-items:center; }
+.filterGroup>span { font-size:11px; color:var(--muted); letter-spacing:0; margin-bottom:6px; }
+.segmented button { border:0; border-radius:8px; background:#f4f5f7; min-height:36px; padding:7px 12px; font-size:13px; }
+.segmented button.active { background:#fff0de; color:#a9550d; box-shadow:none; }
+.segmented button b { font-size:12px; }
+.segmented button small { font-size:10px; }
+.trackGroup .segmented button { min-width:74px; }
+.trackGroup .segmented button small { display:none; }
+.majorGroup .segmented button { min-width:92px; }
+.calendarPanel { margin-top:10px; border:0; box-shadow:none; background:transparent; padding:8px 2px; }
+.calendarStatus span { display:none; }
+.calendarStatus strong { font-family:inherit; font-size:15px; margin:0; }
+.calendarStatus small { font-size:11px; }
+.calendarControls label span { display:none; }
+.calendarControls button,.calendarControls select { border-radius:8px; font-size:12px; background:white; border-color:var(--line); }
+.scheduleBody.sidebarClosed { grid-template-columns:minmax(0,1fr); }
+.scheduleBody.sidebarOpen { grid-template-columns:290px minmax(0,1fr); }
+.timetablePanel { border:1px solid var(--line); padding:18px; border-radius:16px; box-shadow:0 4px 20px #26364b05; }
+.sectionHead { align-items:center; margin-bottom:16px; }
+.sectionHead h2 { font-family:inherit; font-size:19px; font-weight:650; }
+.eyebrow { letter-spacing:.04em; font-size:10px; }
+.sectionTools { flex-direction:row; flex-wrap:wrap; justify-content:flex-end; align-items:center; gap:12px; }
+.panelActions { display:flex; gap:6px; }
+.panelActions button,.emptyState button { border:1px solid var(--line); border-radius:8px; background:white; padding:8px 12px; font-size:12px; cursor:pointer; }
+.legend { gap:9px; }
+.exportActions { flex-wrap:wrap; }
+.exportActions button { border-radius:7px; font-size:11px; }
+.exportStatus:empty { display:none; }
+.dayHead { background:#f6f7f9; color:#47515d; border-color:var(--line); }
+.dayHead small { color:var(--muted); }
+.corner { background:#f6f7f9; color:var(--muted); }
+.courseBlock { cursor:pointer; border-radius:8px; padding:10px; }
+.courseBlock strong { font-size:13px; line-height:1.5; }
+.courseBlock .courseEnglish { display:none; }
+.courseBlock .courseTag { font-size:9px; font-weight:400; }
+.courseBlock .courseDetails { font-size:10px; font-weight:400; }
+.courseBlock:focus-visible { outline:3px solid #db791d; outline-offset:-3px; }
+.courseSidebar { min-height:0; border-color:var(--line); box-shadow:none; }
+.sidebarCourseList { max-height:580px; }
+.sidebarTabs button.active { background:#fff0de; color:#a9550d; box-shadow:none; }
+.sidebarTabs button.active span { background:#db791d; }
+.courseSection { padding:16px 20px; border:1px solid var(--line); border-radius:14px; box-shadow:none; }
+.courseSection>summary { cursor:pointer; font-size:14px; font-weight:600; }
+.courseSection[open]>summary { margin-bottom:20px; }
+.emptyState { display:flex; flex-direction:column; gap:10px; align-items:center; padding:22px; font-size:13px; }
+.emptyState img { width:min(320px,80%); height:clamp(230px,32vw,360px); object-fit:contain; }
+.emptyState strong { color:var(--ink); font-size:16px; }
+.notice { scroll-margin-top:90px; font-size:12px; }
+.detailFacts { padding:12px 0; font-size:14px; line-height:1.8; }
+@media(max-width:1100px) { .filterPanel { grid-template-columns:1fr 1fr; } .sectionHead { flex-wrap:wrap; } .sectionTools { justify-content:flex-start; } }
+@media(max-width:700px) {
+ .topbar { padding:8px 14px; } .topLinks { gap:12px; font-size:11px; } .brand { gap:6px; } .brandCopy strong { font-size:16px; } .brandCopy small { font-size:9px; }
+ .filterPanel,.calendarPanel,.scheduleSection,.courseSection,.notice { width:calc(100% - 24px); }
+ .filterPanel { gap:12px; padding:12px; } .majorGroup { grid-column:1/-1; grid-row:2; } .majorGroup .segmented button { min-width:0; flex:1; } .segmented button { padding:7px 9px; } .classGroup { grid-column:1/-1; }
+ .calendarPanel { align-items:flex-start; gap:8px; flex-direction:column; } .calendarControls { width:100%; gap:4px; flex-wrap:wrap; } .calendarControls select { min-width:170px; } .calendarControls button { padding:7px 10px; }
+ .scheduleBody.sidebarOpen { grid-template-columns:minmax(0,1fr); } .sidebarCourseList { max-height:300px; } .timetablePanel { padding:12px; } .sectionHead h2 { font-size:17px; } .sectionTools { gap:10px; } .legend { font-size:10px; }
+}
+@media print { .panelActions { display:none; } .courseBlock .courseEnglish { display:block; } }
+
+/* Export typography is independent of compact on-screen controls. */
+.exportLayout .sectionHead h2 { font-size:26px; }
+.exportLayout .eyebrow,.exportLayout .legend { font-size:14px; }
+.exportLayout .dayHead,.exportLayout .corner { font-size:16px; }
+.exportLayout .dayHead small,.exportLayout .timeCell span,.exportLayout .timeCell small,.exportLayout .timeCell strong { font-size:13px; }
+.exportLayout .courseBlock { padding:6px 8px; box-shadow:none; }
+.exportLayout .courseBlock strong { margin-top:2px; font-size:18px; line-height:1.25; }
+.exportLayout .courseBlock .courseTag { font-size:11px; line-height:1.2; }
+.exportLayout .courseBlock .courseDetails { margin-top:3px; font-size:14px; line-height:1.25; opacity:1; }
+.exportLayout .exportFootnote { font-size:13px; }
+.exportLayout .emptyState { font-size:18px; }
+.exportLayout .emptyState strong { font-size:22px; }
+.exportLayout .emptyState button { display:none; }
+
+.mobileOnly { display:none; }
+.exportMenu { position:relative; }
+.exportMenu summary { list-style:none; cursor:pointer; border:1px solid var(--line); border-radius:8px; padding:9px 14px; color:#a9550d; background:#fff0de; font-size:12px; }
+.exportMenu>div { position:absolute; right:0; top:100%; z-index:25; background:white; border:1px solid var(--line); border-radius:10px; padding:8px; width:150px; box-shadow:0 8px 20px #0001; display:grid; gap:6px; }
+@media(max-width:700px) {
+ .mobileOnly { display:block; }
+ .identityToggle { width:calc(100% - 24px); margin:12px auto 0; padding:13px; border:1px solid var(--line); border-radius:10px; background:white; text-align:left; font-size:13px; }
+ .identityToggle span { float:right; color:var(--muted); }
+ .filterPanel.identityClosed { display:none; }
+ .filterPanel.identityOpen { margin-top:8px; }
+ .identityDone { grid-column:1/-1; min-height:44px; background:#fff0de; border:0; border-radius:8px; }
+ .calendarPanel { flex-direction:column; align-items:stretch; padding:12px 0 0; }
+ .calendarStatus strong { font-size:14px; }
+ .calendarControls { display:flex; flex-wrap:nowrap; }
+ .calendarControls label { flex:1; min-width:0; }
+ .calendarControls select { width:100%; min-width:0; }
+ .calendarControls button,.calendarControls select { min-height:44px; }
+ .calendarControls>button:last-child { display:none; }
+ .mobileNavigation { margin:10px 12px; }
+ .viewSwitch { display:flex; gap:6px; }
+ .viewSwitch button { min-width:48px; min-height:44px; background:white; border:1px solid var(--line); border-radius:9px; }
+ .viewSwitch button[aria-pressed=true],.dayPicker button[aria-pressed=true] { background:#fff0de; color:#a9550d; border-color:#ecc7a1; }
+ .viewSwitch button:last-child { margin-left:auto; padding:0 14px; }
+ .dayPicker { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:4px; margin-top:10px; }
+ .dayPicker button { padding:8px 1px; min-height:52px; border:1px solid var(--line); border-radius:8px; background:white; font-size:12px; }
+ .dayPicker small { display:block; margin-top:4px; font-size:10px; }
+ .dayAgenda h3 { font-size:14px; margin:8px 0 14px; }
+ .agendaCard { width:100%; display:grid; grid-template-columns:62px minmax(0,1fr); gap:12px; margin:10px 0; padding:15px 12px; text-align:left; border:1px solid var(--line); border-left:4px solid #e7a768; border-radius:12px; background:white; }
+ .agendaCard strong { font-size:16px; line-height:1.5; }
+ .agendaCard small { display:block; margin-top:6px; font-size:13px; color:var(--muted); }
+ .agendaTime { font-size:15px; font-weight:600; }
+ .agendaConflict { border-color:#b82f35; background:#fff2f2; }
+ .agendaPartial { border-color:#dc791f; background:#fff8ee; }
+ .mobileView-day .scheduleContent,.mobileView-day .timetablePanel>.emptyState { display:none; }
+ .mobileView-week .dayAgenda { display:none; }
+ .sectionHead { gap:10px; } .sectionHead h2 { font-size:16px; }
+ .sectionTools { width:100%; } .sectionTools .legend { display:none; }
+ .panelActions button { min-height:44px; } .exportActions { margin-left:auto; }
+ .exportMenu summary { min-height:44px; display:flex; align-items:center; }
+ .exportMenu button { min-height:44px; }
+ .sheetBackdrop { position:fixed; inset:0; z-index:39; border:0; background:#15202e66; }
+ .courseSidebar { position:fixed; bottom:0; left:0; right:0; z-index:40; max-height:85dvh; overflow-y:auto; border-radius:20px 20px 0 0; padding-bottom:env(safe-area-inset-bottom); }
+ .sheetClose { width:100%; min-height:48px; border:0; background:#fff0de; color:#a9550d; }
+ .sidebarCourseList { max-height:none; }
+ .reviewOverlay { align-items:flex-end; padding:0; }
+ .reviewDialog { width:100%; max-width:none; max-height:90dvh; overflow:auto; border-radius:20px 20px 0 0; padding-bottom:max(18px,env(safe-area-inset-bottom)); }
+ .reviewDialog textarea { font-size:16px; }
+ .reviewDialog button { min-height:44px; }
+ .emptyState img { width:auto; max-width:80%; height:220px; }
+ .tableScroll { max-height:65dvh; }
+ .dayHead,.corner { position:sticky; top:0; z-index:8; }
+ .timeCell { position:sticky; left:0; z-index:7; background:#f5f4ef; }
+ .corner { left:0; z-index:9; }
+ .exportLayout .scheduleContent { display:block; }
+ .exportLayout .tableScroll { max-height:none; }
+ .exportLayout .dayHead,.exportLayout .corner,.exportLayout .timeCell { position:static; }
+}
+@media(max-width:700px) {
+ .calendarControls { margin-top:0; }
+ .calendarControls button { flex:0 0 44px; padding:7px 5px; }
+ .calendarControls label { flex:1 1 auto; }
+ .dayAgenda .emptyState { padding:10px 0; }
+ .dayAgenda .emptyState img { height:170px; }
+}
+
+.materialsIntro,.materialsLayout { width:min(1400px,calc(100% - 48px)); margin:24px auto; }
+.materialsIntro h1 { font-size:26px; margin:0 0 12px; }
+.materialsIntro p { color:var(--muted); font-size:14px; line-height:1.8; }
+.materialsIntro .materialsSource { font-size:12px; max-width:900px; }
+.materialsLayout { display:grid; grid-template-columns:320px minmax(0,1fr); gap:20px; align-items:start; }
+.documentList { display:grid; gap:14px; }
+.documentCard { padding:20px; background:white; border:1px solid var(--line); border-radius:14px; }
+.documentCard.selected { border-color:#dfae79; background:#fffaf4; }
+.documentType { color:#a9550d; font-size:11px; }
+.documentCard h2 { font-size:18px; margin:12px 0; }
+.documentCard p { color:var(--muted); font-size:13px; line-height:1.7; }
+.documentFilename { display:block; font-size:11px; line-height:1.7; overflow-wrap:anywhere; color:var(--muted); }
+.documentActions { display:flex; gap:10px; flex-wrap:wrap; margin-top:16px; align-items:center; }
+.documentActions a,.documentActions button,.backToSchedule { padding:10px 12px; font-size:13px; text-decoration:none; border:1px solid var(--line); border-radius:8px; background:white; color:var(--ink); cursor:pointer; }
+.documentActions a:first-child,.documentActions button { color:#a9550d; background:#fff0de; }
+.documentPreview { overflow:hidden; background:white; border:1px solid var(--line); border-radius:14px; }
+.documentPreviewHead { display:flex; align-items:center; justify-content:space-between; gap:15px; padding:14px 18px; }
+.documentPreviewHead h2 { font-size:16px; margin:0; }
+.documentPreviewHead a { color:#a9550d; font-size:13px; }
+.previewHint { color:var(--muted); font-size:12px; padding:0 18px; }
+.documentPreview iframe { width:100%; height:75vh; min-height:540px; border:0; display:block; }
+@media(max-width:800px) {
+ .materialsIntro,.materialsLayout { width:calc(100% - 24px); margin:20px auto; }
+ .materialsIntro h1 { font-size:22px; }
+ .materialsLayout { grid-template-columns:1fr; }
+ .documentActions a,.backToSchedule { min-height:44px; display:inline-flex; align-items:center; }
+}
+@media(max-width:700px) {
+ .topLinks { gap:10px; flex-wrap:wrap; justify-content:flex-end; max-width:145px; }
+ .topLinks a { display:inline-flex; align-items:center; min-height:36px; }
+}
+
+.exportContext { display:none; padding:16px 20px; margin:0 0 12px; font-size:18px; line-height:1.8; background:#fff8ed; color:#493a2b; }
+.detailFacts { display:grid; gap:16px; padding:20px; margin:0; }
+.detailFacts>div { display:grid; grid-template-columns:72px 1fr; gap:12px; }
+.detailFacts dt { color:var(--muted); font-size:13px; }
+.detailFacts dd { margin:0; font-size:15px; line-height:1.7; }
+.reviewReadOnly { padding:0 20px 20px; }
+.reviewReadOnly p { white-space:pre-wrap; line-height:1.8; }
+.reviewReadOnly button { border:1px solid var(--line); border-radius:8px; background:#fff0de; padding:12px 18px; cursor:pointer; }
+.emptyState p { margin:0; }
