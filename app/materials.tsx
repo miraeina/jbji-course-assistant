@@ -21,7 +21,7 @@ export default function Materials(){
   },[]);
   return <main className="materialsPage">
     <header className="topbar"><a className="brand" href="#top"><span className="brandMark"><img className="brandLogo" src="./jbji-logo.png" alt="暨南大学与伯明翰大学院徽"/></span><span className="brandCopy"><strong>JBJI 课表助手</strong><small>原始资料</small></span></a><div className="headerActions"><ThemePicker/><a className="backToSchedule" href="#top">返回课表</a></div></header>
-    <section className="materialsIntro"><h1>课表的依据，都在这里</h1><p>查看或下载网站采用的原始课表和校历，方便核对课程安排。</p><p className="materialsSource">来源：学院课表、单学位授课安排及学校校历，由网站维护者提供原文件。临时调课及后续变更请以学校、学院最新通知为准。</p></section>
+    <section className="materialsIntro"><h1>原始课表与校历</h1><p>网站使用的三份原始文件，可预览或下载。</p><p className="materialsSource">临时调课请以学院最新通知为准。</p></section>
     <div className="materialsLayout">
       <section className="documentList" aria-label="选择原始资料">{documents.map(item=><article key={item.id} className={`documentCard ${desktop&&selected.id===item.id?'selected':''}`}>
         <span className="documentType">PDF · {item.term}</span><h2>{item.title}</h2><p>{item.description}</p><small className="documentFilename">{item.original}</small>

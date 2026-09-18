@@ -210,33 +210,20 @@ h1 { margin:0; max-width:800px; font-family:Georgia,"Songti SC",serif; font-size
 .courseItem strong { font-size:12px; margin-top:4px; }
 .courseItem small { font-size:9px; color:var(--muted); margin-top:3px; }
 .courseItem .courseDetails { margin-top:6px; line-height:1.55; font-weight:700; }
-.localReviewPreview { margin:12px 0 0; padding:10px 11px; border-radius:3px; color:#555; background:#f7f5f0; font-size:9.5px; line-height:1.6; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
 .courseItemActions { margin-top:auto; padding-top:12px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
 .courseItemActions small { margin:0; }
 .courseItemActions button { padding:7px 10px; border:1px solid #333; border-radius:3px; color:#fff; background:#333; font-size:9px; font-weight:850; cursor:pointer; }
 .courseItemActions button:hover { border-color:var(--orange); background:var(--orange); }
 .courseItemActions button:focus-visible { outline:3px solid #ffd2a8; outline-offset:2px; }
-.reviewOverlay { position:fixed; inset:0; z-index:100; display:grid; place-items:center; padding:28px; background:rgba(20,20,20,.58); backdrop-filter:blur(5px); }
-.reviewDialog { width:min(680px,100%); max-height:calc(100vh - 56px); overflow:auto; border-top:5px solid var(--orange); border-radius:8px; background:#fff; box-shadow:0 24px 70px rgba(0,0,0,.3); }
-.reviewDialog>header { padding:20px 22px 16px; display:flex; align-items:flex-start; justify-content:space-between; gap:20px; border-bottom:1px solid var(--line); }
-.reviewDialog>header p { margin:0; color:var(--orange); font-size:8px; font-weight:900; letter-spacing:.14em; }
-.reviewDialog>header h2 { margin:5px 0 0; font-family:Georgia,"Songti SC",serif; font-size:25px; }
-.reviewDialog>header small { display:block; margin-top:4px; color:var(--muted); font-size:9px; }
-.reviewDialog>header button { width:34px; height:34px; border:1px solid var(--line); border-radius:50%; background:#fff; font-size:22px; line-height:1; cursor:pointer; }
-.reviewDialog>header button:hover { color:var(--orange); border-color:var(--orange); }
-.reviewLocalNotice { margin:16px 22px 0; padding:10px 12px; border-left:4px solid var(--orange); background:#fff5ed; color:var(--muted); font-size:9px; line-height:1.55; }
-.reviewLocalNotice strong { color:var(--orange); }
-.reviewDialog form { padding:18px 22px 22px; }
-.reviewDialog label { display:block; margin-bottom:8px; font-size:10px; font-weight:850; }
-.reviewDialog textarea { width:100%; resize:vertical; min-height:170px; padding:13px 14px; border:1px solid #cbc7c0; border-radius:5px; outline:none; font:inherit; font-size:11px; line-height:1.7; }
-.reviewDialog textarea:focus { border-color:var(--orange); box-shadow:0 0 0 3px #fff0e3; }
-.reviewFormMeta { min-height:22px; margin-top:7px; display:flex; justify-content:space-between; gap:15px; color:var(--muted); font-size:8px; }
-.reviewFormMeta span:last-child { color:#9b4c0b; }
-.reviewActions { margin-top:12px; display:flex; justify-content:flex-end; gap:8px; }
-.reviewActions button { padding:9px 15px; border:1px solid #d2d2d2; border-radius:3px; background:#f7f7f4; font-size:10px; font-weight:850; cursor:pointer; }
-.reviewActions button.primary { color:#fff; border-color:var(--orange); background:var(--orange); }
-.reviewActions button:hover { border-color:var(--orange); }
-.reviewActions button:focus-visible,.reviewDialog>header button:focus-visible { outline:3px solid #ffd2a8; outline-offset:2px; }
+.detailOverlay { position:fixed; inset:0; z-index:100; display:grid; place-items:center; padding:28px; background:rgba(20,20,20,.58); backdrop-filter:blur(5px); }
+.detailDialog { width:min(680px,100%); max-height:calc(100vh - 56px); overflow:auto; border-top:5px solid var(--orange); border-radius:8px; background:#fff; box-shadow:0 24px 70px rgba(0,0,0,.3); }
+.detailDialog>header { padding:20px 22px 16px; display:flex; align-items:flex-start; justify-content:space-between; gap:20px; border-bottom:1px solid var(--line); }
+.detailDialog>header p { margin:0; color:var(--orange); font-size:8px; font-weight:900; letter-spacing:.14em; }
+.detailDialog>header h2 { margin:5px 0 0; font-family:Georgia,"Songti SC",serif; font-size:25px; }
+.detailDialog>header small { display:block; margin-top:4px; color:var(--muted); font-size:9px; }
+.detailDialog>header button { width:34px; height:34px; border:1px solid var(--line); border-radius:50%; background:#fff; font-size:22px; line-height:1; cursor:pointer; }
+.detailDialog>header button:hover { color:var(--orange); border-color:var(--orange); }
+.detailDialog>header button:focus-visible { outline:3px solid #ffd2a8; outline-offset:2px; }
 .notice { margin-top:13px; padding:16px 18px; border:1px solid #ead8c8; border-left:5px solid var(--orange); border-radius:2px; background:#fff5ed; display:flex; gap:15px; align-items:flex-start; }
 .notice strong { font-size:11px; white-space:nowrap; color:var(--orange); }
 .notice p { margin:0; color:var(--muted); font-size:10px; line-height:1.7; }
@@ -424,10 +411,9 @@ footer a:hover { text-decoration:underline; }
  .courseSidebar { position:fixed; bottom:0; left:0; right:0; z-index:40; max-height:85dvh; overflow-y:auto; border-radius:20px 20px 0 0; padding-bottom:env(safe-area-inset-bottom); }
  .sheetClose { width:100%; min-height:48px; border:0; background:#fff0de; color:#a9550d; }
  .sidebarCourseList { max-height:none; }
- .reviewOverlay { align-items:flex-end; padding:0; }
- .reviewDialog { width:100%; max-width:none; max-height:90dvh; overflow:auto; border-radius:20px 20px 0 0; padding-bottom:max(18px,env(safe-area-inset-bottom)); }
- .reviewDialog textarea { font-size:16px; }
- .reviewDialog button { min-height:44px; }
+ .detailOverlay { align-items:flex-end; padding:0; }
+ .detailDialog { width:100%; max-width:none; max-height:90dvh; overflow:auto; border-radius:20px 20px 0 0; padding-bottom:max(18px,env(safe-area-inset-bottom)); }
+ .detailDialog button { min-height:44px; }
  .emptyState img { width:auto; max-width:80%; height:220px; }
  .tableScroll { max-height:65dvh; }
  .dayHead,.corner { position:sticky; top:0; z-index:8; }
@@ -482,7 +468,4 @@ footer a:hover { text-decoration:underline; }
 .detailFacts>div { display:grid; grid-template-columns:72px 1fr; gap:12px; }
 .detailFacts dt { color:var(--muted); font-size:13px; }
 .detailFacts dd { margin:0; font-size:15px; line-height:1.7; }
-.reviewReadOnly { padding:0 20px 20px; }
-.reviewReadOnly p { white-space:pre-wrap; line-height:1.8; }
-.reviewReadOnly button { border:1px solid var(--line); border-radius:8px; background:#fff0de; padding:12px 18px; cursor:pointer; }
 .emptyState p { margin:0; }

@@ -3,9 +3,12 @@ export type DegreeTrack='dual'|'single';
 export type CourseKind='common'|'shared'|'major'|'optional'|'general';
 export type TimetableEvent={
   id:string; year:number; title:string; english?:string; day:number; start:number; span:number;
-  room?:string; majors:Major[]|'all'; groups?:string[]; kind:CourseKind; weeks?:string; note?:string;
+  room?:string; roomsByMajor?:Partial<Record<Major,string>>; majors:Major[]|'all'; groups?:string[]; kind:CourseKind; weeks?:string; note?:string;
   track?:DegreeTrack; teacher?:string; listedOnly?:boolean; courseKey?:string; selectionKey?:string; shortTitle?:string;
 };
+
+// Instructors transcribed from the E1–E12 sessions on source timetable PDF page 1.
+const y1EnglishTeachers=[["Robert", "Dawid", "Joanne"], ["Joanne", "Dawid", "Joanne"], ["Laurence", "Dawid", "Henry"], ["Selene", "Dawid", "Henry"], ["Joanne", "Selene", "Robert"], ["Laurence", "Dawid", "Robert"], ["Selene", "Henry", "Selene"], ["Joanne", "Dawid", "Selene"], ["Laurence", "Selene", "Joanne"], ["Selene", "Henry", "Selene"], ["Laurence", "Dawid", "Selene"], ["Laurence", "Henry", "Joanne"]];
 
 const y1English:TimetableEvent[]=[
   ['E1','英语写作 I','English Writing I',1,0,2,'N422','MAM1'],['E1','英语阅读 I','English Reading I',2,9,2,'N432','MAM1'],['E1','英语听说 I','Listening & Speaking English I',4,5,2,'N423','MAM1'],
@@ -20,7 +23,7 @@ const y1English:TimetableEvent[]=[
   ['E10','英语写作 I','English Writing I',1,6,2,'N422','Stat1'],['E10','英语阅读 I','English Reading I',4,2,2,'N426','Stat1'],['E10','英语听说 I','Listening & Speaking English I',0,7,2,'N422','Stat1'],
   ['E11','英语写作 I','English Writing I',0,7,2,'N432','Stat2'],['E11','英语阅读 I','English Reading I',1,7,2,'N432','Stat2'],['E11','英语听说 I','Listening & Speaking English I',0,5,2,'N422','Stat2'],
   ['E12','英语写作 I','English Writing I',1,7,2,'N426','Stat3'],['E12','英语阅读 I','English Reading I',4,0,2,'N426','Stat3'],['E12','英语听说 I','Listening & Speaking English I',4,2,2,'N423','Stat3'],
-].map((x,index)=>({id:`y1-en-${index}`,year:1,title:x[1] as string,english:x[2] as string,day:x[3] as number,start:x[4] as number,span:x[5] as number,room:x[6] as string,majors:[String(x[7]).replace(/\d/g,'') as Major],groups:[x[7] as string],kind:'common',weeks:'4–18周',note:x[0] as string}));
+].map((x,index)=>({id:`y1-en-${index}`,year:1,teacher:y1EnglishTeachers[Math.floor(index/3)][index%3],title:x[1] as string,english:x[2] as string,day:x[3] as number,start:x[4] as number,span:x[5] as number,room:x[6] as string,majors:[String(x[7]).replace(/\d/g,'') as Major],groups:[x[7] as string],kind:'common',weeks:'4–18周',note:x[0] as string}));
 
 // Separate English modules and IELTS teaching groups from PDF pages 2–3.
 const y2English:TimetableEvent[] = [
@@ -43,9 +46,11 @@ const y2English:TimetableEvent[] = [
   ].map(item=>({id:`y2-ielts-${item.e.toLowerCase()}`,courseKey:'y2-ielts',year:2,title:'雅思课程',english:'IELTS Course',day:item.day,start:item.start,span:2,room:item.room,teacher:item.teacher,majors:[item.group.replace(/\d/g,'') as Major],groups:[item.group],kind:'optional' as const,weeks:'1–18周',note:item.e})),
 ];
 
+// JNU module instructors: source timetable PDF pages 1, 3, 4 and 5.
+// Shared instructor lists are retained when the source does not assign them to groups.
 const sourceEvents:TimetableEvent[]=[
   ...y1English,
-  {id:'y1-pe',year:1,title:'体育 I',english:'P.E I',day:0,start:0,span:2,room:'体育场馆',majors:['MAM','ICS'],kind:'shared',weeks:'4–18周'},
+  {id:'y1-pe',teacher:'体育部',year:1,title:'体育 I',english:'P.E I',day:0,start:0,span:2,room:'体育场馆',majors:['MAM','ICS'],kind:'shared',weeks:'4–18周'},
   {id:'y1-found-mi-1',year:1,title:'微积分数学基础 / 序列与级数',english:'MFC / SAS',day:0,start:2,span:2,room:'N315',majors:['MAM','ICS'],kind:'shared',weeks:'4–16周',track:'dual'},
   {id:'y1-found-es-1',year:1,title:'微积分数学基础 / 序列与级数',english:'MFC / SAS',day:0,start:0,span:2,room:'N315',majors:['Econ','Stat'],kind:'shared',weeks:'4–16周',track:'dual'},
   {id:'y1-found-mi-2',year:1,title:'MFC / SAS 课程',day:2,start:5,span:2,room:'N315',majors:['MAM','ICS'],kind:'shared',weeks:'4–16周',track:'dual'},
@@ -60,24 +65,24 @@ const sourceEvents:TimetableEvent[]=[
   {id:'y1-found-thu-qa',year:1,title:'MFC / SAS Q&A',day:3,start:11,span:1,room:'N415',majors:'all',kind:'shared',weeks:'4–16周',track:'dual'},
   {id:'y1-single-ra',year:1,title:'实分析',english:'RA · Real Analysis',day:1,start:1,span:3,room:'知产218',majors:'all',kind:'common',weeks:'6–17周',track:'single',teacher:'肖亮海'},
   {id:'y1-single-sas',year:1,title:'序列与级数',english:'SAS · Sequences and Series',day:1,start:7,span:2,room:'N423',majors:'all',kind:'common',weeks:'6–14周',track:'single',teacher:'肖亮海'},
-  {id:'y1-ide-mi',year:1,title:'思想道德与法治',english:'Ideological Morality and Rule of Law',day:1,start:5,span:2,room:'N415',majors:['MAM','ICS'],kind:'shared',weeks:'4–18周'},
-  {id:'y1-ide-es',year:1,title:'思想道德与法治',english:'Ideological Morality and Rule of Law',day:1,start:9,span:3,room:'N415',majors:['Econ','Stat'],kind:'shared',weeks:'4–18周'},
-  {id:'y1-military-mi',year:1,title:'军事理论与国家安全教育',day:4,start:2,span:2,room:'N415',majors:['MAM','ICS'],kind:'shared',weeks:'4–18周'},
-  {id:'y1-military-es',year:1,title:'军事理论与国家安全教育',day:4,start:5,span:2,room:'N415',majors:['Econ','Stat'],kind:'shared',weeks:'4–18周'},
+  {id:'y1-ide-mi',teacher:'张志刚',year:1,title:'思想道德与法治',english:'Ideological Morality and Rule of Law',day:1,start:5,span:2,room:'N415',majors:['MAM','ICS'],kind:'shared',weeks:'4–18周'},
+  {id:'y1-ide-es',teacher:'张志刚',year:1,title:'思想道德与法治',english:'Ideological Morality and Rule of Law',day:1,start:9,span:3,room:'N415',majors:['Econ','Stat'],kind:'shared',weeks:'4–18周'},
+  {id:'y1-military-mi',teacher:'李仲',year:1,title:'军事理论与国家安全教育',day:4,start:2,span:2,room:'N415',majors:['MAM','ICS'],kind:'shared',weeks:'4–18周'},
+  {id:'y1-military-es',teacher:'李志',year:1,title:'军事理论与国家安全教育',day:4,start:5,span:2,room:'N415',majors:['Econ','Stat'],kind:'shared',weeks:'4–18周'},
   {id:'y1-art',year:1,title:'艺术体验与审美鉴赏',day:3,start:7,span:2,majors:'all',kind:'general',listedOnly:true},
-  {id:'y1-mental-mam',year:1,title:'大学生心理健康',day:3,start:2,span:2,room:'待通知',majors:['MAM'],kind:'major',weeks:'4–18周'},
-  {id:'y1-mental-ics',year:1,title:'大学生心理健康',day:3,start:2,span:2,room:'待通知',majors:['ICS'],kind:'major',weeks:'4–18周'},
-  {id:'y1-mental-econ',year:1,title:'大学生心理健康',day:2,start:5,span:2,room:'待通知',majors:['Econ'],kind:'major',weeks:'4–18周'},
-  {id:'y1-mental-stat',year:1,title:'大学生心理健康',day:2,start:2,span:2,room:'待通知',majors:['Stat'],kind:'major',weeks:'4–18周'},
-  {id:'y1-c-mam',year:1,title:'C语言程序设计',english:'C Programming',day:2,start:0,span:2,room:'N419',majors:['MAM'],kind:'major',weeks:'4–18周'},
-  {id:'y1-c-mam-lab',year:1,title:'C语言程序设计实验',day:2,start:2,span:2,room:'N503/504',majors:['MAM'],kind:'major',weeks:'4–18周'},
-  {id:'y1-c-ics',year:1,title:'C语言程序设计',english:'C Programming',day:2,start:7,span:2,room:'N412',majors:['ICS'],kind:'major',weeks:'4–18周'},
-  {id:'y1-c-ics-lab',year:1,title:'C语言程序设计实验',day:2,start:9,span:2,room:'N514/515',majors:['ICS'],kind:'major',weeks:'4–18周'},
-  {id:'y1-pol-econ',year:1,title:'政治经济学',english:'Political Economics',day:2,start:9,span:3,room:'N424',majors:['Econ'],kind:'major',weeks:'4–18周'},
-  {id:'y1-pol-stat',year:1,title:'政治经济学',english:'Political Economics',day:2,start:5,span:3,room:'待通知',majors:['Stat'],kind:'major',weeks:'4–18周'},
+  {id:'y1-mental-mam',teacher:'刘可心',year:1,title:'大学生心理健康',day:3,start:2,span:2,room:'待通知',majors:['MAM'],kind:'major',weeks:'4–18周'},
+  {id:'y1-mental-ics',teacher:'李鹏扬',year:1,title:'大学生心理健康',day:3,start:2,span:2,room:'待通知',majors:['ICS'],kind:'major',weeks:'4–18周'},
+  {id:'y1-mental-econ',teacher:'王琳',year:1,title:'大学生心理健康',day:2,start:5,span:2,room:'待通知',majors:['Econ'],kind:'major',weeks:'4–18周'},
+  {id:'y1-mental-stat',teacher:'王琳',year:1,title:'大学生心理健康',day:2,start:2,span:2,room:'待通知',majors:['Stat'],kind:'major',weeks:'4–18周'},
+  {id:'y1-c-mam',teacher:'吴祖剑',year:1,title:'C语言程序设计',english:'C Programming',day:2,start:0,span:2,room:'N419',majors:['MAM'],kind:'major',weeks:'4–18周'},
+  {id:'y1-c-mam-lab',teacher:'吴祖剑',year:1,title:'C语言程序设计实验',day:2,start:2,span:2,room:'N503/504',majors:['MAM'],kind:'major',weeks:'4–18周'},
+  {id:'y1-c-ics',teacher:'吴祖剑',year:1,title:'C语言程序设计',english:'C Programming',day:2,start:7,span:2,room:'N412',majors:['ICS'],kind:'major',weeks:'4–18周'},
+  {id:'y1-c-ics-lab',teacher:'吴祖剑',year:1,title:'C语言程序设计实验',day:2,start:9,span:2,room:'N514/515',majors:['ICS'],kind:'major',weeks:'4–18周'},
+  {id:'y1-pol-econ',teacher:'伍亚',year:1,title:'政治经济学',english:'Political Economics',day:2,start:9,span:3,room:'N424',majors:['Econ'],kind:'major',weeks:'4–18周'},
+  {id:'y1-pol-stat',teacher:'伍亚',year:1,title:'政治经济学',english:'Political Economics',day:2,start:5,span:3,room:'待通知',majors:['Stat'],kind:'major',weeks:'4–18周'},
 
-  {id:'y2-history-mi',year:2,title:'中国近代史纲要',english:'Outline of Modern Chinese History',day:0,start:5,span:3,room:'N415',majors:['MAM','ICS'],kind:'shared',weeks:'1–18周'},
-  {id:'y2-history-es',year:2,title:'中国近代史纲要',day:0,start:9,span:3,room:'N415',majors:['Econ','Stat'],kind:'shared',weeks:'1–18周'},
+  {id:'y2-history-mi',teacher:'熊辉',year:2,title:'中国近代史纲要',english:'Outline of Modern Chinese History',day:0,start:5,span:3,room:'N415',majors:['MAM','ICS'],kind:'shared',weeks:'1–18周'},
+  {id:'y2-history-es',teacher:'熊辉',year:2,title:'中国近代史纲要',day:0,start:9,span:3,room:'N415',majors:['Econ','Stat'],kind:'shared',weeks:'1–18周'},
   {id:'y2-fmmva-mi-1',year:2,title:'金融数学 / 多元微积分与向量分析',english:'FM / MVA',day:1,start:0,span:2,room:'N315',majors:['MAM','ICS'],kind:'shared',weeks:'1–16周',track:'dual'},
   {id:'y2-fmmva-es-1',year:2,title:'金融数学 / 多元微积分与向量分析',english:'FM / MVA',day:1,start:2,span:2,room:'N315',majors:['Econ','Stat'],kind:'shared',weeks:'1–16周',track:'dual'},
   {id:'y2-fmmva-mi-2',year:2,title:'FM / MVA 课程',day:3,start:0,span:2,room:'N315',majors:['MAM','ICS'],kind:'shared',weeks:'1–16周',track:'dual'},
@@ -92,19 +97,19 @@ const sourceEvents:TimetableEvent[]=[
   {id:'y2-qa-fri',year:2,title:'FM / MVA Q&A',day:4,start:2,span:1,room:'N422',majors:'all',kind:'shared',weeks:'1–16周',track:'dual'},
   {id:'y2-single-fm',year:2,title:'金融数学',english:'FM · Financial Mathematics',day:1,start:9,span:3,room:'N416',majors:'all',kind:'common',weeks:'6–17周',track:'single',teacher:'肖亮海'},
   {id:'y2-single-mva',year:2,title:'多元与向量分析',english:'MVA · Multivariable & Vector Analysis',day:3,start:2,span:3,room:'N423',majors:'all',kind:'common',weeks:'6–17周',track:'single',teacher:'吴瑞雯'},
-  {id:'y2-pe',year:2,title:'体育 II',english:'P.E II',day:2,start:0,span:2,room:'体育场馆',majors:['MAM','ICS'],kind:'shared',weeks:'1–18周'},
-  {id:'y2-matlab',year:2,title:'Matlab程序设计',english:'Matlab Programming',day:2,start:2,span:2,room:'N217',majors:['MAM','ICS'],kind:'shared',weeks:'1–18周'},
-  {id:'y2-matlab-lab',year:2,title:'Matlab程序设计实验',day:2,start:5,span:2,room:'MAM N504 / ICS N503',majors:['MAM','ICS'],kind:'shared',weeks:'1–18周'},
-  {id:'y2-physics',year:2,title:'大学物理 I',english:'College Physics I',day:1,start:5,span:2,room:'N327',majors:['MAM'],kind:'major',weeks:'1–18周'},
-  {id:'y2-physics-2',year:2,title:'大学物理 I',day:3,start:2,span:2,room:'N527',majors:['MAM'],kind:'major',weeks:'1–18周'},
-  {id:'y2-algebra-lab',year:2,title:'数值代数实验',english:'Numerical Algebra Lab',day:1,start:2,span:2,room:'N502',majors:['ICS'],kind:'major',weeks:'1–18周'},
-  {id:'y2-algebra',year:2,title:'数值代数',english:'Numerical Algebra',day:1,start:9,span:3,room:'N410',majors:['ICS'],kind:'major',weeks:'1–18周'},
-  {id:'y2-micro',year:2,title:'中级微观经济学',english:'Intermediate Microeconomics',day:0,start:5,span:3,room:'Econ N310 / Stat N410',majors:['Econ','Stat'],kind:'shared',weeks:'1–18周'},
-  {id:'y2-money',year:2,title:'货币金融学',english:'Monetary Finance',day:2,start:5,span:3,room:'知产207',majors:['Econ'],kind:'major',weeks:'1–18周'},
-  {id:'y2-statsoft',year:2,title:'统计软件',english:'Statistics Software',day:3,start:9,span:3,room:'N504',majors:['Stat'],kind:'major',weeks:'1–18周'},
+  {id:'y2-pe',teacher:'体育部',year:2,title:'体育 II',english:'P.E II',day:2,start:0,span:2,room:'体育场馆',majors:['MAM','ICS'],kind:'shared',weeks:'1–18周'},
+  {id:'y2-matlab',teacher:'樊足志',year:2,title:'Matlab程序设计',english:'Matlab Programming',day:2,start:2,span:2,room:'N217',majors:['MAM','ICS'],kind:'shared',weeks:'1–18周'},
+  {id:'y2-matlab-lab',teacher:'樊足志',year:2,title:'Matlab程序设计实验',day:2,start:5,span:2,room:'MAM N504 / ICS N503',majors:['MAM','ICS'],kind:'shared',weeks:'1–18周'},
+  {id:'y2-physics',teacher:'谌俊谋',year:2,title:'大学物理 I',english:'College Physics I',day:1,start:5,span:2,room:'N327',majors:['MAM'],kind:'major',weeks:'1–18周'},
+  {id:'y2-physics-2',teacher:'谌俊谋',year:2,title:'大学物理 I',day:3,start:2,span:2,room:'N527',majors:['MAM'],kind:'major',weeks:'1–18周'},
+  {id:'y2-algebra-lab',teacher:'吴乐秦',year:2,title:'数值代数实验',english:'Numerical Algebra Lab',day:1,start:2,span:2,room:'N502',majors:['ICS'],kind:'major',weeks:'1–18周'},
+  {id:'y2-algebra',teacher:'吴乐秦',year:2,title:'数值代数',english:'Numerical Algebra',day:1,start:9,span:3,room:'N410',majors:['ICS'],kind:'major',weeks:'1–18周'},
+  {id:'y2-micro',teacher:'郑立 / 邱筠',year:2,title:'中级微观经济学',english:'Intermediate Microeconomics',day:0,start:5,span:3,room:'Econ N310 / Stat N410',majors:['Econ','Stat'],kind:'shared',weeks:'1–18周'},
+  {id:'y2-money',teacher:'李卓林',year:2,title:'货币金融学',english:'Monetary Finance',day:2,start:5,span:3,room:'知产207',majors:['Econ'],kind:'major',weeks:'1–18周'},
+  {id:'y2-statsoft',teacher:'王术',year:2,title:'统计软件',english:'Statistics Software',day:3,start:9,span:3,room:'N504',majors:['Stat'],kind:'major',weeks:'1–18周'},
   ...y2English,
 
-  {id:'y3-marx',year:3,title:'马克思主义基本原理',english:'Outline of Marxism Basic Principles',day:0,start:5,span:3,room:'Econ/Stat N315 · MAM/ICS N217',majors:'all',kind:'common',weeks:'1–18周'},
+  {id:'y3-marx',teacher:'黄漫 / 张一',year:3,title:'马克思主义基本原理',english:'Outline of Marxism Basic Principles',day:0,start:5,span:3,room:'Econ/Stat N315 · MAM/ICS N217',roomsByMajor:{Econ:'N315',Stat:'N315',MAM:'N217',ICS:'N217'},majors:'all',kind:'common',weeks:'1–18周'},
   {id:'y3-ipco-es-tue',year:3,title:'整数规划及组合优化 / 博弈论与多准则决策',english:'IPCO / GTMCD',day:1,start:0,span:2,room:'N415',majors:['Econ','Stat'],kind:'shared',weeks:'1–16周',track:'dual'},
   {id:'y3-ipco-mi-tue',year:3,title:'IPCO / GTMCD',day:1,start:2,span:2,room:'N415',majors:['MAM','ICS'],kind:'shared',weeks:'1–16周',track:'dual'},
   {id:'y3-ipco-mi-wed',year:3,title:'IPCO / GTMCD',day:2,start:0,span:2,room:'N415',majors:['MAM','ICS'],kind:'shared',weeks:'1–16周',track:'dual'},
@@ -119,28 +124,28 @@ const sourceEvents:TimetableEvent[]=[
   {id:'y3-ipco-seminar-es-thu',year:3,title:'IPCO / GTMCD Seminar',day:3,start:8,span:1,room:'N415',majors:['Econ','Stat'],kind:'shared',weeks:'1–16周',track:'dual'},
   {id:'y3-single-gtmcd',year:3,title:'博弈论与多准则决策',english:'GTMCD · Game Theory and Multi Criteria Decision Making',day:1,start:1,span:3,room:'N418',majors:'all',kind:'common',weeks:'6–17周',track:'single',teacher:'戴天仕'},
   {id:'y3-single-ipco',year:3,title:'整数规划与组合优化',english:'IPCO · Integer Programming and Combinatorial Optimisation',day:2,start:1,span:3,room:'N426',majors:'all',kind:'common',weeks:'6–17周',track:'single',teacher:'吴乐秦'},
-  {id:'y3-real',year:3,title:'实变函数',english:'Theory of Real Variable Function',day:4,start:1,span:3,room:'N211',majors:['MAM'],kind:'major',weeks:'1–18周'},
-  {id:'y3-topology',year:3,title:'一般拓扑学',english:'General Topology',day:0,start:9,span:3,room:'N411',majors:['MAM'],kind:'major',weeks:'1–18周'},
-  {id:'y3-info',year:3,title:'信息论与编码',english:'Information Theory and Coding',day:2,start:5,span:3,room:'N509',majors:['ICS'],kind:'major',weeks:'1–18周'},
-  {id:'y3-algo-fri',year:3,title:'算法设计与分析',english:'Design and Analysis of Algorithms',day:4,start:1,span:3,room:'N504',majors:['ICS'],kind:'major',weeks:'1–18周'},
-  {id:'y3-algo-thu',year:3,title:'算法设计与分析',day:3,start:9,span:3,room:'N412',majors:['ICS'],kind:'major',weeks:'1–18周'},
-  {id:'y3-macro',year:3,title:'中级宏观经济学',english:'Intermediate Macroeconomics',day:0,start:1,span:3,room:'N415',majors:['Econ','Stat'],kind:'shared',weeks:'1–18周'},
-  {id:'y3-corp',year:3,title:'公司金融',english:'Corporate Finance',day:2,start:5,span:3,room:'N309',majors:['Econ'],kind:'major',weeks:'1–18周'},
-  {id:'y3-invest',year:3,title:'投资学',english:'Investments',day:4,start:5,span:3,room:'N305',majors:['Econ'],kind:'major',weeks:'1–18周'},
-  {id:'y3-stoch',year:3,title:'随机过程',english:'Stochastic Process',day:2,start:5,span:3,room:'N527',majors:['Stat'],kind:'major',weeks:'1–18周'},
-  {id:'y3-math-econ-1',year:3,title:'数学经济建模',english:'Mathematical Economic Modelling',day:1,start:2,span:2,room:'N417',majors:['Stat'],kind:'major',weeks:'1–18周'},
-  {id:'y3-math-econ-2',year:3,title:'数学经济建模',day:1,start:7,span:2,room:'N504',majors:['Stat'],kind:'major',weeks:'1–18周'},
+  {id:'y3-real',teacher:'郑奕钟',year:3,title:'实变函数',english:'Theory of Real Variable Function',day:4,start:1,span:3,room:'N211',majors:['MAM'],kind:'major',weeks:'1–18周'},
+  {id:'y3-topology',teacher:'赫海龙',year:3,title:'一般拓扑学',english:'General Topology',day:0,start:9,span:3,room:'N411',majors:['MAM'],kind:'major',weeks:'1–18周'},
+  {id:'y3-info',teacher:'赵山程',year:3,title:'信息论与编码',english:'Information Theory and Coding',day:2,start:5,span:3,room:'N509',majors:['ICS'],kind:'major',weeks:'1–18周'},
+  {id:'y3-algo-fri',teacher:'林义尊',year:3,title:'算法设计与分析',english:'Design and Analysis of Algorithms',day:4,start:1,span:3,room:'N504',majors:['ICS'],kind:'major',weeks:'1–18周'},
+  {id:'y3-algo-thu',teacher:'林义尊',year:3,title:'算法设计与分析',day:3,start:9,span:3,room:'N412',majors:['ICS'],kind:'major',weeks:'1–18周'},
+  {id:'y3-macro',teacher:'王玮',year:3,title:'中级宏观经济学',english:'Intermediate Macroeconomics',day:0,start:1,span:3,room:'N415',majors:['Econ','Stat'],kind:'shared',weeks:'1–18周'},
+  {id:'y3-corp',teacher:'陈少凌',year:3,title:'公司金融',english:'Corporate Finance',day:2,start:5,span:3,room:'N309',majors:['Econ'],kind:'major',weeks:'1–18周'},
+  {id:'y3-invest',teacher:'龚雅婷',year:3,title:'投资学',english:'Investments',day:4,start:5,span:3,room:'N305',majors:['Econ'],kind:'major',weeks:'1–18周'},
+  {id:'y3-stoch',teacher:'汪超男',year:3,title:'随机过程',english:'Stochastic Process',day:2,start:5,span:3,room:'N527',majors:['Stat'],kind:'major',weeks:'1–18周'},
+  {id:'y3-math-econ-1',teacher:'王文君',year:3,title:'数学经济建模',english:'Mathematical Economic Modelling',day:1,start:2,span:2,room:'N417',majors:['Stat'],kind:'major',weeks:'1–18周'},
+  {id:'y3-math-econ-2',teacher:'王文君',year:3,title:'数学经济建模',day:1,start:7,span:2,room:'N504',majors:['Stat'],kind:'major',weeks:'1–18周'},
 
-  {id:'y4-multi',year:4,title:'跨国企业管理',english:'Multinational Enterprise Management (O)',day:0,start:5,span:3,room:'N304',majors:'all',kind:'optional',weeks:'1–18周'},
-  {id:'y4-history',year:4,title:'统计学史',english:'History of Statistics (O)',day:1,start:9,span:3,room:'N420',majors:'all',kind:'optional',weeks:'1–18周'},
-  {id:'y4-public',year:4,title:'公共经济学',english:'Public Economics (O)',day:3,start:5,span:3,room:'N310',majors:['Econ','Stat'],kind:'optional',weeks:'1–18周'},
-  {id:'y4-environment',year:4,title:'环境经济学',english:'Environmental Economics (O)',day:3,start:9,span:3,room:'N310',majors:['Econ','Stat'],kind:'optional',weeks:'1–18周'},
-  {id:'y4-modelling',year:4,title:'统计建模',english:'Statistical Modelling (O)',day:3,start:5,span:3,room:'N410',majors:['Econ','Stat'],kind:'optional',weeks:'1–18周'},
-  {id:'y4-causal',year:4,title:'因果推断导论',english:'Introduction to Causal Inference (O)',day:1,start:1,span:3,room:'N311',majors:['MAM','ICS'],kind:'optional',weeks:'1–18周'},
-  {id:'y4-multivariate',year:4,title:'应用多元统计分析',english:'Applied Multivariate Statistical Analysis (O)',day:2,start:5,span:3,room:'N418',majors:['MAM','ICS'],kind:'optional',weeks:'1–18周'},
-  {id:'y4-intelligence',year:4,title:'计算智能',english:'Computational Intelligence (O)',day:4,start:5,span:3,room:'N311',majors:['MAM','ICS'],kind:'optional',weeks:'1–18周'},
-  {id:'y4-macro',year:4,title:'宏观经济学导论',english:'Introduction to Macroeconomics (O)',day:0,start:5,span:3,room:'N412',majors:['MAM'],kind:'optional',weeks:'1–18周'},
-  {id:'y4-data',year:4,title:'数据分析',english:'Data Analysis (O)',day:2,start:5,span:3,room:'N431',majors:['ICS'],kind:'optional',weeks:'1–18周'},
+  {id:'y4-multi',teacher:'杨瑞霖',year:4,title:'跨国企业管理',english:'Multinational Enterprise Management (O)',day:0,start:5,span:3,room:'N304',majors:'all',kind:'optional',weeks:'1–18周'},
+  {id:'y4-history',teacher:'徐瑾辉',year:4,title:'统计学史',english:'History of Statistics (O)',day:1,start:9,span:3,room:'N420',majors:'all',kind:'optional',weeks:'1–18周'},
+  {id:'y4-public',teacher:'陆超云',year:4,title:'公共经济学',english:'Public Economics (O)',day:3,start:5,span:3,room:'N310',majors:['Econ','Stat'],kind:'optional',weeks:'1–18周'},
+  {id:'y4-environment',teacher:'唐曲',year:4,title:'环境经济学',english:'Environmental Economics (O)',day:3,start:9,span:3,room:'N310',majors:['Econ','Stat'],kind:'optional',weeks:'1–18周'},
+  {id:'y4-modelling',teacher:'陈苗苗',year:4,title:'统计建模',english:'Statistical Modelling (O)',day:3,start:5,span:3,room:'N410',majors:['Econ','Stat'],kind:'optional',weeks:'1–18周'},
+  {id:'y4-causal',teacher:'范旭乾',year:4,title:'因果推断导论',english:'Introduction to Causal Inference (O)',day:1,start:1,span:3,room:'N311',majors:['MAM','ICS'],kind:'optional',weeks:'1–18周'},
+  {id:'y4-multivariate',teacher:'徐瑾辉',year:4,title:'应用多元统计分析',english:'Applied Multivariate Statistical Analysis (O)',day:2,start:5,span:3,room:'N418',majors:['MAM','ICS'],kind:'optional',weeks:'1–18周'},
+  {id:'y4-intelligence',teacher:'王文君',year:4,title:'计算智能',english:'Computational Intelligence (O)',day:4,start:5,span:3,room:'N311',majors:['MAM','ICS'],kind:'optional',weeks:'1–18周'},
+  {id:'y4-macro',teacher:'王玮',year:4,title:'宏观经济学导论',english:'Introduction to Macroeconomics (O)',day:0,start:5,span:3,room:'N412',majors:['MAM'],kind:'optional',weeks:'1–18周'},
+  {id:'y4-data',teacher:'朱小红',year:4,title:'数据分析',english:'Data Analysis (O)',day:2,start:5,span:3,room:'N431',majors:['ICS'],kind:'optional',weeks:'1–18周'},
 ];
 
 // Teaching-week allocation from the module tables on source PDF pages 1, 3 and 4.

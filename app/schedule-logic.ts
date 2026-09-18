@@ -1,4 +1,8 @@
-import type { TimetableEvent } from './timetable-data';
+import type { Major, TimetableEvent } from './timetable-data';
+
+export function roomForMajor(event:TimetableEvent,major:Major){
+  return event.roomsByMajor?.[major]||event.room||'教室待通知';
+}
 type DisplayEvent=TimetableEvent&{displaySource?:'base'|'retake'|'preview';retakeKey?:string};
 export type ConflictDetail={key:string;first:DisplayEvent;second:DisplayEvent;day:number;firstSession:number;lastSession:number;weeks:number[];severity:'hard'|'partial'};
 export function weekNumbers(weeks?:string){

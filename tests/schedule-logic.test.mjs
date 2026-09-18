@@ -1,8 +1,18 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { detectConflicts, emptyScheduleMessage } from '../app/schedule-logic.ts';
+import { detectConflicts, emptyScheduleMessage, roomForMajor } from '../app/schedule-logic.ts';
 import { timetableEvents } from '../app/timetable-data.ts';
 const event=(id,extra={})=>({id,year:2,title:id,day:1,start:2,span:2,majors:'all',kind:'major',weeks:'4–18周',...extra});
+
+test('room display follows the selected major without losing the original group arrangement',()=>{
+ const marx=timetableEvents.find(item=>item.id==='y3-marx');
+ for(const major of ['MAM','ICS'])assert.equal(roomForMajor(marx,major),'N217');
+ for(const major of ['Econ','Stat'])assert.equal(roomForMajor(marx,major),'N315');
+ assert.equal(marx.room,'Econ/Stat N315 · MAM/ICS N217');
+ assert.equal(roomForMajor(event('lab',{room:'N503/504'}),'MAM'),'N503/504');
+ assert.equal(roomForMajor(event('partial',{room:'待通知',roomsByMajor:{MAM:'N217'}}),'ICS'),'待通知');
+ assert.equal(roomForMajor(event('unknown'),'MAM'),'教室待通知');
+});
 test('retake conflicts and exact overlap',()=>{
  const issues=detectConflicts([event('base')],[event('retake',{displaySource:'retake'})]);
  assert.equal(issues.length,1);assert.equal(issues[0].severity,'hard');assert.deepEqual([issues[0].firstSession,issues[0].lastSession],[3,4]);
