@@ -251,6 +251,38 @@ function Home(){
   const [detailCourse,setDetailCourse]=useState<TimetableEvent|null>(null);
   const detailCloseRef=useRef<HTMLButtonElement>(null);
   useEffect(()=>{
+    if(!sidebarOpen||detailCourse)return;
+    const drawerMedia=window.matchMedia('(max-width:1319px)');
+    const panel=document.getElementById('course-panel');
+    const previousFocus=document.activeElement as HTMLElement|null;
+    const previousOverflow=document.body.style.overflow;
+    const syncDrawer=()=>{
+      document.body.style.overflow=drawerMedia.matches?'hidden':previousOverflow;
+      if(drawerMedia.matches)panel?.querySelector<HTMLButtonElement>('.sheetClose')?.focus();
+    };
+    const handleKey=(event:KeyboardEvent)=>{
+      if(!drawerMedia.matches)return;
+      if(event.key==='Escape'){
+        event.preventDefault();setSidebarOpen(false);setPreviewRetakeKey(null);setPreviewElectiveKey(null);
+      }
+      if(event.key==='Tab'&&panel){
+        const controls=Array.from(panel.querySelectorAll<HTMLElement>('button:not(:disabled),input,select,a[href],[tabindex="0"]')).filter(element=>element.getClientRects().length>0);
+        const first=controls[0],last=controls[controls.length-1];
+        if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus()}
+        else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus()}
+      }
+    };
+    syncDrawer();
+    drawerMedia.addEventListener('change',syncDrawer);
+    window.addEventListener('keydown',handleKey);
+    return ()=>{
+      document.body.style.overflow=previousOverflow;
+      drawerMedia.removeEventListener('change',syncDrawer);
+      window.removeEventListener('keydown',handleKey);
+      previousFocus?.focus();
+    };
+  },[sidebarOpen,detailCourse]);
+  useEffect(()=>{
     if(!detailCourse)return;
     detailCloseRef.current?.focus();
     const closeOnEscape=(event:KeyboardEvent)=>{if(event.key==='Escape')setDetailCourse(null)};
@@ -470,18 +502,21 @@ function Home(){
           </>}
         </div>
       </aside>
-      <div className="timetablePanel"><div className="sectionHead"><div><h2>我的课表</h2><p className="scheduleIdentity">大{['一','二','三','四'][year-1]} · {selectedMajor.name}{classCount?` ${classNo} 班`:''} · {degreeLabels[track]}</p></div><div className="sectionTools"><div className="panelActions" data-export-exclude>{hasElectives&&<button className="electivePrimary" aria-controls="course-panel" onClick={openElectives}>{year===2?'英语选课':'选择课程'} · {selectedElectiveKeys.length}</button>}<button aria-expanded={sidebarOpen} aria-controls="course-panel" onClick={()=>{setSidebarOpen(!sidebarOpen);changeSidebarMode('current');setCourseQuery('');setSelectedCategory('all');setSelectedDay('all');setPreviewRetakeKey(null)}}>{sidebarOpen?'收起':'查课'}</button>{year>1&&<button onClick={()=>{setSidebarOpen(true);changeSidebarMode('retake')}}>重修{activeSelectedOptions.length?` · ${activeSelectedOptions.length}`:''}</button>}</div><div className="legend"><span><i className="dot uob"/>{categoryLabels.uob}</span><span><i className="dot jnu"/>{categoryLabels.jnu}</span><span><i className="dot english"/>{categoryLabels.english}</span><span><i className="dot general"/>通识课</span></div><div className="exportActions" data-export-exclude><details className="exportMenu"><summary>导出课表</summary><div><button disabled={exporting!==null||(!scheduled.length&&!selectedRetakeEvents.length)} onClick={()=>exportSchedule('png')}>{exporting==='png'?'生成中…':'导出图片'}</button><button disabled={exporting!==null||(!scheduled.length&&!selectedRetakeEvents.length)} onClick={()=>exportSchedule('pdf')}>{exporting==='pdf'?'生成中…':'导出 PDF'}</button></div></details><span className="exportStatus" role="status" aria-live="polite">{exportMessage}</span></div></div></div>
+      <div className="timetablePanel"><div className="sectionHead"><div><h2>我的课表</h2><p className="scheduleIdentity">大{['一','二','三','四'][year-1]} · {selectedMajor.name}{classCount?` ${classNo} 班`:''} · {degreeLabels[track]}</p></div><div className="sectionTools"><div className="panelActions" data-export-exclude>{hasElectives&&<button className="electivePrimary" aria-controls="course-panel" onClick={openElectives}>{year===2?'英语选课':'选择课程'} · {selectedElectiveKeys.length}</button>}<button aria-expanded={sidebarOpen} aria-controls="course-panel" onClick={()=>{setSidebarOpen(!sidebarOpen);changeSidebarMode('current');setCourseQuery('');setSelectedCategory('all');setSelectedDay('all');setPreviewRetakeKey(null)}}>{sidebarOpen?'收起':'查课'}</button>{year>1&&<button onClick={()=>{setSidebarOpen(true);changeSidebarMode('retake')}}>重修{activeSelectedOptions.length?` · ${activeSelectedOptions.length}`:''}</button>}</div><div className="exportActions" data-export-exclude><details className="exportMenu"><summary>导出课表</summary><div><button disabled={exporting!==null||(!scheduled.length&&!selectedRetakeEvents.length)} onClick={()=>exportSchedule('png')}>{exporting==='png'?'生成中…':'导出图片'}</button><button disabled={exporting!==null||(!scheduled.length&&!selectedRetakeEvents.length)} onClick={()=>exportSchedule('pdf')}>{exporting==='pdf'?'生成中…':'导出 PDF'}</button></div></details><span className="exportStatus" role="status" aria-live="polite">{exportMessage}</span></div></div></div>
     <section className="calendarPanel" aria-label="校历与教学周" data-export-exclude>
       <div className="calendarStatus"><strong>{calendarStatus}</strong>{isFirstWeekPreview&&<small className="firstWeekHint">课程从第 {defaultView.firstWeek} 周开始，已显示首个有课周。</small>}{selectedWeekIsReview&&<small>所选周为复习考试周</small>}</div>
       <div className="calendarControls">
-        <button aria-label="上一周" disabled={selectedWeek==='all'||selectedWeek<=1} onClick={()=>{if(selectedWeek!=='all'){setSelectedWeek(selectedWeek-1);setSelectedDay('all')}}}>‹</button><label htmlFor="week-select"><span>查看周次</span><select aria-label="查看周次" id="week-select" value={selectedWeek} onChange={(event)=>{setSelectedWeek(event.target.value==='all'?'all':Number(event.target.value));setSelectedDay('all')}}><option value="all">整学期</option>{Array.from({length:academicCalendar.totalWeeks},(_,index)=>index+1).map((week)=><option value={week} key={week}>第 {week} 周 · {weekDateRange(week)}</option>)}</select></label><button aria-label="下一周" disabled={selectedWeek==='all'||selectedWeek>=academicCalendar.totalWeeks} onClick={()=>{if(selectedWeek!=='all'){setSelectedWeek(selectedWeek+1);setSelectedDay('all')}}}>›</button>
+        <button aria-label="上一周" disabled={selectedWeek==='all'||selectedWeek<=1} onClick={()=>{if(selectedWeek!=='all'){setSelectedWeek(selectedWeek-1);setSelectedDay('all')}}}>‹</button><label htmlFor="week-select"><span>查看周次</span><select aria-label="查看周次" id="week-select" value={selectedWeek} onChange={(event)=>{setSelectedWeek(event.target.value==='all'?'all':Number(event.target.value));setSelectedDay('all')}}><option value="all">整学期</option>{Array.from({length:academicCalendar.totalWeeks},(_,index)=>index+1).map((week)=><option value={week} key={week}>第 {week} 周 · {formatShortDate(dateForWeekDay(week,-1))}–{formatShortDate(dateForWeekDay(week,5))}</option>)}</select></label><button aria-label="下一周" disabled={selectedWeek==='all'||selectedWeek>=academicCalendar.totalWeeks} onClick={()=>{if(selectedWeek!=='all'){setSelectedWeek(selectedWeek+1);setSelectedDay('all')}}}>›</button>
         <button onClick={showCurrentWeek} disabled={!academicState.currentWeek}>本周</button><button className="primary" onClick={showToday} disabled={!academicState.currentWeek||academicState.weekday===null}>今天</button>
       </div>
     </section>
+    <div className="scheduleMeta">
+    <div className="legend"><span><i className="dot uob"/>{categoryLabels.uob}</span><span><i className="dot jnu"/>{categoryLabels.jnu}</span><span><i className="dot english"/>{categoryLabels.english}</span><span><i className="dot general"/>通识课</span></div>
     <details className="todayPanel" data-export-exclude>
       <summary>{formatCalendarDate(academicState.today)} · 今天{dailySchedule.today.length?` ${dailySchedule.today.length} 堂课`:'没课'}<span>查看今日安排</span></summary>
       <div className="nextLesson">{[{label:'正在上课',items:dailySchedule.active},{label:'下一节课',items:dailySchedule.next}].filter(group=>group.items.length).map(group=><div className="lessonGroup" key={group.label}><span>{group.label}</span>{group.items.map(item=><button key={item.event.id} onClick={()=>openCourseDetails(item.event)}><strong>{courseHeading(item.event)}</strong><small>{formatCalendarDate(item.date)} · {times[item.event.start][1]}–{times[item.event.start+item.event.span-1][2]} · {roomForMajor(item.event,major)}</small></button>)}</div>)}{!dailySchedule.active.length&&!dailySchedule.next.length&&<p>暂无后续课程</p>}</div>
     </details>
+    </div>
     <div className="mobileNavigation mobileOnly">
       <div className="viewSwitch"><button aria-pressed={mobileView==='day'} onClick={()=>{setMobileView('day');setSelectedDay('all')}}>日</button><button aria-pressed={mobileView==='week'} onClick={()=>{setMobileView('week');setSelectedDay('all')}}>周</button><button onClick={()=>{showCurrentWeek();setMobileDay(todayIndex);setMobileView('day')}}>回到今天</button></div>
       {mobileView==='day'&&<div className="dayPicker" aria-label="选择星期">{['一','二','三','四','五','六','日'].map((name,day)=><button key={day} aria-pressed={mobileDay===day} onClick={()=>{setMobileDay(day);setSelectedDay('all')}}><span>{name}{day===todayIndex&&selectedWeek===academicState.currentWeek?' · 今':''}</span><small>{selectedWeek==='all'?'':formatShortDate(dateForWeekDay(selectedWeek,day===6?-1:day))}</small></button>)}</div>}
@@ -498,7 +533,7 @@ function Home(){
         {displayedEvents.filter(event=>event.day===mobileDay&&event.displaySource!=='preview').sort((a,b)=>a.start-b.start).map(event=><button key={`${event.displaySource}-${event.id}`} className={`agendaCard category-${courseCategory(event)} ${hardConflictEventIds.has(event.id)?'agendaConflict':partialConflictEventIds.has(event.id)?'agendaPartial':''}`} onClick={()=>openCourseDetails(event)}><span className="agendaTime">{times[event.start]?.[1]}<small>{times[event.start+event.span-1]?.[2]||'结束时间待确认'}</small></span><span><strong>{courseHeading(event)}</strong>{event.shortTitle&&<small>{courseSubtitle(event)}</small>}<small className="agendaRoom">教室：{roomForMajor(event,major)}</small><small className="agendaWeeks">周次：{event.weeks||'按学期安排'}</small>{event.teacher&&<small className="agendaTeacher">教师：{event.teacher}</small>}<small>{event.displaySource==='retake'?'重修 · ':isElective(event)?'选修 · ':''}{hardConflictEventIds.has(event.id)?'课程冲突':partialConflictEventIds.has(event.id)?'部分冲突':categoryLabels[courseCategory(event)]}</small></span></button>)}
         {!displayedEvents.some(event=>event.day===mobileDay&&event.displaySource!=='preview')&&renderEmpty(mobileDay)}
       </div>
-      <div className="scheduleContent"><div className="tableScroll" hidden={displayedEvents.length===0}><div className="timetable" style={{gridTemplateColumns:displayedDays.length===1?'72px minmax(480px,1fr)':'72px repeat(5,minmax(165px,1fr))',minWidth:displayedDays.length===1?'620px':'960px'}}><div className="corner">节次</div>{displayedDays.map((day,index)=><div className="dayHead" style={{gridColumn:index+2}} key={day}>{weekdayNames[day]}<small>{selectedWeek==='all'?weekdayShort[day]:formatShortDate(dateForWeekDay(selectedWeek,day))}</small></div>)}
+      <div className="scheduleContent"><div className="tableScroll" hidden={displayedEvents.length===0}><div className="timetable" style={{gridTemplateColumns:displayedDays.length===1?'72px minmax(0,1fr)':'72px repeat(5,minmax(0,1fr))',minWidth:displayedDays.length===1?'360px':'900px'}}><div className="corner">节次</div>{displayedDays.map((day,index)=><div className="dayHead" style={{gridColumn:index+2}} key={day}>{weekdayNames[day]}<small>{selectedWeek==='all'?weekdayShort[day]:formatShortDate(dateForWeekDay(selectedWeek,day))}</small></div>)}
         {times.map(([session,from,to],index)=><div className={`timeCell ${session==='5'?'break':''}`} style={{gridRow:index+2}} key={session}><strong>{session}</strong><span>{from}</span>{to&&<small>{to}</small>}</div>)}
         {times.map((_,row)=>displayedDays.map((day,index)=><div className={`gridCell ${row===4?'break':''}`} style={{gridColumn:index+2,gridRow:row+2}} key={`${day}-${row}`}/>))}
         {displayedEvents.map((event)=>{

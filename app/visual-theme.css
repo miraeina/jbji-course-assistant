@@ -270,11 +270,11 @@ button:focus-visible,a:focus-visible,summary:focus-visible,select:focus-visible 
 .nextLesson p{margin:0}
 
 /* Let crowded rows grow so room and teaching weeks remain readable, including exports. */
-.timetable{grid-template-rows:50px repeat(12,minmax(58px,auto))}
+.timetable{grid-template-rows:44px repeat(12,minmax(52px,auto))}
 .courseBlock{min-height:min-content;padding:8px;overflow-wrap:anywhere}
 .courseBlock strong{margin-top:0;line-height:1.35}
-.courseBlock.abbreviatedModule .courseEnglish{display:block;font-size:11px;line-height:1.35;color:var(--course-ink);opacity:1}
-.courseBlock .courseRoom,.courseBlock .courseWeeks{display:block;margin-top:5px;font-size:11px;line-height:1.4;color:var(--course-ink);opacity:1}
+.courseBlock.abbreviatedModule .courseEnglish{display:block;font-size:12px;line-height:1.35;color:var(--course-ink);opacity:1}
+.courseBlock .courseRoom,.courseBlock .courseWeeks{display:block;margin-top:4px;font-size:12px;line-height:1.4;color:var(--course-ink);opacity:1}
 .courseBlock .courseRoom{font-weight:600}
 .courseBlock .courseWeeks{font-weight:500}
 .courseBlock .courseTag{display:block;margin-top:7px;line-height:1.4;letter-spacing:0}
@@ -290,25 +290,25 @@ button:focus-visible,a:focus-visible,summary:focus-visible,select:focus-visible 
 /* Content-sized cards keep one-session lessons and narrow parallel lanes readable. */
 .courseBlock{height:max-content;min-height:calc(100% - 6px);align-self:start;overflow:visible;white-space:normal;word-break:normal;overflow-wrap:anywhere}
 .courseBlock>strong,.courseBlock>small,.courseBlock>.courseTag{display:block;white-space:normal;overflow-wrap:anywhere}
-.courseBlock .courseTeacher{margin-top:5px;font-size:11px;line-height:1.4;color:var(--course-ink);opacity:1}
+.courseBlock .courseTeacher{margin-top:4px;font-size:12px;line-height:1.4;color:var(--course-ink);opacity:1}
 .courseBlock.shortModuleSession .courseEnglish{display:none}
 .agendaCard .agendaTeacher{display:block;color:var(--course-ink);white-space:normal;overflow-wrap:anywhere}
 .detailFacts dd,.electiveSession{white-space:normal;overflow-wrap:anywhere}
 .exportLayout .courseBlock .courseTeacher{font-size:14px;line-height:1.35}
 
 /* Keep identity selection and the timetable as the two primary surfaces. */
-.filterPanel{margin-top:18px;padding:14px 18px;border-top:1px solid var(--line);border-radius:8px;box-shadow:none;gap:18px}
-.filterGroup>span{font-size:12px;margin-bottom:7px}
-.segmented button{border-radius:5px;background:transparent;border-color:var(--line);min-height:34px}
+.filterPanel{margin-top:12px;padding:12px 16px;border-top:1px solid var(--line);border-radius:8px;box-shadow:none;gap:16px;align-items:start}
+.filterGroup>span{font-size:12px;margin-bottom:6px}
+.segmented button{border-radius:6px;background:transparent;border-color:var(--line);min-height:46px}
 .segmented button.active{background:var(--accent-soft);border-color:var(--accent-line)}
-.scheduleSection{margin-top:14px}
-.timetablePanel{border-radius:8px;padding:18px;box-shadow:none}
+.scheduleSection{margin-top:12px}
+.timetablePanel{border-radius:8px;padding:16px;box-shadow:none}
 .sectionHead{gap:14px;margin-bottom:12px}
 .sectionHead h2{font-size:20px;margin:0}
 .scheduleIdentity{font-size:12px;line-height:1.6;margin:4px 0 0;color:var(--muted)}
 .timetablePanel>.calendarPanel{width:100%;margin:0 0 10px;padding:10px 0;border-top:1px solid var(--line);gap:12px}
-.calendarStatus strong{font-size:12px;font-weight:400;color:var(--muted)}
-.calendarStatus small{display:block;font-size:11px}
+.calendarStatus strong{font-size:13px;font-weight:400;color:var(--muted)}
+.calendarStatus small{display:block;font-size:12px}
 .calendarControls button,.calendarControls select{padding:7px 10px}
 .semesterHint,.electiveHint{margin:0 0 10px;padding:0;border:0;background:none;font-size:12px;line-height:1.6;color:var(--muted)}
 .courseSection{border-radius:8px;margin-top:14px;padding:14px 18px}
@@ -342,3 +342,111 @@ footer{padding-top:14px;padding-bottom:20px;justify-content:space-between;font-s
 .topbar .mascotDownload:hover{background:var(--surface-soft);border-color:var(--accent)}
 .topbar .mascotDownload:focus-visible{outline:2px solid var(--focus);outline-offset:3px}
 @media(max-width:700px){.topbar .mascotDownload{min-height:44px}.headerActions{flex-wrap:wrap}.topLinks{flex-wrap:wrap}}
+
+/* Shared proportions: identity, actions, week navigation, then the timetable. */
+.topbar{min-height:64px;padding-block:6px;gap:20px}
+.topLinks{gap:18px;flex-shrink:0}
+.majorGroup .segmented{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}
+.majorGroup .segmented button{min-width:0;padding:5px 9px}
+.segmented button small{font-size:12px;line-height:1.4}
+.filterGroup{min-width:0}
+.sectionHead{display:flex;flex-wrap:wrap}
+.sectionTools{gap:8px;margin-left:auto;margin-top:0;width:auto}
+.timetablePanel>.calendarPanel{display:flex}
+.panelActions button,.exportMenu summary,.calendarControls button,.calendarControls select{min-height:38px;font-size:13px;border-radius:6px}
+.calendarControls>button{min-width:38px}
+.exportActions{position:relative;flex-wrap:nowrap}
+.exportStatus:not(:empty){position:absolute;right:0;bottom:calc(100% + 4px);padding:4px 8px;background:var(--surface);font-size:12px;white-space:nowrap;z-index:26}
+.scheduleMeta{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px 20px;margin:0 0 10px}
+.scheduleMeta .todayPanel{order:1;flex:1;margin:0;padding:0;border:0;font-size:13px}
+.scheduleMeta .todayPanel[open]{flex-basis:100%}
+.scheduleMeta .todayPanel summary{min-height:28px;line-height:28px}
+.scheduleMeta .todayPanel summary>span{font-size:12px;margin-left:8px}
+.scheduleMeta .legend{order:2;font-size:12px;gap:12px;margin-top:0}
+.legend span{white-space:nowrap}
+.timetable .dayHead,.timetable .corner{font-size:13px}
+.timetable .dayHead small{font-size:11px}
+.timetable .timeCell strong{font-size:10px}
+.timetable .timeCell span{font-size:11px}
+.timetable .timeCell small{font-size:10px}
+.courseBlock strong{font-size:14px}
+.courseBlock .courseTag{font-size:10px;margin-top:5px}
+.emptyState img{width:180px;height:180px;max-width:100%}
+.emptyState{padding:20px;gap:8px}
+.courseSearch input,.sidebarTabs button{font-size:13px}
+.filterPills button{font-size:12px;min-height:32px}
+.sidebarCourseCard small,.sidebarCourseCard em,.sidebarCourseCard i,.retakeCourseCard>small,.retakeCourseCard>em,.retakeCourseCard>i{font-size:12px;line-height:1.5}
+.courseSearch>span,.sidebarFilter>span{font-size:12px}
+.scheduleBody.sidebarOpen{grid-template-columns:300px minmax(0,1fr);gap:12px}
+
+@media(min-width:701px) and (max-width:1179px){
+ .filterPanel{grid-template-columns:auto auto 1fr;gap:12px 20px}
+ .majorGroup{grid-column:1/-1;grid-row:2}
+ .classGroup{justify-self:end}
+ .topbar{flex-wrap:wrap;gap:6px 16px}
+ .topLinks{margin-left:auto;gap:14px}
+}
+/* A course drawer avoids squeezing five weekdays on laptop/tablet screens. */
+@media(max-width:1319px){
+ .scheduleBody.sidebarOpen{grid-template-columns:minmax(0,1fr)}
+ .sheetBackdrop{display:block;position:fixed;inset:0;z-index:39;border:0;background:#15202e66}
+ .sheetClose{display:block;width:100%;min-height:48px;border:0;background:var(--accent-soft);color:var(--accent-hover);cursor:pointer}
+ .sidebarCourseList{max-height:none}
+}
+@media(min-width:701px) and (max-width:1319px){
+ .courseSidebar{position:fixed;right:0;top:0;bottom:0;width:360px;max-width:90vw;z-index:40;overflow-y:auto;border-radius:12px 0 0 12px;overscroll-behavior:contain}
+}
+@media(max-width:700px){
+ .topbar{gap:2px;padding:6px 12px}
+ .topLinks{gap:4px;flex-wrap:nowrap;width:100%;font-size:12px}
+ .topLinks a{min-height:44px}
+ .topbar .mascotDownload{padding:6px 8px;font-size:12px}
+ .themeTrigger{padding:6px;gap:4px}
+ .identityToggle{margin-top:8px;padding:10px 12px;min-height:44px}
+ .filterPanel{grid-template-columns:minmax(0,1fr);gap:10px}
+ .filterGroup{display:grid;grid-template-columns:40px minmax(0,1fr);gap:6px;align-items:center}
+ .filterGroup>span{margin:0}
+ .majorGroup{grid-column:auto;grid-row:auto}
+ .trackGroup .segmented button{min-width:0}
+ .filterGroup .segmented{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr)}
+ .majorGroup .segmented{grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-flow:row}
+ .segmented button{padding:6px 3px;min-height:44px}
+ .segmented button small{font-size:11px}
+ .classGroup .segmented button{min-width:0}
+ .scheduleSection{margin-top:8px}
+ .timetablePanel{padding:12px}
+ .timetablePanel>.sectionHead{gap:6px;margin-bottom:8px}
+ .scheduleIdentity{display:none}
+ .sectionTools{width:auto;gap:6px}
+ .panelActions{gap:4px}
+ .panelActions button,.exportMenu summary{padding:7px 9px;min-height:44px;font-size:12px}
+ .exportActions{margin-left:0}
+ .timetablePanel>.calendarPanel{padding:8px 0;margin-bottom:6px;gap:6px}
+ .calendarControls button,.calendarControls select{min-height:44px;font-size:13px}
+ .scheduleMeta{margin-bottom:6px}
+ .scheduleMeta .legend{display:none}
+ .scheduleMeta .todayPanel{font-size:12px}
+ .scheduleMeta .todayPanel summary{min-height:36px;line-height:36px}
+ .scheduleMeta .todayPanel summary>span{font-size:11px}
+ .timetablePanel>.mobileNavigation{margin:6px 0}
+ .dayPicker{margin-top:6px}
+ .dayPicker small{font-size:11px}
+ .dayAgenda h3{margin:10px 0}
+ .agendaCard{padding:12px;gap:10px}
+ .dayAgenda .emptyState img,.emptyState img{width:140px;height:140px}
+ .courseSidebar{overscroll-behavior:contain}
+}
+@media(max-width:380px){
+ .timetablePanel>.sectionHead{align-items:flex-start}
+ .sectionTools{flex-basis:100%;margin-left:0;justify-content:space-between}
+ .majorGroup .segmented{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .topLinks{font-size:11px}
+ .topbar .mascotDownload{font-size:11px;padding-inline:6px}
+ .calendarControls>button:nth-last-child(2){display:none}
+}
+
+.exportLayout .scheduleMeta{justify-content:flex-end;margin-bottom:12px}
+.exportLayout .scheduleMeta .legend{display:flex;font-size:14px}
+.exportLayout .scheduleIdentity{display:block}
+.exportLayout .timetable .dayHead,.exportLayout .timetable .corner{font-size:16px}
+.exportLayout .timetable .dayHead small,.exportLayout .timetable .timeCell span,.exportLayout .timetable .timeCell small,.exportLayout .timetable .timeCell strong{font-size:13px}
