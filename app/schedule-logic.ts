@@ -1,8 +1,27 @@
-import type { Major, TimetableEvent } from './timetable-data';
+import type { DegreeTrack, Major, TimetableEvent } from './timetable-data';
 
 export function roomForMajor(event:TimetableEvent,major:Major){
   return event.roomsByMajor?.[major]||event.room||'教室待通知';
 }
+export function coursesForProfile(events:TimetableEvent[],track:DegreeTrack,year:number,major:Major,classNo:number){
+  return events.filter(event=>!event.retakeOnly&&event.year===year&&(!event.track||event.track===track)&&
+    (event.majors==='all'||event.majors.includes(major))&&(!event.groups||event.groups.includes(`${major}${classNo}`)));
+}
+
+export function initialScheduleView(events:TimetableEvent[],academic:AcademicState){
+  const weeks=events.filter(event=>!event.listedOnly&&!event.retakeOnly).flatMap(event=>[...weekNumbers(event.weeks)]);
+  const firstWeek=weeks.length?Math.min(...weeks):null;
+  const preview=firstWeek!==null&&(academic.phase==='before'||(academic.currentWeek!==null&&academic.currentWeek<firstWeek));
+  const week:number|'all'=preview?firstWeek!:academic.currentWeek??'all';
+  return {week,preview,firstWeek};
+}
+
+export function sessionTimeLabel(event:TimetableEvent,sessionTimes:string[][]){
+  const start=sessionTimes[event.start]?.[1],end=sessionTimes[event.start+event.span-1]?.[2];
+  return /^\d{2}:\d{2}$/.test(start||'')&&/^\d{2}:\d{2}$/.test(end||'')?`${start}–${end}`:
+    `第 ${event.start+1}–${event.start+event.span} 节（具体时间待确认）`;
+}
+
 type DisplayEvent=TimetableEvent&{displaySource?:'base'|'retake'|'preview';retakeKey?:string};
 export type ConflictDetail={key:string;first:DisplayEvent;second:DisplayEvent;day:number;firstSession:number;lastSession:number;weeks:number[];severity:'hard'|'partial'};
 export function weekNumbers(weeks?:string){
