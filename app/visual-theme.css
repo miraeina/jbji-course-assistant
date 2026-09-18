@@ -337,3 +337,8 @@ footer{padding-top:14px;padding-bottom:20px;justify-content:space-between;font-s
  .timetablePanel>.mobileNavigation{margin:10px 0}
  .mobileView-day .semesterHint{display:none}
 }
+
+.topbar .mascotDownload{display:inline-flex;align-items:center;gap:5px;padding:7px 10px;border:1px solid var(--accent-line);border-radius:6px;background:var(--accent-soft);color:var(--accent-hover);text-decoration:none;font-size:12px;white-space:nowrap;min-height:36px}
+.topbar .mascotDownload:hover{background:var(--surface-soft);border-color:var(--accent)}
+.topbar .mascotDownload:focus-visible{outline:2px solid var(--focus);outline-offset:3px}
+@media(max-width:700px){.topbar .mascotDownload{min-height:44px}.headerActions{flex-wrap:wrap}.topLinks{flex-wrap:wrap}}
