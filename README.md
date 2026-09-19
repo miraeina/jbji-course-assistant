@@ -1,36 +1,39 @@
-# JBJI Course Assistant
+# JBJI 课表助手
 
-面向 JBJI 本科生的课表筛选页面。可以按双学位/单学位、年级、专业和班级查看专属课程，数据来自 2026–27 学年第一学期课表与单学位伯大必修课程授课安排。
+暨南大学伯明翰大学联合学院本科生课表工具 · 2026–27 学年第一学期
 
-在线访问：<https://miraeina.github.io/jbji-course-assistant/>
+学院的课表把四个专业放在一起，找自己班的课不太方便。这个网站把合并课表按学位、年级、专业和班级拆开，方便平时查课，也可以下载保存。
 
-## 本地运行
+**[打开课表助手 →](https://miraeina.github.io/jbji-course-assistant/)**
 
-需要 Node.js 22 或更高版本。
+## 功能
 
-```bash
-npm install
-npm run dev
-```
+- **查看班级课表**：支持双学位 / 单学位、大一至大四，以及 MAM、ICS、ECON、STAT 四个专业和对应班级。
+- **按周查课**：查看整学期或指定教学周的安排，点击课程查看教师、教室和上课周次；手机上可切换单日视图。
+- **添加选修与重修**：大二英语课程、大四选修课和重修课程可手动加入课表，支持预览和时间冲突提示。
+- **下载课表**：导出图片或 PDF；下载前可临时修改课程名称、教室、教师和备注，生成个人编辑版。
+- **调整配色**：九套预设配色，也可自定义界面和课程颜色，导入、导出配色文件。下载的课表沿用所选颜色。
 
-生产构建：
+右上角还放了「JBJI奶龙」原图下载入口。
 
-```bash
-npm run build
-```
+## 怎么用
 
-构建结果位于 `dist/`，是完全静态的 HTML、CSS 和 JavaScript，可以部署到 GitHub Pages 或其他静态托管服务。
+打开网站，选好学位、年级、专业和班级即可。需要英语选课、选修课或重修课时，再手动添加，最后通过「导出课表」保存。
 
-## GitHub Pages
+无需注册。身份、选课和配色会保存在当前浏览器，换设备不会自动同步；下载前的临时编辑仅用于个人副本，退出编辑后不保存，也不会改动网站原始课表。网站中的选课仅用于排课，仍需在学校系统完成正式选课。
 
-仓库包含自动部署工作流。首次发布时，在仓库的 **Settings → Pages → Build and deployment** 中将 Source 设为 **GitHub Actions**。以后每次推送到 `main` 分支都会自动更新网站。
+## 资料与纠错
 
-## 数据说明
+课程和教学周依据以下资料整理，网站内也可查看原文件：
 
-当前课程数据维护在 `app/timetable-data.ts`。带有 `track: 'dual'` 或 `track: 'single'` 的课程只在对应学位类型下显示；未标记的暨大学位课程由两类学生共用。学校发布新课表后，只需更新这个文件并推送即可。
+- [2026–27 学年第一学期学院课表](public/documents/26-27-1-JBJI-Timetable.pdf)
+- [单学位伯大必修课程授课安排](public/documents/26-27-1-single-degree.pdf)
+- [2026–2027 学年校历](public/documents/2026-2027-calendar.pdf)
 
-## 开源许可
+这是学生自制的非官方工具。临时调课、教室变更等请以学校及学院最新通知为准。发现错误可以点击网站中的「课表纠错」，或[提交 Issue](https://github.com/miraeina/jbji-course-assistant/issues)，附上课程信息和通知来源。
 
-代码以 MIT License 开源。课程与教务信息仅供查阅，最终安排以学院通知为准。
+## 参考与许可
 
-`public/jbji-logo.png` 与 `public/jbji-banner.jpg` 来源于[暨南大学伯明翰大学联合学院官网](https://birmingham.jnu.edu.cn/)，相关校徽、名称与图片权利归暨南大学、伯明翰大学及学院所有，不包含在本项目的 MIT 软件许可中。本项目为非官方学生工具。
+界面与使用方式参考了 [CityUDG Course Assistant](https://github.com/hxh2002/CityUDG-Course-Assistant) 和 [CityUDS Courses 2627](https://char1es-emp.github.io/CityUDS-courses-2627/index.html)。本项目的课程数据来自上述 JBJI 资料。
+
+代码使用 [MIT License](LICENSE)。`public/jbji-logo.png` 与 `public/jbji-banner.jpg` 来源于[学院官网](https://birmingham.jnu.edu.cn/)，相关校徽、名称与图片权利归暨南大学、伯明翰大学及学院所有，不包含在 MIT 软件许可中。
