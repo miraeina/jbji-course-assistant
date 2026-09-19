@@ -530,3 +530,19 @@ footer{padding-top:14px;padding-bottom:20px;justify-content:space-between;font-s
 .exportLayout.editorPreview .tableScroll{max-height:none}
 @media(max-width:1000px){.editorWorkspace{grid-template-columns:minmax(0,1fr)}.editorForm fieldset{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 14px}.editorForm .editorScopeHint,.editorForm .editorMessage{grid-column:1/-1}.editorFormActions{align-items:end}.editorPreview .tableScroll{max-height:60dvh}}
 @media(max-width:700px){.exportEditor{width:100%;max-height:100dvh;height:100dvh;border-radius:0;margin:0}.editorHeader{padding:12px}.editorWorkspace{padding:12px;gap:12px}.editorForm fieldset{display:block}.editorFooter{padding:10px 12px;flex-wrap:wrap}.editorFooter>div{width:100%;justify-content:flex-end}.editorFooter button,.editorFormActions button{min-height:44px}.editorForm input,.editorForm select,.editorForm textarea{font-size:16px}.editorHeader h2{font-size:18px}.editorPreview{padding:10px}.editorFooter span{margin:0}.editorPreview .courseBlock{font-size:12px}}
+
+.feedbackLink,.detailFeedback a{color:var(--accent);text-decoration:none}
+.detailFeedback{padding:14px 20px;border-top:1px solid var(--line)}
+.detailFeedback a{display:inline-flex;align-items:center;min-height:40px;font-size:14px}
+.detailFeedback small{display:block;font-size:12px;color:var(--muted);line-height:1.6}
+.editorViewSwitch,.editorApplyMobile{display:none}
+.editorReturn{margin:0 0 12px;padding:8px 12px;min-height:44px;border:1px solid var(--accent-line);border-radius:6px;background:var(--accent-soft);color:var(--accent-hover);font-size:13px}
+@media(max-width:1000px){
+ .editorViewSwitch{position:sticky;top:0;z-index:11;display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--surface);border-bottom:1px solid var(--line)}
+ .editorViewSwitch button{min-width:72px;min-height:44px;padding:8px 14px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink);font-size:14px}
+ .editorViewSwitch button[aria-pressed=true]{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent-hover)}
+ .editorViewSwitch span{margin-left:auto;font-size:12px;line-height:1.5;color:var(--muted)}
+ .editorWorkspace[data-panel=edit]>.editorPreviewPane,.editorWorkspace[data-panel=preview]>.editorForm{display:none}
+ .editorApplyDesktop{display:none}.editorApplyMobile{display:inline}
+}
+@media(max-width:700px){.detailFeedback a,.feedbackLink{min-height:44px}.feedbackLink{display:inline-flex;align-items:center}}

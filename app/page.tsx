@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { academicCalendar, roomForMajor, coursesForProfile, initialScheduleView, sessionTimeLabel, getAcademicState, dateForWeekDay, formatShortDate, weekDateRange, formatCalendarDate, getDailySchedule, advanceCalendarView, emptyScheduleMessage, detectConflicts, weekNumbers, type ConflictDetail } from './schedule-logic';
 import Materials from './materials';
+import {timetableFeedbackUrl} from './feedback';
 import ExportEditor from './export-editor';
 import type {ExportLesson} from './export-edit-logic';
 import { ThemePicker } from './theme';
@@ -461,6 +462,10 @@ function Home(){
       context:`2026–27 第一学期 · 大${['一','二','三','四'][year-1]} · ${selectedMajor.name}${classCount?' '+classNo+' 班':''} · ${degreeLabels[track]} · ${selectedWeek==='all'?'整学期':`第 ${selectedWeek} 周 · ${weekDateRange(selectedWeek)}`}${selectedDay!=='all'?' · '+weekdayNames[selectedDay]:''}${courseQuery||selectedCategory!=='all'?' · 已应用课程筛选':''}`,fileName:exportFileName});
   }
 
+  function feedbackUrl(course?:TimetableEvent){
+    return timetableFeedbackUrl({profile:`${degreeLabels[track]} · 大${['一','二','三','四'][year-1]} · ${selectedMajor.name}${classCount?' '+classNo+' 班':''}`,week:selectedWeek==='all'?'整学期':`第 ${selectedWeek} 周`,major,course});
+  }
+
   function openCourseDetails(course:TimetableEvent){
     setDetailCourse(course);
   }
@@ -571,13 +576,13 @@ function Home(){
         </article>;
       })}</div>
     </details>
-    <details className="notice" id="help"><summary>使用帮助</summary><div className="helpContent"><p>选好学位、年级、专业和班级，即可查看课表。点击课程可看详情。</p><p>切换周次查看当周安排；“整学期”显示所有课程。英语选课和重修课程需手动添加，选择仅保存在当前浏览器，不代替学校选课。</p><p>在“导出课表”中选择“编辑后导出”，可临时修改名称、教室、教师和备注。修改只用于个人副本，退出后不保存。</p><p>课表与教学周来自学院课表、单学位授课安排和学校校历。临时调课请以学院通知为准。</p><a href="#materials">查看原始课表与校历 ↗</a></div></details>
-    <footer><span>JBJI 课表助手 · 学生自制</span><a href="https://birmingham.jnu.edu.cn/" target="_blank" rel="noreferrer">学院官网 ↗</a></footer>
+    <details className="notice" id="help"><summary>使用帮助</summary><div className="helpContent"><p>选好学位、年级、专业和班级，即可查看课表。点击课程可看详情。</p><p>切换周次查看当周安排；“整学期”显示所有课程。英语选课和重修课程需手动添加，选择仅保存在当前浏览器，不代替学校选课。</p><p>在“导出课表”中选择“编辑后导出”，可临时修改名称、教室、教师和备注。修改只用于个人副本，退出后不保存。</p><p>课表与教学周来自学院课表、单学位授课安排和学校校历。临时调课请以学院通知为准。</p><p>发现课程信息有误或遗漏？<a href={feedbackUrl()} target="_blank" rel="noreferrer">提交课表纠错 ↗</a>（需登录 GitHub）。请补充正确信息及学院通知链接或截图，由维护者核实后更新。</p><a href="#materials">查看原始课表与校历 ↗</a></div></details>
+    <footer><span>JBJI 课表助手 · 学生自制</span><a className="feedbackLink" href={feedbackUrl()} target="_blank" rel="noreferrer" title="在 GitHub 提交课表纠错，需要登录">课表纠错（GitHub）↗</a><a href="https://birmingham.jnu.edu.cn/" target="_blank" rel="noreferrer">学院官网 ↗</a></footer>
     {exportDraft&&<ExportEditor {...exportDraft} busy={exporting!==null} status={exportMessage} onClose={()=>{setExportDraft(null);setExportMessage('')}} onExport={(format,source)=>exportSchedule(format,source,true)}/>}
     {detailCourse&&<div className="detailOverlay" onMouseDown={()=>setDetailCourse(null)}>
       <section className="detailDialog" role="dialog" aria-modal="true" aria-labelledby="course-detail-title" onMouseDown={(event)=>event.stopPropagation()}>
         <header><div><p>课程详情</p><h2 id="course-detail-title">{courseHeading(detailCourse)}</h2>{courseSubtitle(detailCourse)&&<small>{courseSubtitle(detailCourse)}</small>}</div><button ref={detailCloseRef} type="button" aria-label="关闭课程详情" onClick={()=>setDetailCourse(null)}>×</button></header>
-        <dl className="detailFacts"><div><dt>上课时间</dt><dd>{`${weekdayNames[detailCourse.day]} · ${sessionTimeLabel(detailCourse,times)}`}{times[detailCourse.start+detailCourse.span-1]?.[2]&&` · 第 ${detailCourse.start+1}–${detailCourse.start+detailCourse.span} 节`}</dd></div><div><dt>教室</dt><dd>{roomForMajor(detailCourse,major)}</dd></div>{detailCourse.roomsByMajor&&detailCourse.room&&<div><dt>完整分组安排</dt><dd>{detailCourse.room}</dd></div>}<div><dt>教师</dt><dd>{detailCourse.teacher||'原始资料未注明'}</dd></div><div><dt>周次</dt><dd>{detailCourse.weeks||'原始资料未注明'}</dd></div>{detailCourse.sourceNote&&<div><dt>资料说明</dt><dd>{detailCourse.sourceNote}</dd></div>}{detailCourse.note&&<div><dt>备注</dt><dd>{detailCourse.note}</dd></div>}</dl>
+        <dl className="detailFacts"><div><dt>上课时间</dt><dd>{`${weekdayNames[detailCourse.day]} · ${sessionTimeLabel(detailCourse,times)}`}{times[detailCourse.start+detailCourse.span-1]?.[2]&&` · 第 ${detailCourse.start+1}–${detailCourse.start+detailCourse.span} 节`}</dd></div><div><dt>教室</dt><dd>{roomForMajor(detailCourse,major)}</dd></div>{detailCourse.roomsByMajor&&detailCourse.room&&<div><dt>完整分组安排</dt><dd>{detailCourse.room}</dd></div>}<div><dt>教师</dt><dd>{detailCourse.teacher||'原始资料未注明'}</dd></div><div><dt>周次</dt><dd>{detailCourse.weeks||'原始资料未注明'}</dd></div>{detailCourse.sourceNote&&<div><dt>资料说明</dt><dd>{detailCourse.sourceNote}</dd></div>}{detailCourse.note&&<div><dt>备注</dt><dd>{detailCourse.note}</dd></div>}</dl><div className="detailFeedback"><a href={feedbackUrl(detailCourse)} target="_blank" rel="noreferrer">反馈这门课的信息 ↗</a><small>需登录 GitHub，已带上课程和班级信息；请补充通知依据。</small></div>
 
       </section>
     </div>}

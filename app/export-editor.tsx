@@ -1,4 +1,4 @@
-import {useEffect,useRef,useState} from 'react';
+import {useEffect,useId,useRef,useState} from 'react';
 import {times} from './timetable-data';
 import {applyExportEdit,editedLesson,editableFields,type ExportFields,type ExportEdits,type ExportLesson} from './export-edit-logic';
 
@@ -13,6 +13,10 @@ export default function ExportEditor({lessons,days,context,busy,status,onClose,o
   const [scope,setScope]=useState<'one'|'course'>('one');
   const [notice,setNotice]=useState('');
   const [confirmExit,setConfirmExit]=useState(false);
+  const [mobilePanel,setMobilePanel]=useState<'edit'|'preview'>('edit');
+  const panelId=useId();
+  const editTab=useRef<HTMLButtonElement>(null),previewTab=useRef<HTMLButtonElement>(null);
+  const exitPrompt=useRef<HTMLElement>(null);
   const original=lessons.find(lesson=>lesson.id===selected)!;
   const current=editedLesson(original,edits);
   const pending=editableFields.some(field=>draft[field].trim()!==current[field]);
@@ -26,11 +30,20 @@ export default function ExportEditor({lessons,days,context,busy,status,onClose,o
     element?.showModal();document.body.style.overflow='hidden';
     return ()=>{element?.close();document.body.style.overflow=overflow;returnFocus?.focus()};
   },[]);
+  useEffect(()=>{if(confirmExit){dialog.current?.scrollTo({top:0});exitPrompt.current?.querySelector('button')?.focus()}},[confirmExit]);
+  function switchPanel(panel:'edit'|'preview'){
+    setMobilePanel(panel);
+    if(window.matchMedia('(max-width:1000px)').matches){
+      dialog.current?.scrollTo({top:0});
+      (panel==='edit'?editTab:previewTab).current?.focus();
+    }
+  }
   function close(){if(busy)return;if(count||pending)setConfirmExit(true);else onClose()}
   function select(id:string){
-    if(pending){setNotice('请先应用修改，或取消尚未应用的输入。');return;}
+    if(pending){setNotice('请先应用修改，或取消尚未应用的输入。');switchPanel('edit');return;}
     const lesson=lessons.find(item=>item.id===id)!;
     setSelected(id);setDraft(editedLesson(lesson,edits));setScope('one');setNotice('');
+    switchPanel('edit');
   }
   function restore(all=false){
     const next=all?{}:{...edits};if(!all)delete next[selected];
@@ -38,9 +51,10 @@ export default function ExportEditor({lessons,days,context,busy,status,onClose,o
   }
   return <dialog ref={dialog} className="exportEditor" aria-labelledby="export-editor-title" onCancel={event=>{event.preventDefault();close()}}>
     <header className="editorHeader"><div><h2 id="export-editor-title">编辑后导出</h2><p>修改仅用于本次导出，退出后不保存。</p></div><button type="button" onClick={close} disabled={busy} aria-label="退出编辑">×</button></header>
-    {confirmExit?<section className="editorExit" role="alert"><p>退出将放弃本次个人修改，原始课表不受影响。</p><button onClick={()=>setConfirmExit(false)}>继续编辑</button><button onClick={onClose}>放弃修改并退出</button></section>:null}
-    <div className="editorWorkspace">
-      <form className="editorForm" onSubmit={event=>{event.preventDefault();if(!draft.title.trim()){setNotice('请填写课程显示名称。');return;}const next=applyExportEdit(lessons,edits,selected,draft,scope);setEdits(next);setDraft(editedLesson(original,next));setNotice('修改已应用到预览。')}}>
+    {confirmExit?<section className="editorExit" role="alert" ref={exitPrompt}><p>退出将放弃本次个人修改，原始课表不受影响。</p><button onClick={()=>setConfirmExit(false)}>继续编辑</button><button onClick={onClose}>放弃修改并退出</button></section>:null}
+    <div className="editorViewSwitch" role="group" aria-label="编辑与预览切换"><button ref={editTab} type="button" aria-pressed={mobilePanel==='edit'} aria-controls={`${panelId}-form`} disabled={busy||confirmExit} onClick={()=>switchPanel('edit')}>编辑</button><button ref={previewTab} type="button" aria-pressed={mobilePanel==='preview'} aria-controls={`${panelId}-preview`} disabled={busy||confirmExit} onClick={()=>switchPanel('preview')}>预览</button><span>{pending?'有尚未应用的输入':`已修改 ${count} 处`}</span></div>
+    <div className="editorWorkspace" data-panel={mobilePanel}>
+      <form id={`${panelId}-form`} className="editorForm" onSubmit={event=>{event.preventDefault();if(!draft.title.trim()){setNotice('请填写课程显示名称。');return;}const next=applyExportEdit(lessons,edits,selected,draft,scope);setEdits(next);setDraft(editedLesson(original,next));setNotice('修改已应用到预览。');switchPanel('preview')}}>
         <fieldset disabled={busy||confirmExit}>
           <label>选择上课安排<select value={selected} onChange={event=>select(event.target.value)}>{lessons.map(lesson=><option key={lesson.id} value={lesson.id}>{lesson.title} · {slot(lesson)}</option>)}</select></label>
           <p className="editorScopeHint">{context}<br/>周次：{original.weeks}。修改仅作用于当前导出范围，不改变日期和节次。</p>
@@ -50,12 +64,12 @@ export default function ExportEditor({lessons,days,context,busy,status,onClose,o
           <label>教室<input value={draft.room} maxLength={100} placeholder="例如 N315" onChange={event=>setDraft({...draft,room:event.target.value})}/></label>
           <label>教师<input value={draft.teacher} maxLength={160} placeholder="可留空" onChange={event=>setDraft({...draft,teacher:event.target.value})}/></label>
           <label>个人备注<textarea value={draft.note} maxLength={240} rows={3} placeholder="例如：教室调整，以班群通知为准" onChange={event=>setDraft({...draft,note:event.target.value})}/></label>
-          <div className="editorFormActions"><button className="primary" type="submit" disabled={!pending}>应用修改</button><button type="button" disabled={!pending} onClick={()=>{setDraft(current);setNotice('已取消尚未应用的输入。')}}>取消输入</button></div>
+          <div className="editorFormActions"><button className="primary" type="submit" disabled={!pending}><span className="editorApplyDesktop">应用修改</span><span className="editorApplyMobile">应用并预览</span></button><button type="button" disabled={!pending} onClick={()=>{setDraft(current);setNotice('已取消尚未应用的输入。')}}>取消输入</button></div>
           <div className="editorFormActions"><button type="button" onClick={()=>restore()} disabled={!edits[selected]&&!pending}>恢复此安排</button><button type="button" onClick={()=>restore(true)} disabled={!count&&!pending}>恢复全部原始信息</button></div>
-          <p className="editorMessage" role="status">{notice||'可从右侧课表点击课程，或使用上方列表选择。'}</p>
+          <p className="editorMessage" role="status">{notice||'可点击预览中的课程，或使用上方列表选择。'}</p>
         </fieldset>
       </form>
-      <div className="editorPreviewPane"><p className="editorPreviewLabel">导出预览 · 已修改 {count} 处{pending?' · 输入尚未应用':''}</p>
+      <div id={`${panelId}-preview`} className="editorPreviewPane"><p className="editorPreviewLabel">导出预览 · 已修改 {count} 处{pending?' · 显示已应用的内容':''}</p>{pending&&<button className="editorReturn" type="button" onClick={()=>switchPanel('edit')}>返回编辑处理未应用的输入</button>}
         <div ref={preview} className="editorPreview">
           <div className="editorPrintHeading"><strong>我的课表 · 个人编辑版</strong><p>{context}</p></div>
           <div className="tableScroll"><div className="timetable" style={{gridTemplateColumns:`72px repeat(${days.length},minmax(0,1fr))`,minWidth:days.length===1?'360px':'900px'}}>
