@@ -6,6 +6,10 @@ const themes = [
   {id:'blue',label:'静蓝',description:'简洁沉静',swatches:['#395e9b','#edf2fb','#f0edf8']},
   {id:'violet',label:'暮紫',description:'柔和雅致',swatches:['#70549a','#f1ebf8','#eef3f7']},
   {id:'rose',label:'玫瑰',description:'温暖轻盈',swatches:['#a34e69','#fbedf2','#f8f2e9']},
+  {id:'forest',label:'松林绿',description:'自然清新',swatches:['#376749','#e9f3e6','#edf1f8']},
+  {id:'cream',label:'奶油米',description:'暖纸质感',swatches:['#86602f','#f6edd8','#eef4e9']},
+  {id:'cherry',label:'樱桃红',description:'明快复古',swatches:['#a5413d','#fbe9e3','#edf5f0']},
+  {id:'graphite',label:'石墨灰',description:'克制简洁',swatches:['#4b5969','#eaf0f5','#edf4f0']},
 ] as const;
 type Theme = typeof themes[number]['id'];
 const themeKey = 'jbji-color-theme';

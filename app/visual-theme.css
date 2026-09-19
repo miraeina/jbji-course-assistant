@@ -78,6 +78,51 @@
   --course-muted:#806974; --course-ink:#715862;
 }
 
+:root[data-theme="forest"] {
+  --ink:#293c31; --muted:#5e7063; --line:#dce6dd; --paper:#f3f6f1;
+  --surface-soft:#f7faf4; --accent:#376749; --accent-hover:#284e36;
+  --accent-soft:#e9f3e6; --accent-line:#bfd4b9; --focus:#487c54;
+  --uob:#628667; --uob-soft:#edf4e9;
+  --jnu:#788cac; --jnu-soft:#edf1f8;
+  --english:#b38967; --english-soft:#faf1e7;
+  --general:#9b7f9d; --general-soft:#f4eef6;
+  --table-head:#eef3e9; --table-time:#f8faf5; --table-break:#e8eee2;
+  --course-muted:#5c6b58; --course-ink:#425440;
+}
+:root[data-theme="cream"] {
+  --ink:#433a2e; --muted:#756650; --line:#e8dfcf; --paper:#f8f5ed;
+  --surface-soft:#fcfaf3; --accent:#86602f; --accent-hover:#674820;
+  --accent-soft:#f6edd8; --accent-line:#decba6; --focus:#96713c;
+  --uob:#a68a52; --uob-soft:#f8f0dc;
+  --jnu:#749386; --jnu-soft:#eef4e9;
+  --english:#8390ad; --english-soft:#eef1f8;
+  --general:#b38183; --general-soft:#f8eeee;
+  --table-head:#f5efdf; --table-time:#fcfaf3; --table-break:#eee7d5;
+  --course-muted:#71634d; --course-ink:#594c38;
+}
+:root[data-theme="cherry"] {
+  --ink:#473333; --muted:#7a6060; --line:#eddcda; --paper:#faf4f1;
+  --surface-soft:#fcf7f4; --accent:#a5413d; --accent-hover:#80302d;
+  --accent-soft:#fbe9e3; --accent-line:#e7bab1; --focus:#b75148;
+  --uob:#b97167; --uob-soft:#faeae5;
+  --jnu:#6b9487; --jnu-soft:#edf5f0;
+  --english:#7d8fad; --english-soft:#edf1f9;
+  --general:#b09457; --general-soft:#f8f3e4;
+  --table-head:#f7ede7; --table-time:#fdf8f5; --table-break:#f0e4dd;
+  --course-muted:#785e58; --course-ink:#624842;
+}
+:root[data-theme="graphite"] {
+  --ink:#303840; --muted:#626d77; --line:#dfe3e7; --paper:#f3f4f5;
+  --surface-soft:#f7f8f9; --accent:#4b5969; --accent-hover:#34404e;
+  --accent-soft:#eaf0f5; --accent-line:#c2ced9; --focus:#62788c;
+  --uob:#7b8fa5; --uob-soft:#edf1f6;
+  --jnu:#76968d; --jnu-soft:#edf4f0;
+  --english:#a48d77; --english-soft:#f7f0e8;
+  --general:#9485a4; --general-soft:#f2eef7;
+  --table-head:#edf0f3; --table-time:#f8f9fa; --table-break:#e6eaee;
+  --course-muted:#616a74; --course-ink:#485460;
+}
+
 body { font-family:"Inter","PingFang SC","Microsoft YaHei",sans-serif; -webkit-font-smoothing:antialiased; }
 h1,h2,.brandCopy strong,.calendarStatus strong,.countBadge { font-family:inherit; }
 button,input,select,textarea { font-family:inherit; }
