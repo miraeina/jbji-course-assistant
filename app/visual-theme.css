@@ -546,3 +546,36 @@ footer{padding-top:14px;padding-bottom:20px;justify-content:space-between;font-s
  .editorApplyDesktop{display:none}.editorApplyMobile{display:inline}
 }
 @media(max-width:700px){.detailFeedback a,.feedbackLink{min-height:44px}.feedbackLink{display:inline-flex;align-items:center}}
+
+/* Carry the selected palette through the main navigation and timetable. */
+.topbar{background:linear-gradient(110deg,var(--accent-soft),var(--surface) 78%);border-bottom-color:var(--accent-line)}
+.filterPanel{border-top:3px solid var(--accent);background:linear-gradient(180deg,var(--surface),var(--surface-soft))}
+.filterGroup>span{color:var(--accent-hover);font-weight:600}
+.segmented button.active,.segmented button.active:hover{background:var(--accent);border-color:var(--accent);color:#fff}
+.segmented button.active small{color:inherit}
+.timetable .dayHead,.timetable .corner{background:var(--accent-soft);color:var(--accent-hover)}
+.timetable .dayHead small{color:var(--accent-hover)}
+.timetablePanel>.sectionHead h2{color:var(--accent-hover)}
+.themeOptions .customThemeEntry{background:var(--accent-soft);color:var(--accent-hover);margin-bottom:6px}
+.themeOptions button>span:nth-child(2){min-width:0;overflow-wrap:anywhere}
+.paletteEditor{width:min(520px,calc(100vw - 24px));max-height:calc(100dvh - 24px);padding:0;border:1px solid var(--line);border-radius:14px;background:var(--surface);color:var(--ink);box-shadow:0 24px 80px #17202b40;overflow:auto}
+.paletteEditor::backdrop{background:#17202b88}
+.paletteHeader{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:18px 20px;border-bottom:1px solid var(--line)}
+.paletteHeader h2{margin:0;font-size:20px}.paletteHeader p{margin:6px 0 0;font-size:13px;color:var(--muted);line-height:1.6}
+.paletteEditor button{min-height:40px;border:1px solid var(--line);border-radius:6px;padding:8px 12px;background:var(--surface);color:var(--ink);font:inherit;font-size:13px;cursor:pointer}
+.paletteHeader>button{min-width:40px;font-size:22px;padding:3px 9px}
+.paletteBody{padding:16px 20px 0}.paletteName{display:block;font-size:13px;font-weight:600}
+.paletteEditor input:not([type=file]){min-width:0;min-height:40px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink);font:inherit;font-size:14px}
+.paletteName input{display:block;width:100%;padding:8px 10px;margin-top:6px}
+.paletteFields{display:grid;gap:10px;margin:16px 0}.paletteField{display:grid;grid-template-columns:minmax(0,1fr) 44px 112px;align-items:center;gap:10px;font-size:13px}
+.paletteField input[type=color]{width:44px;height:40px;padding:3px;cursor:pointer}.paletteField input:not([type=color]){width:100%;padding:8px;font-family:ui-monospace,monospace}
+.paletteField input[aria-invalid=true]{border:2px solid #ad3030}
+.palettePreview{border:1px solid var(--accent-line);border-radius:8px;overflow:hidden;background:var(--paper);color:var(--ink)}
+.palettePreviewHead{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;background:var(--accent-soft);font-size:13px;overflow-wrap:anywhere}
+.palettePreviewHead span{flex-shrink:0;padding:6px 10px;border-radius:5px;background:var(--accent);color:white;font-size:12px}
+.palettePreviewCourses{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px}.palettePreviewCourses>div{padding:10px 8px;border-left:3px solid;font-size:12px;border-radius:4px}.palettePreviewCourses small{display:block;margin-top:6px;font-size:11px;color:var(--course-ink);line-height:1.5}
+.paletteFileActions{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}.paletteHint,.paletteMessage{font-size:12px;line-height:1.7;color:var(--muted);margin:10px 0}.paletteMessage{min-height:20px;color:var(--accent-hover)}
+.paletteFooter{display:flex;justify-content:flex-end;gap:8px;position:sticky;bottom:0;padding:12px 20px;background:var(--surface);border-top:1px solid var(--line)}
+.paletteEditor button.primary{background:var(--accent);border-color:var(--accent);color:#fff}.paletteEditor button:disabled{opacity:.5;cursor:default}
+.paletteEditor :focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+@media(max-width:700px){.paletteHeader{padding:14px}.paletteBody{padding:14px 14px 0}.paletteFooter{padding:12px 14px}.paletteEditor button,.paletteEditor input:not([type=file]){min-height:44px}.paletteEditor input:not([type=file]){font-size:16px}.paletteField{grid-template-columns:minmax(0,1fr) 44px 112px;gap:8px}}
