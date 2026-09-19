@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { academicCalendar, roomForMajor, coursesForProfile, initialScheduleView, sessionTimeLabel, getAcademicState, dateForWeekDay, formatShortDate, weekDateRange, formatCalendarDate, getDailySchedule, advanceCalendarView, emptyScheduleMessage, detectConflicts, weekNumbers, type ConflictDetail } from './schedule-logic';
 import Materials from './materials';
+import ExportEditor from './export-editor';
+import type {ExportLesson} from './export-edit-logic';
 import { ThemePicker } from './theme';
 import ElectivePanel from './elective-panel';
 import { electiveOptions, electiveProfile, electiveStorageKey, isElective, parseElectiveSelections, selectedSchedule, toggleElective, type ElectiveOption } from './elective-logic';
@@ -248,6 +250,7 @@ function Home(){
   const [retakeQuery,setRetakeQuery]=useState('');
   const [exporting,setExporting]=useState<'png'|'pdf'|null>(null);
   const [exportMessage,setExportMessage]=useState('');
+  const [exportDraft,setExportDraft]=useState<{lessons:ExportLesson[];days:{day:number;label:string;date:string}[];context:string;fileName:string}|null>(null);
   const [detailCourse,setDetailCourse]=useState<TimetableEvent|null>(null);
   const detailCloseRef=useRef<HTMLButtonElement>(null);
   useEffect(()=>{
@@ -379,13 +382,14 @@ function Home(){
     setSelectedWeek(academicState.currentWeek);setSelectedDay(academicState.weekday??'all');setMobileDay(todayIndex);setMobileView('day');setSidebarMode('current');setSelectedCategory('all');setCourseQuery('');
   }
 
-  async function renderScheduleCanvas(){
-    if(!scheduleRef.current)throw new Error('找不到课表区域');
+  async function renderScheduleCanvas(source:HTMLElement|null=scheduleRef.current,personal=false){
+    if(!source)throw new Error('找不到课表区域');
     await document.fonts?.ready;
-    const clone=scheduleRef.current.cloneNode(true) as HTMLElement;
+    const clone=source.cloneNode(true) as HTMLElement;
+    clone.querySelectorAll('.editorSelected').forEach(element=>element.classList.remove('editorSelected'));
     clone.classList.add('exportLayout');
     clone.querySelectorAll('.previewBlock').forEach(element=>element.remove());
-    const exportEvents=arrange(displayedEvents.filter(event=>event.displaySource!=='preview'));
+    const exportEvents=personal?[]:arrange(displayedEvents.filter(event=>event.displaySource!=='preview'));
     clone.querySelectorAll<HTMLElement>('.courseBlock').forEach(element=>{
       const event=exportEvents.find(item=>item.id===element.dataset.eventId);
       if(event){element.style.width=`calc((100% - 6px) / ${event.laneCount})`;element.style.marginLeft=`calc(${event.lane} * (100% / ${event.laneCount}) + 3px)`}
@@ -396,7 +400,7 @@ function Home(){
     const scheduleBody=clone.querySelector<HTMLElement>('.scheduleBody');
     if(scheduleBody)scheduleBody.style.gridTemplateColumns='1fr';
     const tableScroll=clone.querySelector<HTMLElement>('.tableScroll');
-    if(tableScroll)tableScroll.style.overflow='visible';
+    if(tableScroll){tableScroll.style.overflow='visible';tableScroll.style.maxHeight='none';}
     const timetable=clone.querySelector<HTMLElement>('.timetable');
     if(timetable)timetable.style.gridTemplateRows='52px repeat(12,minmax(80px,auto))';
     document.body.appendChild(clone);
@@ -417,14 +421,15 @@ function Home(){
     }
   }
 
-  async function exportSchedule(format:'png'|'pdf'){
+  async function exportSchedule(format:'png'|'pdf',source?:HTMLElement,personal=false){
+    const filename=personal?`${exportDraft?.fileName||exportFileName}-个人编辑版`:exportFileName;
     setExporting(format); setExportMessage(format==='png'?'正在生成图片…':'正在生成 PDF…');
     try{
-      const canvas=await renderScheduleCanvas();
+      const canvas=await renderScheduleCanvas(source,personal);
       if(format==='png'){
         const blob=await new Promise<Blob>((resolve,reject)=>canvas.toBlob((value)=>value?resolve(value):reject(new Error('图片生成失败')),'image/png'));
         const url=URL.createObjectURL(blob);
-        downloadFile(url,`${exportFileName}.png`); URL.revokeObjectURL(url);
+        downloadFile(url,`${filename}.png`); URL.revokeObjectURL(url);
       }else{
         const {jsPDF}=await import('jspdf');
         const landscape=canvas.width>=canvas.height;
@@ -433,7 +438,7 @@ function Home(){
         const ratio=Math.min((pageWidth-margin*2)/canvas.width,(pageHeight-margin*2)/canvas.height);
         const width=canvas.width*ratio; const height=canvas.height*ratio;
         pdf.addImage(canvas.toDataURL('image/png'),'PNG',(pageWidth-width)/2,(pageHeight-height)/2,width,height,undefined,'FAST');
-        pdf.save(`${exportFileName}.pdf`);
+        pdf.save(`${filename}.pdf`);
       }
       setExportMessage(format==='png'?'图片已导出':'PDF 已导出');
     }catch(error){
@@ -441,6 +446,19 @@ function Home(){
     }finally{
       setExporting(null);
     }
+  }
+
+  function openExportEditor(){
+    const lessons=arrange(displayedEvents.filter(event=>event.displaySource!=='preview')).map(event=>({
+      id:event.id,group:`${event.year}:${event.courseKey||event.title}`,title:courseHeading(event),subtitle:event.shortTitle&&event.span>1?courseSubtitle(event):undefined,
+      room:roomForMajor(event,major),teacher:event.teacher||'',note:'',weeks:event.weeks||'按学期安排',
+      day:event.day,start:event.start,span:event.span,lane:event.lane,laneCount:event.laneCount,
+      category:courseCategory(event),categoryLabel:`${event.displaySource==='retake'?'重修 · ':isElective(event)?'选修 · ':''}${categoryLabels[courseCategory(event)]}${event.note?' · '+event.note:''}`
+    }));
+    if(!lessons.length)return;
+    setExportMessage('');
+    setExportDraft({lessons,days:displayedDays.map(day=>({day,label:weekdayNames[day],date:selectedWeek==='all'?weekdayShort[day]:formatShortDate(dateForWeekDay(selectedWeek,day))})),
+      context:`2026–27 第一学期 · 大${['一','二','三','四'][year-1]} · ${selectedMajor.name}${classCount?' '+classNo+' 班':''} · ${degreeLabels[track]} · ${selectedWeek==='all'?'整学期':`第 ${selectedWeek} 周 · ${weekDateRange(selectedWeek)}`}${selectedDay!=='all'?' · '+weekdayNames[selectedDay]:''}${courseQuery||selectedCategory!=='all'?' · 已应用课程筛选':''}`,fileName:exportFileName});
   }
 
   function openCourseDetails(course:TimetableEvent){
@@ -502,7 +520,7 @@ function Home(){
           </>}
         </div>
       </aside>
-      <div className="timetablePanel"><div className="sectionHead"><div><h2>我的课表</h2><p className="scheduleIdentity">大{['一','二','三','四'][year-1]} · {selectedMajor.name}{classCount?` ${classNo} 班`:''} · {degreeLabels[track]}</p></div><div className="sectionTools"><div className="panelActions" data-export-exclude>{hasElectives&&<button className="electivePrimary" aria-controls="course-panel" onClick={openElectives}>{year===2?'英语选课':'选择课程'} · {selectedElectiveKeys.length}</button>}<button aria-expanded={sidebarOpen} aria-controls="course-panel" onClick={()=>{setSidebarOpen(!sidebarOpen);changeSidebarMode('current');setCourseQuery('');setSelectedCategory('all');setSelectedDay('all');setPreviewRetakeKey(null)}}>{sidebarOpen?'收起':'查课'}</button>{year>1&&<button onClick={()=>{setSidebarOpen(true);changeSidebarMode('retake')}}>重修{activeSelectedOptions.length?` · ${activeSelectedOptions.length}`:''}</button>}</div><div className="exportActions" data-export-exclude><details className="exportMenu"><summary>导出课表</summary><div><button disabled={exporting!==null||(!scheduled.length&&!selectedRetakeEvents.length)} onClick={()=>exportSchedule('png')}>{exporting==='png'?'生成中…':'导出图片'}</button><button disabled={exporting!==null||(!scheduled.length&&!selectedRetakeEvents.length)} onClick={()=>exportSchedule('pdf')}>{exporting==='pdf'?'生成中…':'导出 PDF'}</button></div></details><span className="exportStatus" role="status" aria-live="polite">{exportMessage}</span></div></div></div>
+      <div className="timetablePanel"><div className="sectionHead"><div><h2>我的课表</h2><p className="scheduleIdentity">大{['一','二','三','四'][year-1]} · {selectedMajor.name}{classCount?` ${classNo} 班`:''} · {degreeLabels[track]}</p></div><div className="sectionTools"><div className="panelActions" data-export-exclude>{hasElectives&&<button className="electivePrimary" aria-controls="course-panel" onClick={openElectives}>{year===2?'英语选课':'选择课程'} · {selectedElectiveKeys.length}</button>}<button aria-expanded={sidebarOpen} aria-controls="course-panel" onClick={()=>{setSidebarOpen(!sidebarOpen);changeSidebarMode('current');setCourseQuery('');setSelectedCategory('all');setSelectedDay('all');setPreviewRetakeKey(null)}}>{sidebarOpen?'收起':'查课'}</button>{year>1&&<button onClick={()=>{setSidebarOpen(true);changeSidebarMode('retake')}}>重修{activeSelectedOptions.length?` · ${activeSelectedOptions.length}`:''}</button>}</div><div className="exportActions" data-export-exclude><details className="exportMenu"><summary>导出课表</summary><div><button disabled={exporting!==null||(!scheduled.length&&!selectedRetakeEvents.length)} onClick={()=>exportSchedule('png')}>{exporting==='png'?'生成中…':'导出图片'}</button><button disabled={exporting!==null||(!scheduled.length&&!selectedRetakeEvents.length)} onClick={()=>exportSchedule('pdf')}>{exporting==='pdf'?'生成中…':'导出 PDF'}</button><button disabled={exporting!==null||!displayedEvents.some(event=>event.displaySource!=='preview')} onClick={event=>{event.currentTarget.closest('details')?.removeAttribute('open');openExportEditor()}}>编辑后导出</button></div></details><span className="exportStatus" role="status" aria-live="polite">{exportMessage}</span></div></div></div>
     <section className="calendarPanel" aria-label="校历与教学周" data-export-exclude>
       <div className="calendarStatus"><strong>{calendarStatus}</strong>{isFirstWeekPreview&&<small className="firstWeekHint">课程从第 {defaultView.firstWeek} 周开始，已显示首个有课周。</small>}{selectedWeekIsReview&&<small>所选周为复习考试周</small>}</div>
       <div className="calendarControls">
@@ -553,8 +571,9 @@ function Home(){
         </article>;
       })}</div>
     </details>
-    <details className="notice" id="help"><summary>使用帮助</summary><div className="helpContent"><p>选好学位、年级、专业和班级，即可查看课表。点击课程可看详情。</p><p>切换周次查看当周安排；“整学期”显示所有课程。英语选课和重修课程需手动添加，选择仅保存在当前浏览器，不代替学校选课。</p><p>课表与教学周来自学院课表、单学位授课安排和学校校历。临时调课请以学院通知为准。</p><a href="#materials">查看原始课表与校历 ↗</a></div></details>
+    <details className="notice" id="help"><summary>使用帮助</summary><div className="helpContent"><p>选好学位、年级、专业和班级，即可查看课表。点击课程可看详情。</p><p>切换周次查看当周安排；“整学期”显示所有课程。英语选课和重修课程需手动添加，选择仅保存在当前浏览器，不代替学校选课。</p><p>在“导出课表”中选择“编辑后导出”，可临时修改名称、教室、教师和备注。修改只用于个人副本，退出后不保存。</p><p>课表与教学周来自学院课表、单学位授课安排和学校校历。临时调课请以学院通知为准。</p><a href="#materials">查看原始课表与校历 ↗</a></div></details>
     <footer><span>JBJI 课表助手 · 学生自制</span><a href="https://birmingham.jnu.edu.cn/" target="_blank" rel="noreferrer">学院官网 ↗</a></footer>
+    {exportDraft&&<ExportEditor {...exportDraft} busy={exporting!==null} status={exportMessage} onClose={()=>{setExportDraft(null);setExportMessage('')}} onExport={(format,source)=>exportSchedule(format,source,true)}/>}
     {detailCourse&&<div className="detailOverlay" onMouseDown={()=>setDetailCourse(null)}>
       <section className="detailDialog" role="dialog" aria-modal="true" aria-labelledby="course-detail-title" onMouseDown={(event)=>event.stopPropagation()}>
         <header><div><p>课程详情</p><h2 id="course-detail-title">{courseHeading(detailCourse)}</h2>{courseSubtitle(detailCourse)&&<small>{courseSubtitle(detailCourse)}</small>}</div><button ref={detailCloseRef} type="button" aria-label="关闭课程详情" onClick={()=>setDetailCourse(null)}>×</button></header>
