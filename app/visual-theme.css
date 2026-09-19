@@ -423,6 +423,13 @@ footer{padding-top:14px;padding-bottom:20px;justify-content:space-between;font-s
 .sidebarCourseCard small,.sidebarCourseCard em,.sidebarCourseCard i,.retakeCourseCard>small,.retakeCourseCard>em,.retakeCourseCard>i{font-size:12px;line-height:1.5}
 .courseSearch>span,.sidebarFilter>span{font-size:12px}
 .scheduleBody.sidebarOpen{grid-template-columns:300px minmax(0,1fr);gap:12px}
+/* English teaching groups need room for their full session details. */
+@media(min-width:1320px){
+ .englishElectivePanel .electiveCourseList{max-height:900px}
+}
+@media(max-width:700px){
+ .englishElectivePanel{height:85dvh}
+}
 
 @media(min-width:701px) and (max-width:1179px){
  .filterPanel{grid-template-columns:auto auto 1fr;gap:12px 20px}

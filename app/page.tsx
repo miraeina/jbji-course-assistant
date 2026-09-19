@@ -494,7 +494,7 @@ function Home(){
     </section>
     {sidebarOpen&&<button className="sheetBackdrop mobileOnly" aria-label="关闭课程面板" onClick={()=>{setSidebarOpen(false);setPreviewRetakeKey(null);setPreviewElectiveKey(null)}}/>}
     <section className="scheduleSection" ref={scheduleRef}><p className="exportContext" data-export-only>{academicCalendar.academicYear} 学年第一学期 · {degreeLabels[track]} · 大{['一','二','三','四'][year-1]} · {selectedMajor.name}{classCount?` · ${classNo} 班`:''}<br/>{selectedWeek==='all'?'整学期':`第 ${selectedWeek} 周 · ${weekDateRange(selectedWeek)}`}{selectedDay!=='all'?` · ${weekdayNames[selectedDay]}`:''}{courseQuery||selectedCategory!=='all'?' · 已应用课程筛选':''}{hasElectives?` · 已选 ${selectedElectiveKeys.length} 门选修`:''}</p><div className={`scheduleBody ${sidebarOpen?"sidebarOpen":"sidebarClosed"}`}>
-      <aside hidden={!sidebarOpen} id="course-panel" className="courseSidebar" aria-label="浏览和筛选课程" data-export-exclude>
+      <aside hidden={!sidebarOpen} id="course-panel" className={`courseSidebar ${sidebarMode==='elective'&&year===2?'englishElectivePanel':''}`} aria-label="浏览和筛选课程" data-export-exclude>
         <button className="sheetClose mobileOnly" onClick={()=>{setSidebarOpen(false);setPreviewRetakeKey(null);setPreviewElectiveKey(null)}}>完成</button>
         <div className="sidebarHead sidebarTabs" role="tablist" aria-label="课程面板">
           {hasElectives&&<button role="tab" aria-selected={sidebarMode==='elective'} className={sidebarMode==='elective'?'active':''} onClick={()=>changeSidebarMode('elective')}>选修课<span>{selectedElectiveKeys.length}</span></button>}
