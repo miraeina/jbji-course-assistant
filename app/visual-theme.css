@@ -449,10 +449,19 @@ footer{padding-top:14px;padding-bottom:20px;justify-content:space-between;font-s
  .courseSidebar{position:fixed;right:0;top:0;bottom:0;width:360px;max-width:90vw;z-index:40;overflow-y:auto;border-radius:12px 0 0 12px;overscroll-behavior:contain}
 }
 @media(max-width:700px){
- .topbar{gap:2px;padding:6px 12px}
- .topLinks{gap:4px;flex-wrap:nowrap;width:100%;font-size:12px}
- .topLinks a{min-height:44px}
- .topbar .mascotDownload{padding:6px 8px;font-size:12px}
+ .topbar{display:grid;grid-template-columns:minmax(0,1fr);gap:4px;padding:6px 12px}
+ .topbar .brand{min-width:0;justify-self:start}
+ .topLinks{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:4px;width:100%;max-width:none;margin:0;font-size:12px}
+ .topLinks>*{grid-column:span 2}
+ .topLinks>a{display:flex;justify-content:center;min-width:0;min-height:44px;white-space:nowrap}
+ .topLinks .themeTrigger{width:100%;justify-content:center}
+ .topbar .mascotDownload{padding:6px 8px;font-size:12px;white-space:normal;overflow-wrap:anywhere;line-height:1.5;text-align:center;justify-content:center}
+ .topLinks>.mascotDownload{grid-column:span 5;align-self:stretch}
+ .topLinks>.mascotDownload+.mascotDownload{grid-column:span 3}
+ .topbar .headerActions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;width:100%;margin:0}
+ .headerActions .themeTrigger{width:100%;justify-content:center}
+ .headerActions .backToSchedule{display:flex;align-items:center;justify-content:center;min-height:44px}
+ .headerActions .themeOptions{left:0;right:auto}
  .themeTrigger{padding:6px;gap:4px}
  .identityToggle{margin-top:8px;padding:10px 12px;min-height:44px}
  .filterPanel{grid-template-columns:minmax(0,1fr);gap:10px}
@@ -493,7 +502,8 @@ footer{padding-top:14px;padding-bottom:20px;justify-content:space-between;font-s
  .sectionTools{flex-basis:100%;margin-left:0;justify-content:space-between}
  .majorGroup .segmented{grid-template-columns:repeat(2,minmax(0,1fr))}
  .topLinks{font-size:11px}
- .topbar .mascotDownload{font-size:11px;padding-inline:6px}
+ .topbar .mascotDownload{font-size:11px;padding-inline:4px;gap:3px}
+ .topbar .mascotDownload .downloadIcon{width:16px;height:16px}
  .calendarControls>button:nth-last-child(2){display:none}
 }
 
