@@ -3,6 +3,8 @@ import { createRoot } from 'react-dom/client';
 import Home from '../app/page';
 import '../app/globals.css';
 import '../app/visual-theme.css';
+import '../app/design-refinements.css';
+import '../app/readability.css';
 import { initializeTheme, ThemeProvider } from '../app/theme';
 
 initializeTheme();

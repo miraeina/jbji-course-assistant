@@ -1,0 +1,66 @@
+/* Preserve the existing palettes and timetable density while clarifying small facts. */
+.courseBlock .courseTag,
+.courseTag .categoryHint {
+  color:var(--course-ink);
+}
+.courseTag .categoryHint { opacity:1; }
+
+/* Conflicting courses and their overlapping weeks need to be easy to compare. */
+.conflictSummaryLead>div,
+.conflictList { min-width:0; }
+.conflictSummaryLead strong {
+  font-size:14px;
+  line-height:1.5;
+}
+.conflictSummaryLead p,
+.conflictSummaryLead span {
+  font-size:12px;
+  line-height:1.5;
+}
+.conflictSummaryLead span { color:var(--course-ink); }
+.conflictList b {
+  font-size:13px;
+  line-height:1.5;
+}
+.conflictList span {
+  font-size:12px;
+  line-height:1.5;
+}
+.conflictList button { overflow-wrap:anywhere; }
+
+/* Keep status and actions separate when a narrow card needs another row. */
+.retakeCardFooter {
+  flex-wrap:wrap;
+  gap:8px 10px;
+}
+.retakeCardFooter .conflictStatus {
+  flex:1 1 72px;
+  min-width:0;
+  font-size:12px;
+  line-height:1.5;
+}
+.conflictStatus.partial { color:#965014; }
+.retakeCardActions {
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  justify-content:flex-end;
+  gap:6px;
+  max-width:100%;
+  margin-left:auto;
+}
+.retakeCardActions button {
+  min-height:36px;
+  font-size:12px;
+  line-height:1.5;
+  white-space:nowrap;
+}
+
+@media(max-width:700px) {
+  .retakeCardFooter button,
+  .filterPills button {
+    min-height:44px;
+    font-size:13px;
+    line-height:1.5;
+  }
+}
