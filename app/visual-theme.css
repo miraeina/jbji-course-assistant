@@ -609,3 +609,9 @@ footer{padding-top:14px;padding-bottom:20px;justify-content:space-between;font-s
 .courseTag .categoryHint{font-weight:400;opacity:.75}
 
 .mascotDownload .downloadIcon{width:20px;height:20px;flex-shrink:0}
+
+/* Short facts wrap at meaningful boundaries rather than leaving a lone unit. */
+.courseBlock .courseWeeks,.agendaWeeks{overflow-wrap:normal;word-break:normal;text-wrap:pretty}
+.weekRange,.factLabel{white-space:nowrap;overflow-wrap:normal;word-break:normal}
+.courseBlock .courseRoom{overflow-wrap:normal;word-break:normal;text-wrap:pretty}
+.courseBlock>strong,.courseBlock .courseEnglish,.courseBlock .courseTag{text-wrap:pretty}

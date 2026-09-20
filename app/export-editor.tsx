@@ -1,3 +1,4 @@
+import WeekText from './week-text';
 import {useEffect,useId,useRef,useState} from 'react';
 import {times} from './timetable-data';
 import {applyExportEdit,editedLesson,editableFields,type ExportFields,type ExportEdits,type ExportLesson} from './export-edit-logic';
@@ -77,7 +78,7 @@ export default function ExportEditor({lessons,days,context,busy,status,onClose,o
             {times.map(([session,from,to],index)=><div className={`timeCell ${session==='5'?'break':''}`} style={{gridRow:index+2}} key={session}><strong>{session}</strong><span>{from}</span>{to&&<small>{to}</small>}</div>)}
             {times.map((_,row)=>days.map((day,index)=><div className={`gridCell ${row===4?'break':''}`} key={`${day.day}-${row}`} style={{gridColumn:index+2,gridRow:row+2}}/>))}
             {lessons.map(base=>{const lesson=editedLesson(base,edits);return <button type="button" key={lesson.id} data-event-id={lesson.id} className={`courseBlock category-${lesson.category} ${selected===lesson.id?'editorSelected':''}`} aria-label={`编辑 ${lesson.title}，${slot(lesson)}`} aria-pressed={selected===lesson.id} disabled={busy||confirmExit} onClick={()=>select(lesson.id)} style={{gridColumn:days.findIndex(day=>day.day===lesson.day)+2,gridRow:`${lesson.start+2} / span ${lesson.span}`,width:`calc((100% - 6px) / ${lesson.laneCount})`,marginLeft:`calc(${lesson.lane} * (100% / ${lesson.laneCount}) + 3px)`}}>
-              <strong>{lesson.title}</strong>{lesson.subtitle&&lesson.title===base.title&&<small className="editorSubtitle">{lesson.subtitle}</small>}<small className="courseRoom">教室：{lesson.room||'未填写'}</small><small className="courseWeeks">周次：{lesson.weeks}</small>{lesson.teacher&&<small className="courseTeacher">教师：{lesson.teacher}</small>}{lesson.note&&<small className="editorNote">备注：{lesson.note}</small>}<span className="courseTag">{lesson.categoryLabel}</span>{edits[lesson.id]&&<small className="editorChanged">已编辑</small>}
+              <strong>{lesson.title}</strong>{lesson.subtitle&&lesson.title===base.title&&<small className="editorSubtitle">{lesson.subtitle}</small>}<small className="courseRoom">教室：{lesson.room||'未填写'}</small><small className="courseWeeks"><span className="factLabel">周次：</span><WeekText value={lesson.weeks}/></small>{lesson.teacher&&<small className="courseTeacher">教师：{lesson.teacher}</small>}{lesson.note&&<small className="editorNote">备注：{lesson.note}</small>}<span className="courseTag">{lesson.categoryLabel}</span>{edits[lesson.id]&&<small className="editorChanged">已编辑</small>}
             </button>})}
           </div></div>
           <p className="editorPrintFootnote">个人编辑版 · {count?'标注“已编辑”的课程含个人修改，非原始 PDF 内容。':'基于原始课表生成。'}临时安排请以学院最新通知为准。</p>
