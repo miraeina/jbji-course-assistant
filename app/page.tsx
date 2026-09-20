@@ -41,7 +41,7 @@ function arrange(events:DisplayEvent[]):LaidEvent[]{
   return result;
 }
 
-const categoryLabels:Record<CourseCategory,string>={uob:'伯大课程',jnu:'暨大课程',english:'英语课程',general:'通识课'};
+const categoryLabels:Record<CourseCategory,string>={uob:'（伯大课程）',jnu:'（暨大课程）',english:'（英语课程）',general:'（通识课）'};
 
 function courseCategory(event:TimetableEvent):CourseCategory{
   if(event.year===2&&isElective(event))return 'english';
@@ -540,7 +540,7 @@ function Home(){
       </div>
     </section>
     <div className="scheduleMeta">
-    <div className="legend"><span><i className="dot uob"/>{categoryLabels.uob}</span><span><i className="dot jnu"/>{categoryLabels.jnu}</span><span><i className="dot english"/>{categoryLabels.english}</span><span><i className="dot general"/>通识课</span></div>
+    <div className="legend"><span><i className="dot uob"/>{categoryLabels.uob}</span><span><i className="dot jnu"/>{categoryLabels.jnu}</span><span><i className="dot english"/>{categoryLabels.english}</span><span><i className="dot general"/>{categoryLabels.general}</span></div>
     <details className="todayPanel" data-export-exclude>
       <summary>{formatCalendarDate(academicState.today)} · 今天{dailySchedule.today.length?` ${dailySchedule.today.length} 堂课`:'没课'}<span>查看今日安排</span></summary>
       <div className="nextLesson">{[{label:'正在上课',items:dailySchedule.active},{label:'下一节课',items:dailySchedule.next}].filter(group=>group.items.length).map(group=><div className="lessonGroup" key={group.label}><span>{group.label}</span>{group.items.map(item=><button key={item.event.id} onClick={()=>openCourseDetails(item.event)}><strong>{courseHeading(item.event)}</strong><small>{formatCalendarDate(item.date)} · {times[item.event.start][1]}–{times[item.event.start+item.event.span-1][2]} · {roomForMajor(item.event,major)}</small></button>)}</div>)}{!dailySchedule.active.length&&!dailySchedule.next.length&&<p>暂无后续课程</p>}</div>
@@ -570,7 +570,7 @@ function Home(){
         {times.map((_,row)=>displayedDays.map((day,index)=><div className={`gridCell ${row===4?'break':''}`} style={{gridColumn:index+2,gridRow:row+2}} key={`${day}-${row}`}/>))}
         {displayedEvents.map((event)=>{
           const hasHard=hardConflictEventIds.has(event.id); const hasPartial=!hasHard&&partialConflictEventIds.has(event.id);
-          return <article className={`courseBlock ${event.shortTitle?'abbreviatedModule':''} ${event.shortTitle&&event.span===1?'shortModuleSession':''} category-${courseCategory(event)} ${event.displaySource==='retake'?'retakeBlock':''} ${event.displaySource==='preview'?'previewBlock':''} ${hasHard?'conflictBlock':hasPartial?'partialConflictBlock':''}`} style={{gridColumn:displayedDays.indexOf(event.day)+2,gridRow:`${event.start+2} / span ${event.span}`,width:`calc((100% - 6px) / ${event.laneCount})`,marginLeft:`calc(${event.lane} * (100% / ${event.laneCount}) + 3px)`}} key={`${event.displaySource}-${event.id}`} data-event-id={event.id} title="查看课程详情" role="button" tabIndex={0} onClick={()=>openCourseDetails(event)} onKeyDown={(key)=>{if(key.key==='Enter'||key.key===' '){key.preventDefault();openCourseDetails(event)}}}><strong>{courseHeading(event)}</strong>{courseSubtitle(event)&&<small className="courseEnglish">{courseSubtitle(event)}</small>}<small className="courseRoom">教室：{roomForMajor(event,major)}</small><small className="courseWeeks">周次：{event.weeks||'按学期安排'}</small>{event.teacher&&<small className="courseTeacher">教师：{event.teacher}</small>}<span className="courseTag">{event.displaySource==='retake'?'重修 · ':event.displaySource==='preview'?'课程预览 · ':isElective(event)?'选修 · ':''}{categoryLabels[courseCategory(event)]}{event.note&&` · ${event.note}`}</span></article>;
+          return <article className={`courseBlock ${event.shortTitle?'abbreviatedModule':''} ${event.shortTitle&&event.span===1?'shortModuleSession':''} category-${courseCategory(event)} ${event.displaySource==='retake'?'retakeBlock':''} ${event.displaySource==='preview'?'previewBlock':''} ${hasHard?'conflictBlock':hasPartial?'partialConflictBlock':''}`} style={{gridColumn:displayedDays.indexOf(event.day)+2,gridRow:`${event.start+2} / span ${event.span}`,width:`calc((100% - 6px) / ${event.laneCount})`,marginLeft:`calc(${event.lane} * (100% / ${event.laneCount}) + 3px)`}} key={`${event.displaySource}-${event.id}`} data-event-id={event.id} title="查看课程详情" role="button" tabIndex={0} onClick={()=>openCourseDetails(event)} onKeyDown={(key)=>{if(key.key==='Enter'||key.key===' '){key.preventDefault();openCourseDetails(event)}}}><strong>{courseHeading(event)}</strong>{courseSubtitle(event)&&<small className="courseEnglish">{courseSubtitle(event)}</small>}<small className="courseRoom">教室：{roomForMajor(event,major)}</small><small className="courseWeeks">周次：{event.weeks||'按学期安排'}</small>{event.teacher&&<small className="courseTeacher">教师：{event.teacher}</small>}<span className="courseTag">{event.displaySource==='retake'?'重修 · ':event.displaySource==='preview'?'课程预览 · ':isElective(event)?'选修 · ':''}<span className="categoryHint">{categoryLabels[courseCategory(event)]}</span>{event.note&&` · ${event.note}`}</span></article>;
         })}
       </div></div>
       {displayedEvents.length===0&&renderEmpty(selectedDay==='all'?undefined:selectedDay)}</div></div></div>
