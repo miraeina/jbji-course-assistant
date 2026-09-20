@@ -8,6 +8,7 @@ import ExportEditor from './export-editor';
 import type {ExportLesson} from './export-edit-logic';
 import { ThemePicker } from './theme';
 import ElectivePanel from './elective-panel';
+import ConflictMascot from './conflict-mascot';
 import { electiveOptions, electiveProfile, electiveStorageKey, isElective, parseElectiveSelections, selectedSchedule, toggleElective, type ElectiveOption } from './elective-logic';
 import { majors, timetableEvents, times, type DegreeTrack, type Major, type TimetableEvent } from './timetable-data';
 
@@ -304,8 +305,12 @@ function Home(){
   const dailySchedule=getDailySchedule([...scheduled,...selectedRetakeEvents],now,times);
   const previewOption=previewRetakeKey&&!selectedRetakeKeys.includes(previewRetakeKey)?retakeOptions.find((option)=>option.key===previewRetakeKey):undefined;
   const previewRetakeEvents:DisplayEvent[]=previewOption?previewOption.events.map((event)=>({...event,displaySource:'preview' as const,retakeKey:previewOption.key})):[];
-  const conflicts=detectConflicts(scheduled,selectedRetakeEvents,selectedElectiveIds).filter(issue=>selectedWeek==='all'||issue.weeks.includes(selectedWeek));
   const electivePreviews=electiveChoices.filter(option=>previewElectiveKeys.includes(option.key)&&!selectedElectiveKeys.includes(option.key));
+  const electivePreviewEvents=electivePreviews.flatMap(option=>option.events);
+  const previewIds=new Set(electivePreviewEvents.map(event=>event.id));
+  const allConflicts=detectConflicts([...scheduled,...electivePreviewEvents],selectedRetakeEvents,new Set([...selectedElectiveIds,...previewIds]));
+  const conflicts=allConflicts.filter(issue=>selectedWeek==='all'||issue.weeks.includes(selectedWeek));
+  const previewConflict=(issue:ConflictDetail)=>previewIds.has(issue.first.id)||previewIds.has(issue.second.id);
   const hardConflictEventIds=new Set(conflicts.filter((conflict)=>conflict.severity==='hard').flatMap((conflict)=>[conflict.first.id,conflict.second.id]));
   const partialConflictEventIds=new Set(conflicts.filter((conflict)=>conflict.severity==='partial').flatMap((conflict)=>[conflict.first.id,conflict.second.id]));
   const displayedDays=selectedDay==='all'?[0,1,2,3,4]:[selectedDay];
@@ -483,6 +488,7 @@ function Home(){
   }
 
   return <main className={`mobileView-${mobileView}`}>
+    <ConflictMascot key={profile} conflicts={allConflicts} previewIds={previewIds}/>
     <header className="topbar" id="top"><a className="brand" href="#top" aria-label="JBJI课表助手首页"><span className="brandMark"><img className="brandLogo" src="./jbji-logo.png" alt="暨南大学与伯明翰大学院徽"/></span><span className="brandCopy"><strong>JBJI 课表助手</strong><small>2026–27 第一学期</small></span></a><nav className="topLinks"><ThemePicker/><a href="#materials">原始资料</a><a href="#help">帮助</a><a href="https://github.com/miraeina/jbji-course-assistant" target="_blank" rel="noreferrer">GitHub ↗</a><a className="mascotDownload" href={`${import.meta.env.BASE_URL}jbji-nailong-guardian.png`} download="暨伯奶龙.png" title="下载奶龙原图（PNG）">JBJI奶龙 <span aria-hidden="true">↓</span></a></nav></header>
     <button className="identityToggle mobileOnly" aria-expanded={identityOpen} aria-controls="identity-filters" onClick={()=>setIdentityOpen(!identityOpen)}>{degreeLabels[track]} · 大{['一','二','三','四'][year-1]} · {groupLabel}<span>{identityOpen?'收起':'切换'}⌄</span></button>
     <section id="identity-filters" className={`filterPanel ${identityOpen?'identityOpen':'identityClosed'}`} aria-label="课表筛选">
@@ -550,8 +556,8 @@ function Home(){
         {electivePreviews.map(option=><div className="electivePreviewNotice" key={option.key}><span>{option.events[0].title}<small>{option.events[0].note}{selectedWeek!=='all'&&!option.events.some(event=>weekNumbers(event.weeks).has(selectedWeek))?' · 本周无课，可查看整学期。':''}</small></span><button onClick={()=>chooseElective(option)}>加入课表</button><button aria-label={`取消预览${option.events[0].title}`} onClick={()=>setPreviewElectiveKeys(current=>current.filter(key=>key!==option.key))}>取消预览</button></div>)}
       </div>}
       <div hidden={!conflicts.length} className={`conflictSummary ${conflicts.length?'hasConflicts':'clear'}`}>
-        <div className="conflictSummaryLead"><strong>{conflicts.length?`发现 ${conflicts.length} 处课程冲突`:activeSelectedOptions.length?'已加入的重修课程暂无冲突':'尚未加入重修课程'}</strong><span>{conflicts.length?'红色表示整段冲突，橙色表示部分节次或部分周次重叠。':activeSelectedOptions.length?`当前已加入 ${activeSelectedOptions.length} 门重修课程。`:'可在左侧“重修课程”中选择低年级课程。'}</span></div>
-        {conflicts.length>0&&<div className="conflictList">{conflicts.map((conflict)=><button key={conflict.key} className={conflict.severity} onClick={()=>setSelectedDay(conflict.day)}><b>{courseHeading(conflict.first)} × {courseHeading(conflict.second)}</b><span>{weekdayNames[conflict.day]} · 第{conflict.firstSession}{conflict.lastSession>conflict.firstSession?`–${conflict.lastSession}`:''}节 · {formatWeekList(conflict.weeks)}</span></button>)}</div>}
+        <div className="conflictSummaryLead"><img className="conflictMascotInline" src="./conflict-nailong.png" alt="奶龙：惊鸿一瞥"/><div><strong>发现 {conflicts.length} 处课程冲突</strong><p>{conflicts.some(previewConflict)?'包含预览课程冲突，预览尚未加入课表。':'已加入的课程存在时间重叠。'}</p><span>点击下方条目查看对应上课日和重叠周次。</span></div></div>
+        {conflicts.length>0&&<div className="conflictList">{conflicts.map((conflict)=><button key={conflict.key} className={conflict.severity} onClick={()=>{setSelectedDay(conflict.day);setMobileDay(conflict.day)}}><b>{previewConflict(conflict)?'【预览冲突】':'【已加入冲突】'}{courseHeading(conflict.first)} × {courseHeading(conflict.second)}</b><span>{weekdayNames[conflict.day]} · 第{conflict.firstSession}{conflict.lastSession>conflict.firstSession?`–${conflict.lastSession}`:''}节 · {formatWeekList(conflict.weeks)}</span></button>)}</div>}
       </div>
       {selectedWeek==='all'&&displayedEvents.length>0&&<p className="semesterHint">并排课程可能分周上课，请留意周次。</p>}
       <div className="dayAgenda mobileOnly" data-export-exclude>
