@@ -3,7 +3,7 @@
 import WeekText from './week-text';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { academicCalendar, roomForMajor, coursesForProfile, initialScheduleView, sessionTimeLabel, getAcademicState, dateForWeekDay, formatShortDate, weekDateRange, formatCalendarDate, getDailySchedule, advanceCalendarView, emptyScheduleMessage, detectConflicts, weekNumbers, type ConflictDetail } from './schedule-logic';
+import { academicCalendar, roomForMajor, coursesForProfile, sessionTimeLabel, getAcademicState, dateForWeekDay, formatShortDate, weekDateRange, formatCalendarDate, getDailySchedule, advanceCalendarView, emptyScheduleMessage, detectConflicts, weekNumbers, type ConflictDetail } from './schedule-logic';
 import Materials from './materials';
 import {timetableFeedbackUrl} from './feedback';
 import ExportEditor from './export-editor';
@@ -217,12 +217,10 @@ function Home(){
   const [selectedCategory,setSelectedCategory]=useState<CourseCategory|'all'>('all');
   const [courseQuery,setCourseQuery]=useState('');
 
-  const defaultView=initialScheduleView(scheduled,academicState);
   const [weekChoice,setWeekChoice]=useState<{profile:string;week:number|'all'}|null>(null);
   const automaticWeek=weekChoice?.profile!==profile;
-  const selectedWeek=automaticWeek?defaultView.week:weekChoice!.week;
-  const isFirstWeekPreview=automaticWeek&&defaultView.preview;
-  const mobileView=mobileViewChoice??(isFirstWeekPreview?'week':'day');
+  const selectedWeek=automaticWeek?'all':weekChoice!.week;
+  const mobileView=mobileViewChoice??'week';
   function setSelectedWeek(week:number|'all'){setWeekChoice({profile,week})}
 
   const previousAcademic=useRef(academicState);
@@ -535,7 +533,7 @@ function Home(){
       </aside>
       <div className="timetablePanel"><div className="sectionHead"><div><h2>我的课表</h2><p className="scheduleIdentity">大{['一','二','三','四'][year-1]} · {selectedMajor.name}{classCount?` ${classNo} 班`:''} · {degreeLabels[track]}</p></div><div className="sectionTools"><div className="panelActions" data-export-exclude>{hasElectives&&<button className="electivePrimary" aria-controls="course-panel" onClick={openElectives}>{year===2?'英语选课':'选择课程'} · {selectedElectiveKeys.length}</button>}<button aria-expanded={sidebarOpen} aria-controls="course-panel" onClick={()=>{setSidebarOpen(!sidebarOpen);changeSidebarMode('current');setCourseQuery('');setSelectedCategory('all');setSelectedDay('all');setPreviewRetakeKey(null)}}>{sidebarOpen?'收起':'查课'}</button>{year>1&&<button onClick={()=>{setSidebarOpen(true);changeSidebarMode('retake')}}>重修{activeSelectedOptions.length?` · ${activeSelectedOptions.length}`:''}</button>}</div><div className="exportActions" data-export-exclude><details className="exportMenu"><summary>导出课表</summary><div><button disabled={exporting!==null||(!scheduled.length&&!selectedRetakeEvents.length)} onClick={()=>exportSchedule('png')}>{exporting==='png'?'生成中…':'导出图片'}</button><button disabled={exporting!==null||(!scheduled.length&&!selectedRetakeEvents.length)} onClick={()=>exportSchedule('pdf')}>{exporting==='pdf'?'生成中…':'导出 PDF'}</button><button disabled={exporting!==null||!displayedEvents.some(event=>event.displaySource!=='preview')} onClick={event=>{event.currentTarget.closest('details')?.removeAttribute('open');openExportEditor()}}>编辑后导出</button></div></details><span className="exportStatus" role="status" aria-live="polite">{exportMessage}</span></div></div></div>
     <section className="calendarPanel" aria-label="校历与教学周" data-export-exclude>
-      <div className="calendarStatus"><strong>{calendarStatus}</strong>{isFirstWeekPreview&&<small className="firstWeekHint">课程从第 {defaultView.firstWeek} 周开始，已显示首个有课周。</small>}{selectedWeekIsReview&&<small>所选周为复习考试周</small>}</div>
+      <div className="calendarStatus"><strong>{calendarStatus}</strong>{selectedWeekIsReview&&<small>所选周为复习考试周</small>}</div>
       <div className="calendarControls">
         <button aria-label="上一周" disabled={selectedWeek==='all'||selectedWeek<=1} onClick={()=>{if(selectedWeek!=='all'){setSelectedWeek(selectedWeek-1);setSelectedDay('all')}}}>‹</button><label htmlFor="week-select"><span>查看周次</span><select aria-label="查看周次" id="week-select" value={selectedWeek} onChange={(event)=>{setSelectedWeek(event.target.value==='all'?'all':Number(event.target.value));setSelectedDay('all')}}><option value="all">整学期</option>{Array.from({length:academicCalendar.totalWeeks},(_,index)=>index+1).map((week)=><option value={week} key={week}>第 {week} 周 · {formatShortDate(dateForWeekDay(week,-1))}–{formatShortDate(dateForWeekDay(week,5))}</option>)}</select></label><button aria-label="下一周" disabled={selectedWeek==='all'||selectedWeek>=academicCalendar.totalWeeks} onClick={()=>{if(selectedWeek!=='all'){setSelectedWeek(selectedWeek+1);setSelectedDay('all')}}}>›</button>
         <button onClick={showCurrentWeek} disabled={!academicState.currentWeek}>本周</button><button className="primary" onClick={showToday} disabled={!academicState.currentWeek||academicState.weekday===null}>今天</button>
