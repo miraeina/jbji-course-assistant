@@ -607,3 +607,5 @@ footer{padding-top:14px;padding-bottom:20px;justify-content:space-between;font-s
 @media(prefers-reduced-motion:reduce){.conflictMascotToast{animation:none}}
 
 .courseTag .categoryHint{font-weight:400;opacity:.75}
+
+.mascotDownload .downloadIcon{width:20px;height:20px;flex-shrink:0}
