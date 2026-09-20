@@ -416,8 +416,8 @@ footer{padding-top:14px;padding-bottom:20px;justify-content:space-between;font-s
 .timetable .timeCell small{font-size:10px}
 .courseBlock strong{font-size:14px}
 .courseBlock .courseTag{font-size:10px;margin-top:5px}
-.emptyState img{width:180px;height:180px;max-width:100%}
-.emptyState{padding:20px;gap:8px}
+.emptyState img{width:min(480px,100%);height:auto;max-width:100%;aspect-ratio:1;object-fit:contain;filter:drop-shadow(0 16px 22px rgb(0 0 0 / 12%))}
+.emptyState{padding:24px 20px 30px;gap:12px}
 .courseSearch input,.sidebarTabs button{font-size:13px}
 .filterPills button{font-size:12px;min-height:32px}
 .sidebarCourseCard small,.sidebarCourseCard em,.sidebarCourseCard i,.retakeCourseCard>small,.retakeCourseCard>em,.retakeCourseCard>i{font-size:12px;line-height:1.5}
@@ -485,7 +485,7 @@ footer{padding-top:14px;padding-bottom:20px;justify-content:space-between;font-s
  .dayPicker small{font-size:11px}
  .dayAgenda h3{margin:10px 0}
  .agendaCard{padding:12px;gap:10px}
- .dayAgenda .emptyState img,.emptyState img{width:140px;height:140px}
+ .dayAgenda .emptyState img,.emptyState img{width:min(340px,100%);height:auto;max-width:100%}
  .courseSidebar{overscroll-behavior:contain}
 }
 @media(max-width:380px){
