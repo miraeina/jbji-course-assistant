@@ -184,11 +184,11 @@ function Home(){
   const [selectedRetakeKeys,setSelectedRetakeKeys]=useState<string[]>(loadRetakes);
   const [previewRetakeKey,setPreviewRetakeKey]=useState<string|null>(null);
   const [electiveSelections,setElectiveSelections]=useState(()=>{try{return parseElectiveSelections(localStorage.getItem(electiveStorageKey))}catch{return {}}});
-  const [previewElectiveKey,setPreviewElectiveKey]=useState<string|null>(null);
+  const [previewElectiveKeys,setPreviewElectiveKeys]=useState<string[]>([]);
   const profile=electiveProfile(track,year,major,classNo);
   const hasElectives=year===2||year===4;
   useEffect(()=>{try{localStorage.setItem(electiveStorageKey,JSON.stringify(electiveSelections))}catch{/* Keep session selections when storage is unavailable. */}},[electiveSelections]);
-  useEffect(()=>{setPreviewElectiveKey(null);setPreviewRetakeKey(null);setCourseQuery('');setSelectedCategory('all');setSelectedDay('all');setSidebarMode(year===2||year===4?'elective':'current')},[profile,year]);
+  useEffect(()=>{setPreviewElectiveKeys([]);setPreviewRetakeKey(null);setCourseQuery('');setSelectedCategory('all');setSelectedDay('all');setSidebarMode(year===2||year===4?'elective':'current')},[profile,year]);
   const selectedMajor=majors.find((item)=>item.id===major)!;
   const classCount=year===1?3:year===2?2:0;
   useEffect(()=>{if(classCount&&classNo>classCount)setClassNo(1)},[classCount,classNo]);
@@ -267,7 +267,7 @@ function Home(){
     const handleKey=(event:KeyboardEvent)=>{
       if(!drawerMedia.matches)return;
       if(event.key==='Escape'){
-        event.preventDefault();setSidebarOpen(false);setPreviewRetakeKey(null);setPreviewElectiveKey(null);
+        event.preventDefault();setSidebarOpen(false);setPreviewRetakeKey(null);
       }
       if(event.key==='Tab'&&panel){
         const controls=Array.from(panel.querySelectorAll<HTMLElement>('button:not(:disabled),input,select,a[href],[tabindex="0"]')).filter(element=>element.getClientRects().length>0);
@@ -305,7 +305,7 @@ function Home(){
   const previewOption=previewRetakeKey&&!selectedRetakeKeys.includes(previewRetakeKey)?retakeOptions.find((option)=>option.key===previewRetakeKey):undefined;
   const previewRetakeEvents:DisplayEvent[]=previewOption?previewOption.events.map((event)=>({...event,displaySource:'preview' as const,retakeKey:previewOption.key})):[];
   const conflicts=detectConflicts(scheduled,selectedRetakeEvents,selectedElectiveIds).filter(issue=>selectedWeek==='all'||issue.weeks.includes(selectedWeek));
-  const electivePreview=electiveChoices.find(option=>option.key===previewElectiveKey&&!selectedElectiveKeys.includes(option.key));
+  const electivePreviews=electiveChoices.filter(option=>previewElectiveKeys.includes(option.key)&&!selectedElectiveKeys.includes(option.key));
   const hardConflictEventIds=new Set(conflicts.filter((conflict)=>conflict.severity==='hard').flatMap((conflict)=>[conflict.first.id,conflict.second.id]));
   const partialConflictEventIds=new Set(conflicts.filter((conflict)=>conflict.severity==='partial').flatMap((conflict)=>[conflict.first.id,conflict.second.id]));
   const displayedDays=selectedDay==='all'?[0,1,2,3,4]:[selectedDay];
@@ -324,7 +324,7 @@ function Home(){
     if(sidebarMode==='current'&&normalizedQuery&&!`${event.title} ${event.english||''}`.toLocaleLowerCase('zh-CN').includes(normalizedQuery))return false;
     return true;
   });
-  const visiblePreviewEvents=[...previewRetakeEvents,...(electivePreview?.events.filter(event=>!event.listedOnly).map(event=>({...event,displaySource:'preview' as const}))||[])].filter((event)=>(selectedWeek==='all'||weekNumbers(event.weeks).has(selectedWeek))&&(selectedDay==='all'||event.day===selectedDay));
+  const visiblePreviewEvents=[...previewRetakeEvents,...electivePreviews.flatMap(option=>option.events.filter(event=>!event.listedOnly).map(event=>({...event,displaySource:'preview' as const})))].filter((event)=>(selectedWeek==='all'||weekNumbers(event.weeks).has(selectedWeek))&&(selectedDay==='all'||event.day===selectedDay));
   const displayedEvents=arrange([...matchingEvents.map((event)=>({...event,displaySource:'base' as const})),...visibleRetakeEvents,...visiblePreviewEvents]);
   const sidebarCourses=Array.from(new Map(matchingEvents.map((event)=>[event.title,event])).values()).sort((a,b)=>a.title.localeCompare(b.title,'zh-CN'));
   const normalizedRetakeQuery=retakeQuery.trim().toLocaleLowerCase('zh-CN');
@@ -342,13 +342,13 @@ function Home(){
   const selectedWeekIsReview=selectedWeek!=='all'&&academicCalendar.reviewExamWeeks.includes(selectedWeek as 17|18|19|20);
 
   function changeSidebarMode(mode:SidebarMode){
-    setSidebarMode(mode); setPreviewRetakeKey(null);setPreviewElectiveKey(null);
+    setSidebarMode(mode); setPreviewRetakeKey(null);
     if(mode!=='current'){setSelectedDay('all');setSelectedCategory('all');setCourseQuery('')}
   }
 
   function chooseElective(option:ElectiveOption){
+    setPreviewElectiveKeys(current=>current.filter(key=>key!==option.key));
     setElectiveSelections(current=>({...current,[profile]:toggleElective(current[profile]||[],option,electiveChoices)}));
-    setPreviewElectiveKey(null);
   }
   function electiveConflicts(option:ElectiveOption){
     const alternativeIds=new Set(electiveChoices.filter(item=>item.courseKey===option.courseKey).flatMap(item=>item.events.map(event=>event.id)));
@@ -357,7 +357,7 @@ function Home(){
   }
   function openElectives(){setSidebarOpen(true);changeSidebarMode('elective')}
   function previewElective(option:ElectiveOption){
-    setPreviewElectiveKey(option.key);setPreviewRetakeKey(null);setSelectedDay('all');
+    setPreviewElectiveKeys(current=>current.includes(option.key)?current.filter(key=>key!==option.key):[...current,option.key]);setPreviewRetakeKey(null);setSelectedDay('all');
     if(window.matchMedia('(max-width:700px)').matches){setMobileView('week');setSidebarOpen(false)}
   }
 
@@ -471,7 +471,7 @@ function Home(){
   }
 
   function renderEmpty(day?:number){
-    if(year===4&&!selectedElectiveKeys.length&&!selectedRetakeEvents.length)return <div className="emptyState"><strong>尚未添加选修课</strong><p>点击下方按钮，添加本学期课程。</p><button onClick={openElectives}>选择课程</button></div>;
+    if(year===4&&!selectedElectiveKeys.length&&!selectedRetakeEvents.length)return <div className="emptyState"><img src="./jbji-nailong-guardian.png" alt=""/><strong>尚未添加选修课</strong><p>点击下方按钮，添加本学期课程。</p><button onClick={openElectives}>选择课程</button></div>;
     const info=emptyScheduleMessage([...scheduled,...selectedRetakeEvents],selectedWeek,day);
     const activate=()=>{
       setSelectedDay('all');setSelectedCategory('all');setCourseQuery('');
@@ -492,17 +492,17 @@ function Home(){
       {classCount>0&&<div className="filterGroup classGroup"><span>班级</span><div className="segmented">{Array.from({length:classCount},(_,i)=>i+1).map((item)=><button key={item} className={classNo===item?'active':''} onClick={()=>setClassNo(item)}>{item} 班</button>)}</div></div>}
       <button className="identityDone mobileOnly" onClick={()=>setIdentityOpen(false)}>查看课表</button>
     </section>
-    {sidebarOpen&&<button className="sheetBackdrop mobileOnly" aria-label="关闭课程面板" onClick={()=>{setSidebarOpen(false);setPreviewRetakeKey(null);setPreviewElectiveKey(null)}}/>}
+    {sidebarOpen&&<button className="sheetBackdrop mobileOnly" aria-label="关闭课程面板" onClick={()=>{setSidebarOpen(false);setPreviewRetakeKey(null)}}/>}
     <section className="scheduleSection" ref={scheduleRef}><p className="exportContext" data-export-only>{academicCalendar.academicYear} 学年第一学期 · {degreeLabels[track]} · 大{['一','二','三','四'][year-1]} · {selectedMajor.name}{classCount?` · ${classNo} 班`:''}<br/>{selectedWeek==='all'?'整学期':`第 ${selectedWeek} 周 · ${weekDateRange(selectedWeek)}`}{selectedDay!=='all'?` · ${weekdayNames[selectedDay]}`:''}{courseQuery||selectedCategory!=='all'?' · 已应用课程筛选':''}{hasElectives?` · 已选 ${selectedElectiveKeys.length} 门选修`:''}</p><div className={`scheduleBody ${sidebarOpen?"sidebarOpen":"sidebarClosed"}`}>
       <aside hidden={!sidebarOpen} id="course-panel" className={`courseSidebar ${sidebarMode==='elective'&&year===2?'englishElectivePanel':''}`} aria-label="浏览和筛选课程" data-export-exclude>
-        <button className="sheetClose mobileOnly" onClick={()=>{setSidebarOpen(false);setPreviewRetakeKey(null);setPreviewElectiveKey(null)}}>完成</button>
+        <button className="sheetClose mobileOnly" onClick={()=>{setSidebarOpen(false);setPreviewRetakeKey(null)}}>完成</button>
         <div className="sidebarHead sidebarTabs" role="tablist" aria-label="课程面板">
           {hasElectives&&<button role="tab" aria-selected={sidebarMode==='elective'} className={sidebarMode==='elective'?'active':''} onClick={()=>changeSidebarMode('elective')}>选修课<span>{selectedElectiveKeys.length}</span></button>}
           <button role="tab" aria-selected={sidebarMode==='current'} className={sidebarMode==='current'?'active':''} onClick={()=>changeSidebarMode('current')}>本学期课程<span>{sidebarCourses.length}</span></button>
           <button role="tab" aria-selected={sidebarMode==='retake'} className={sidebarMode==='retake'?'active':''} onClick={()=>changeSidebarMode('retake')}>重修课程<span>{activeSelectedOptions.length}</span></button>
         </div>
         <div className="sidebarPanel">
-          {sidebarMode==='elective'&&hasElectives?<ElectivePanel key={profile} options={electiveChoices} selected={selectedElectiveKeys} year={year} issuesFor={electiveConflicts} onToggle={chooseElective} onPreview={previewElective} onDetails={course=>openCourseDetails(course)}/>:sidebarMode==='current'?<>
+          {sidebarMode==='elective'&&hasElectives?<ElectivePanel key={profile} options={electiveChoices} selected={selectedElectiveKeys} previewed={previewElectiveKeys} year={year} issuesFor={electiveConflicts} onToggle={chooseElective} onPreview={previewElective} onDetails={course=>openCourseDetails(course)}/>:sidebarMode==='current'?<>
             <label className="courseSearch" htmlFor="course-search"><span>搜索课程</span><input id="course-search" type="search" value={courseQuery} onChange={(event)=>setCourseQuery(event.target.value)} placeholder="搜索中文名或英文名" autoComplete="off"/></label>
             <div className="sidebarFilter"><span>课程类别</span><div className="filterPills"><button className={selectedCategory==='all'?'active':''} aria-pressed={selectedCategory==='all'} onClick={()=>setSelectedCategory('all')}>全部</button>{(Object.keys(categoryLabels) as CourseCategory[]).map((category)=><button className={selectedCategory===category?'active':''} aria-pressed={selectedCategory===category} onClick={()=>setSelectedCategory(category)} key={category}>{categoryLabels[category]}</button>)}</div></div>
             <div className="sidebarFilter"><span>上课日</span><div className="filterPills"><button className={selectedDay==='all'?'active':''} aria-pressed={selectedDay==='all'} onClick={()=>setSelectedDay('all')}>全部</button>{weekdayNames.map((day,index)=><button className={selectedDay===index?'active':''} aria-pressed={selectedDay===index} onClick={()=>setSelectedDay(index)} key={day}>{['一','二','三','四','五'][index]}</button>)}</div></div>
@@ -545,7 +545,10 @@ function Home(){
       {mobileView==='day'&&<div className="dayPicker" aria-label="选择星期">{['一','二','三','四','五','六','日'].map((name,day)=><button key={day} aria-pressed={mobileDay===day} onClick={()=>{setMobileDay(day);setSelectedDay('all')}}><span>{name}{day===todayIndex&&selectedWeek===academicState.currentWeek?' · 今':''}</span><small>{selectedWeek==='all'?'':formatShortDate(dateForWeekDay(selectedWeek,day===6?-1:day))}</small></button>)}</div>}
     </div>
       {hasElectives&&!selectedElectiveKeys.length&&<p className="electiveHint" data-export-exclude>{year===2?'英语课需自行添加，点击“英语选课”选择。':'点击“选择课程”添加本学期选修课。'}</p>}
-      {electivePreview&&<div className="electivePreviewNotice" data-export-exclude><span>正在预览：{electivePreview.events[0].title}<small>预览中，尚未加入。{selectedWeek!=='all'&&!electivePreview.events.some(event=>weekNumbers(event.weeks).has(selectedWeek))?'本周无课，可查看整学期。':''}</small></span><button onClick={()=>chooseElective(electivePreview)}>加入课表</button><button onClick={()=>setPreviewElectiveKey(null)}>结束预览</button></div>}
+      {electivePreviews.length>0&&<div data-export-exclude aria-label="预览课程管理">
+        <div className="electivePreviewNotice"><span>正在预览 {electivePreviews.length} 门课程<small>预览不会保存或导出，可逐门取消或加入课表。</small></span><button onClick={()=>setPreviewElectiveKeys([])}>清空预览</button></div>
+        {electivePreviews.map(option=><div className="electivePreviewNotice" key={option.key}><span>{option.events[0].title}<small>{option.events[0].note}{selectedWeek!=='all'&&!option.events.some(event=>weekNumbers(event.weeks).has(selectedWeek))?' · 本周无课，可查看整学期。':''}</small></span><button onClick={()=>chooseElective(option)}>加入课表</button><button aria-label={`取消预览${option.events[0].title}`} onClick={()=>setPreviewElectiveKeys(current=>current.filter(key=>key!==option.key))}>取消预览</button></div>)}
+      </div>}
       <div hidden={!conflicts.length} className={`conflictSummary ${conflicts.length?'hasConflicts':'clear'}`}>
         <div className="conflictSummaryLead"><strong>{conflicts.length?`发现 ${conflicts.length} 处课程冲突`:activeSelectedOptions.length?'已加入的重修课程暂无冲突':'尚未加入重修课程'}</strong><span>{conflicts.length?'红色表示整段冲突，橙色表示部分节次或部分周次重叠。':activeSelectedOptions.length?`当前已加入 ${activeSelectedOptions.length} 门重修课程。`:'可在左侧“重修课程”中选择低年级课程。'}</span></div>
         {conflicts.length>0&&<div className="conflictList">{conflicts.map((conflict)=><button key={conflict.key} className={conflict.severity} onClick={()=>setSelectedDay(conflict.day)}><b>{courseHeading(conflict.first)} × {courseHeading(conflict.second)}</b><span>{weekdayNames[conflict.day]} · 第{conflict.firstSession}{conflict.lastSession>conflict.firstSession?`–${conflict.lastSession}`:''}节 · {formatWeekList(conflict.weeks)}</span></button>)}</div>}

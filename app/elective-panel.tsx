@@ -4,8 +4,8 @@ import type { ConflictDetail } from './schedule-logic';
 import { times, type TimetableEvent } from './timetable-data';
 
 const days=['周一','周二','周三','周四','周五'];
-export default function ElectivePanel({options,selected,year,issuesFor,onToggle,onPreview,onDetails}:{
-  options:ElectiveOption[];selected:string[];year:number;issuesFor:(option:ElectiveOption)=>ConflictDetail[];
+export default function ElectivePanel({options,selected,previewed,year,issuesFor,onToggle,onPreview,onDetails}:{
+  options:ElectiveOption[];selected:string[];previewed:string[];year:number;issuesFor:(option:ElectiveOption)=>ConflictDetail[];
   onToggle:(option:ElectiveOption)=>void;onPreview:(option:ElectiveOption)=>void;onDetails:(event:TimetableEvent)=>void;
 }){
   const [query,setQuery]=useState('');
@@ -27,7 +27,7 @@ export default function ElectivePanel({options,selected,year,issuesFor,onToggle,
         <span>{event.note||'选修课程'}{chosen?' · 已加入':''}</span><strong>{event.title}</strong>{event.english&&<small>{event.english}</small>}
         {option.events.map(session=><p className="electiveSession" key={session.id}>{session.listedOnly?'时间待通知':`${days[session.day]} ${times[session.start]?.[1]}–${times[session.start+session.span-1]?.[2]}`}<br/>教室：{session.room||'待通知'}<br/>周次：{session.weeks||'待通知'}{session.teacher&&<><br/>教师：{session.teacher}</>}</p>)}
         {issues.length>0&&<details className="electiveIssues"><summary>{issues.length} 处{severity==='partial'?'部分':''}冲突 · 查看</summary>{issues.map(issue=><p key={issue.key}>{option.events.some(item=>item.id===issue.first.id)?issue.second.title:issue.first.title}<br/>{days[issue.day]} 第{issue.firstSession}–{issue.lastSession}节 · 第{issue.weeks.join('、')}周</p>)}</details>}
-        <div className="electiveLinks"><button onClick={()=>onDetails(event)}>详情</button>{!chosen&&<button onClick={()=>onPreview(option)}>预览课表</button>}</div>
+        <div className="electiveLinks"><button onClick={()=>onDetails(event)}>详情</button>{!chosen&&<button aria-pressed={previewed.includes(option.key)} onClick={()=>onPreview(option)}>{previewed.includes(option.key)?'取消预览':'预览课表'}</button>}</div>
         <div className="retakeCardFooter"><span className={`conflictStatus ${severity}`}>{severity==='safe'?'无冲突':severity==='hard'?'课程冲突':'部分冲突'}</span><button aria-label={`${chosen?'移除':replaces?'换为':'加入'}${event.title}${event.note?` · ${event.note}`:''}`} onClick={()=>onToggle(option)}>{chosen?'移除':replaces?'换到此班':'加入课表'}</button></div>
       </article>;
     })}{!rows.length&&<p className="sidebarEmpty">{filter==='selected'?'尚未添加选修课':'没有符合条件的选修课'}</p>}</div>
