@@ -559,7 +559,7 @@ function Home(){
   }
 
   function renderEmpty(day?:number){
-    if(year===4&&!selectedElectiveKeys.length&&!selectedRetakeEvents.length)return <div className="emptyState"><img src="./jbji-nailong-guardian.png" alt=""/><strong>尚未添加选修课</strong><p>点击下方按钮，添加本学期课程。</p><button onClick={openElectives}>选择课程</button></div>;
+    if(year===4&&!selectedElectiveKeys.length&&!selectedRetakeEvents.length)return <div className="emptyState"><img src="./jbji-nailong-guardian.webp" fetchPriority="high" loading="eager" alt=""/><strong>尚未添加选修课</strong><p>点击下方按钮，添加本学期课程。</p><button onClick={openElectives}>选择课程</button></div>;
     const info=emptyScheduleMessage([...scheduled,...selectedRetakeEvents],selectedWeek,day);
     const activate=()=>{
       setSelectedDay('all');setSelectedCategory('all');setCourseQuery('');
@@ -567,7 +567,7 @@ function Home(){
       if(info.action==='semester')setSelectedWeek('all');
       if(info.action==='week')setMobileView('week');
     };
-    return <div className="emptyState"><img src="./jbji-nailong-guardian.png" alt=""/><strong>{info.title}</strong><p>{info.detail}</p><button onClick={activate}>{info.action==='start'?`查看第 ${info.firstWeek} 周`:info.action==='semester'?'查看整学期':info.action==='week'?'查看本周':'清除筛选'}</button></div>;
+    return <div className="emptyState"><img src="./jbji-nailong-guardian.webp" fetchPriority="high" loading="eager" alt=""/><strong>{info.title}</strong><p>{info.detail}</p><button onClick={activate}>{info.action==='start'?`查看第 ${info.firstWeek} 周`:info.action==='semester'?'查看整学期':info.action==='week'?'查看本周':'清除筛选'}</button></div>;
   }
 
   return <main className={`mobileView-${mobileView}`}>
@@ -646,7 +646,7 @@ function Home(){
         {electivePreviews.map(option=><div className="electivePreviewNotice" key={option.key}><span>{option.events[0].title}<small>{option.events[0].note}{selectedWeek!=='all'&&!option.events.some(event=>weekNumbers(event.weeks).has(selectedWeek))?' · 本周无课，可查看整学期。':''}</small></span><button onClick={()=>chooseElective(option)}>加入课表</button><button aria-label={`取消预览${option.events[0].title}`} onClick={()=>setPreviewElectiveKeys(current=>current.filter(key=>key!==option.key))}>取消预览</button></div>)}
       </div>}
       <div hidden={!conflicts.length} className={`conflictSummary ${conflicts.length?'hasConflicts':'clear'}`} data-export-exclude>
-        <div className="conflictSummaryLead"><img className="conflictMascotInline" src="./conflict-nailong.png" alt="奶龙：惊鸿一瞥"/><div><strong>发现 {conflicts.length} 处课程冲突</strong><p>{conflicts.some(previewConflict)?'包含预览课程冲突，预览尚未加入课表。':'已加入的课程存在时间重叠。'}</p><span>点击下方条目查看对应上课日和重叠周次。</span></div></div>
+        <div className="conflictSummaryLead"><img className="conflictMascotInline" src="./conflict-nailong.webp" alt="奶龙：惊鸿一瞥"/><div><strong>发现 {conflicts.length} 处课程冲突</strong><p>{conflicts.some(previewConflict)?'包含预览课程冲突，预览尚未加入课表。':'已加入的课程存在时间重叠。'}</p><span>点击下方条目查看对应上课日和重叠周次。</span></div></div>
         {conflicts.length>0&&<div className="conflictList">{conflicts.map((conflict)=><button key={conflict.key} className={conflict.severity} onClick={()=>{setSelectedDay(conflict.day);setMobileDay(conflict.day)}}><b>{previewConflict(conflict)?'【预览冲突】':'【已加入冲突】'}{courseHeading(conflict.first)} × {courseHeading(conflict.second)}</b><span>{weekdayNames[conflict.day]} · 第{conflict.firstSession}{conflict.lastSession>conflict.firstSession?`–${conflict.lastSession}`:''}节 · {formatWeekList(conflict.weeks)}</span></button>)}</div>}
       </div>
       {selectedWeek==='all'&&displayedEvents.length>0&&<p className="semesterHint">并排课程可能分周上课，请留意周次。</p>}

@@ -38,7 +38,7 @@ export default function SiteHeader() {
 
   return <header className="topbar scheduleHeader" id="top">
     <a className="brand" href="#top" aria-label="JBJI课表助手首页">
-      <span className="brandMark"><img className="brandLogo" src="./jbji-logo.png" alt="暨南大学与伯明翰大学院徽"/></span>
+      <span className="brandMark"><img className="brandLogo" src="./jbji-logo.webp" fetchPriority="high" loading="eager" alt="暨南大学与伯明翰大学院徽"/></span>
       <span className="brandCopy"><strong>JBJI 课表助手</strong><small>2026–27 第一学期</small></span>
     </a>
     <nav className="topLinks" aria-label="网站工具">

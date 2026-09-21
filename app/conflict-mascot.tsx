@@ -23,7 +23,7 @@ export default function ConflictMascot({conflicts,previewIds}:{conflicts:Conflic
   },[notice]);
   return notice?<aside className="conflictMascotToast" data-export-exclude key={notice.stamp}>
     <button className="conflictMascotClose" aria-label="关闭奶龙提醒" onClick={()=>setNotice(null)}>×</button>
-    <img src="./conflict-nailong.png" alt="奶龙：惊鸿一瞥"/>
+    <img src="./conflict-nailong.webp" alt="奶龙：惊鸿一瞥"/>
     <div role="status"><strong>你最好真的会分身。</strong><p>{notice.preview?'预览课程存在冲突，尚未加入课表。':'新增课程冲突，请检查重叠时间。'}</p></div>
   </aside>:null;
 }
