@@ -194,6 +194,11 @@ function Home(){
   const hasElectives=year===2||year===4;
   const longPress=useCourseLongPress(profile);
   const [removedElective,setRemovedElective]=useState<{profile:string;option:ElectiveOption}|null>(null);
+  useEffect(()=>{
+    if(!removedElective)return;
+    const timer=window.setTimeout(()=>setRemovedElective(null),3000);
+    return ()=>window.clearTimeout(timer);
+  },[removedElective]);
   useEffect(()=>{try{localStorage.setItem(electiveStorageKey,JSON.stringify(electiveSelections))}catch{/* Keep session selections when storage is unavailable. */}},[electiveSelections]);
   useEffect(()=>{setRemovedElective(null);setPreviewElectiveKeys([]);setPreviewRetakeKey(null);setCourseQuery('');setSelectedCategory('all');setSelectedDay('all');setSidebarMode(year===2||year===4?'elective':'current')},[profile,year]);
   const selectedMajor=majors.find((item)=>item.id===major)!;
