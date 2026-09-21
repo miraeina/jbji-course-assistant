@@ -2,6 +2,7 @@
 
 import WeekText from './week-text';
 import ScheduleViewport from './schedule-viewport';
+import useCourseLongPress from './use-course-long-press';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { academicCalendar, roomForMajor, coursesForProfile, sessionTimeLabel, getAcademicState, dateForWeekDay, formatShortDate, weekDateRange, formatCalendarDate, getDailySchedule, advanceCalendarView, emptyScheduleMessage, detectConflicts, weekNumbers, type ConflictDetail } from './schedule-logic';
@@ -191,8 +192,10 @@ function Home(){
   const [previewElectiveKeys,setPreviewElectiveKeys]=useState<string[]>([]);
   const profile=electiveProfile(track,year,major,classNo);
   const hasElectives=year===2||year===4;
+  const longPress=useCourseLongPress(profile);
+  const [removedElective,setRemovedElective]=useState<{profile:string;option:ElectiveOption}|null>(null);
   useEffect(()=>{try{localStorage.setItem(electiveStorageKey,JSON.stringify(electiveSelections))}catch{/* Keep session selections when storage is unavailable. */}},[electiveSelections]);
-  useEffect(()=>{setPreviewElectiveKeys([]);setPreviewRetakeKey(null);setCourseQuery('');setSelectedCategory('all');setSelectedDay('all');setSidebarMode(year===2||year===4?'elective':'current')},[profile,year]);
+  useEffect(()=>{setRemovedElective(null);setPreviewElectiveKeys([]);setPreviewRetakeKey(null);setCourseQuery('');setSelectedCategory('all');setSelectedDay('all');setSidebarMode(year===2||year===4?'elective':'current')},[profile,year]);
   const selectedMajor=majors.find((item)=>item.id===major)!;
   const classCount=year===1?3:year===2?2:0;
   useEffect(()=>{if(classCount&&classNo>classCount)setClassNo(1)},[classCount,classNo]);
@@ -391,12 +394,23 @@ function Home(){
   }
 
   function chooseElective(option:ElectiveOption){
+    setRemovedElective(null);
     setPreviewElectiveKeys(current=>current.filter(key=>key!==option.key));
     setElectiveSelections(current=>({...current,[profile]:toggleElective(current[profile]||[],option,electiveChoices)}));
   }
   function clearElectives(){
+    setRemovedElective(null);
     setElectiveSelections(current=>({...current,[profile]:[]}));
     setPreviewElectiveKeys([]);
+  }
+  function courseLongPress(event:DisplayEvent){
+    const option=event.displaySource==='base'&&isElective(event)
+      ?electiveChoices.find(choice=>selectedElectiveKeys.includes(choice.key)&&choice.events.some(item=>item.id===event.id)):undefined;
+    return longPress(option?()=>{
+      setElectiveSelections(current=>({...current,[profile]:(current[profile]||[]).filter(key=>key!==option.key)}));
+      setPreviewElectiveKeys(current=>current.filter(key=>key!==option.key));
+      setRemovedElective({profile,option});
+    }:undefined);
   }
   function electiveConflicts(option:ElectiveOption){
     const alternativeIds=new Set(electiveChoices.filter(item=>item.courseKey===option.courseKey).flatMap(item=>item.events.map(event=>event.id)));
@@ -627,9 +641,11 @@ function Home(){
         {conflicts.length>0&&<div className="conflictList">{conflicts.map((conflict)=><button key={conflict.key} className={conflict.severity} onClick={()=>{setSelectedDay(conflict.day);setMobileDay(conflict.day)}}><b>{previewConflict(conflict)?'【预览冲突】':'【已加入冲突】'}{courseHeading(conflict.first)} × {courseHeading(conflict.second)}</b><span>{weekdayNames[conflict.day]} · 第{conflict.firstSession}{conflict.lastSession>conflict.firstSession?`–${conflict.lastSession}`:''}节 · {formatWeekList(conflict.weeks)}</span></button>)}</div>}
       </div>
       {selectedWeek==='all'&&displayedEvents.length>0&&<p className="semesterHint">并排课程可能分周上课，请留意周次。</p>}
+      {selectedElectiveKeys.length>0&&<p className="longPressHint" data-export-exclude>轻点课程查看详情，长按已选课程可移除。</p>}
+      {removedElective?.profile===profile&&<div className="courseRemovalNotice" data-export-exclude><span role="status">已移除：{removedElective.option.events[0].title}</span><button onClick={()=>chooseElective(removedElective.option)}>撤销</button><button aria-label="关闭移除提示" onClick={()=>setRemovedElective(null)}>×</button></div>}
       <div className="dayAgenda mobileOnly" data-export-exclude>
         <h3>{selectedWeek==='all'?'整学期':`第 ${selectedWeek} 周`} · 周{['一','二','三','四','五','六','日'][mobileDay]}</h3>
-        {displayedEvents.filter(event=>event.day===mobileDay&&event.displaySource!=='preview').sort((a,b)=>a.start-b.start).map(event=><button key={`${event.displaySource}-${event.id}`} className={`agendaCard category-${courseCategory(event)} ${hardConflictEventIds.has(event.id)?'agendaConflict':partialConflictEventIds.has(event.id)?'agendaPartial':''}`} onClick={()=>openCourseDetails(event)}><span className="agendaTime">{times[event.start]?.[1]}<small>{times[event.start+event.span-1]?.[2]||'结束时间待确认'}</small></span><span><strong>{courseHeading(event)}</strong>{event.shortTitle&&<small>{courseSubtitle(event)}</small>}<small className="agendaRoom">教室：{roomForMajor(event,major)}</small><small className="agendaWeeks"><span className="factLabel">周次：</span><WeekText value={event.weeks||'按学期安排'}/></small>{event.teacher&&<small className="agendaTeacher">教师：{event.teacher}</small>}<small>{event.displaySource==='retake'?'重修 · ':isElective(event)?'选修 · ':''}{hardConflictEventIds.has(event.id)?'课程冲突':partialConflictEventIds.has(event.id)?'部分冲突':categoryLabels[courseCategory(event)]}</small></span></button>)}
+        {displayedEvents.filter(event=>event.day===mobileDay&&event.displaySource!=='preview').sort((a,b)=>a.start-b.start).map(event=><button key={`${event.displaySource}-${event.id}`} {...courseLongPress(event)} className={`agendaCard category-${courseCategory(event)} ${hardConflictEventIds.has(event.id)?'agendaConflict':partialConflictEventIds.has(event.id)?'agendaPartial':''}`} onClick={()=>openCourseDetails(event)}><span className="agendaTime">{times[event.start]?.[1]}<small>{times[event.start+event.span-1]?.[2]||'结束时间待确认'}</small></span><span><strong>{courseHeading(event)}</strong>{event.shortTitle&&<small>{courseSubtitle(event)}</small>}<small className="agendaRoom">教室：{roomForMajor(event,major)}</small><small className="agendaWeeks"><span className="factLabel">周次：</span><WeekText value={event.weeks||'按学期安排'}/></small>{event.teacher&&<small className="agendaTeacher">教师：{event.teacher}</small>}<small>{event.displaySource==='retake'?'重修 · ':isElective(event)?'选修 · ':''}{hardConflictEventIds.has(event.id)?'课程冲突':partialConflictEventIds.has(event.id)?'部分冲突':categoryLabels[courseCategory(event)]}</small></span></button>)}
         {!displayedEvents.some(event=>event.day===mobileDay&&event.displaySource!=='preview')&&renderEmpty(mobileDay)}
       </div>
       <div className="scheduleContent">{displayedEvents.length>0&&<ScheduleViewport minWidth={displayedDays.length===1?360:900}><div className="timetable" style={{gridTemplateColumns:displayedDays.length===1?'72px minmax(0,1fr)':'72px repeat(5,minmax(0,1fr))',minWidth:displayedDays.length===1?'360px':'900px'}}><div className="corner">节次</div>{displayedDays.map((day,index)=><div className="dayHead" style={{gridColumn:index+2}} key={day}>{weekdayNames[day]}<small>{selectedWeek==='all'?weekdayShort[day]:formatShortDate(dateForWeekDay(selectedWeek,day))}</small></div>)}
@@ -637,7 +653,7 @@ function Home(){
         {times.map((_,row)=>displayedDays.map((day,index)=><div className={`gridCell ${row===4?'break':''}`} style={{gridColumn:index+2,gridRow:row+2}} key={`${day}-${row}`}/>))}
         {displayedEvents.map((event)=>{
           const hasHard=hardConflictEventIds.has(event.id); const hasPartial=!hasHard&&partialConflictEventIds.has(event.id);
-          return <article className={`courseBlock ${event.shortTitle?'abbreviatedModule':''} ${event.shortTitle&&event.span===1?'shortModuleSession':''} category-${courseCategory(event)} ${event.displaySource==='retake'?'retakeBlock':''} ${event.displaySource==='preview'?'previewBlock':''} ${hasHard?'conflictBlock':hasPartial?'partialConflictBlock':''}`} style={{gridColumn:displayedDays.indexOf(event.day)+2,gridRow:`${event.start+2} / span ${event.span}`,width:`calc((100% - 6px) / ${event.laneCount})`,marginLeft:`calc(${event.lane} * (100% / ${event.laneCount}) + 3px)`}} key={`${event.displaySource}-${event.id}`} data-event-id={event.id} title="查看课程详情" role="button" tabIndex={0} onClick={()=>openCourseDetails(event)} onKeyDown={(key)=>{if(key.key==='Enter'||key.key===' '){key.preventDefault();openCourseDetails(event)}}}><strong>{courseHeading(event)}</strong>{courseSubtitle(event)&&<small className="courseEnglish">{courseSubtitle(event)}</small>}<small className="courseRoom">教室：{roomForMajor(event,major)}</small><small className="courseWeeks"><span className="factLabel">周次：</span><WeekText value={event.weeks||'按学期安排'}/></small>{event.teacher&&<small className="courseTeacher">教师：{event.teacher}</small>}<span className="courseTag">{event.displaySource==='retake'?'重修 · ':event.displaySource==='preview'?'课程预览 · ':isElective(event)?'选修 · ':''}<span className="categoryHint">{categoryLabels[courseCategory(event)]}</span>{event.note&&` · ${event.note}`}</span></article>;
+          return <article {...courseLongPress(event)} className={`courseBlock ${event.shortTitle?'abbreviatedModule':''} ${event.shortTitle&&event.span===1?'shortModuleSession':''} category-${courseCategory(event)} ${event.displaySource==='retake'?'retakeBlock':''} ${event.displaySource==='preview'?'previewBlock':''} ${hasHard?'conflictBlock':hasPartial?'partialConflictBlock':''}`} style={{gridColumn:displayedDays.indexOf(event.day)+2,gridRow:`${event.start+2} / span ${event.span}`,width:`calc((100% - 6px) / ${event.laneCount})`,marginLeft:`calc(${event.lane} * (100% / ${event.laneCount}) + 3px)`}} key={`${event.displaySource}-${event.id}`} data-event-id={event.id} title="查看课程详情" role="button" tabIndex={0} onClick={()=>openCourseDetails(event)} onKeyDown={(key)=>{if(key.key==='Enter'||key.key===' '){key.preventDefault();openCourseDetails(event)}}}><strong>{courseHeading(event)}</strong>{courseSubtitle(event)&&<small className="courseEnglish">{courseSubtitle(event)}</small>}<small className="courseRoom">教室：{roomForMajor(event,major)}</small><small className="courseWeeks"><span className="factLabel">周次：</span><WeekText value={event.weeks||'按学期安排'}/></small>{event.teacher&&<small className="courseTeacher">教师：{event.teacher}</small>}<span className="courseTag">{event.displaySource==='retake'?'重修 · ':event.displaySource==='preview'?'课程预览 · ':isElective(event)?'选修 · ':''}<span className="categoryHint">{categoryLabels[courseCategory(event)]}</span>{event.note&&` · ${event.note}`}</span></article>;
         })}
       </div></ScheduleViewport>}
       {displayedEvents.length===0&&renderEmpty(selectedDay==='all'?undefined:selectedDay)}</div></div></div>
@@ -652,7 +668,7 @@ function Home(){
         </article>;
       })}</div>
     </details>
-    <details className="notice" id="help"><summary>使用帮助</summary><div className="helpContent"><p>选好学位、年级、专业和班级，即可查看课表。点击课程可看详情。</p><p>切换周次查看当周安排；“整学期”显示所有课程。英语选课和重修课程需手动添加，选择仅保存在当前浏览器，不代替学校选课。</p><p>在“导出课表”中选择“编辑后导出”，可临时修改名称、教室、教师和备注。修改只用于个人副本，退出后不保存。</p><p>课表与教学周来自学院课表、单学位授课安排和学校校历。临时调课请以学院通知为准。</p><p>发现课程信息有误或遗漏？<a href={feedbackUrl()} target="_blank" rel="noreferrer">提交课表纠错 ↗</a>（需登录 GitHub）。请补充正确信息及学院通知链接或截图，由维护者核实后更新。</p><a href="#materials">查看原始课表与校历 ↗</a></div></details>
+    <details className="notice" id="help"><summary>使用帮助</summary><div className="helpContent"><p>选好学位、年级、专业和班级，即可查看课表。点击课程可看详情；手机长按已选选修课约 0.6 秒可移除整门课程，移除后可撤销。</p><p>切换周次查看当周安排；“整学期”显示所有课程。英语选课和重修课程需手动添加，选择仅保存在当前浏览器，不代替学校选课。</p><p>在“导出课表”中选择“编辑后导出”，可临时修改名称、教室、教师和备注。修改只用于个人副本，退出后不保存。</p><p>课表与教学周来自学院课表、单学位授课安排和学校校历。临时调课请以学院通知为准。</p><p>发现课程信息有误或遗漏？<a href={feedbackUrl()} target="_blank" rel="noreferrer">提交课表纠错 ↗</a>（需登录 GitHub）。请补充正确信息及学院通知链接或截图，由维护者核实后更新。</p><a href="#materials">查看原始课表与校历 ↗</a></div></details>
     <footer><span>JBJI 课表助手 · 学生自制</span><a className="feedbackLink" href={feedbackUrl()} target="_blank" rel="noreferrer" title="在 GitHub 提交课表纠错，需要登录">课表纠错（GitHub）↗</a><a href="https://birmingham.jnu.edu.cn/" target="_blank" rel="noreferrer">学院官网 ↗</a></footer>
     {exportDraft&&<ExportEditor {...exportDraft} busy={exporting!==null} status={exportMessage} onClose={()=>{setExportDraft(null);setExportMessage('')}} onExport={(format,source)=>exportSchedule(format,source,true)}/>}
     {detailCourse&&<div className="detailOverlay" onMouseDown={()=>setDetailCourse(null)}>

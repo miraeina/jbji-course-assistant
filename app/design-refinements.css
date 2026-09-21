@@ -1,5 +1,13 @@
 /* Keep the timetable's established palette and density; make its controls easier to read. */
 .desktopNavLinks { display:contents; }
+.longPressHint { display:none; margin:8px 0; color:var(--muted); font-size:12px; line-height:1.6; }
+.courseRemovalNotice { position:fixed; z-index:60; left:50%; bottom:max(16px,env(safe-area-inset-bottom)); transform:translateX(-50%); width:min(480px,calc(100vw - 24px)); display:flex; align-items:center; flex-wrap:wrap; gap:8px; padding:8px 12px; border:1px solid var(--accent-line); border-radius:8px; background:var(--accent-soft); color:var(--ink); font-size:13px; box-shadow:0 4px 20px #253b4926; }
+.courseRemovalNotice>span { flex:1; min-width:0; overflow-wrap:anywhere; }
+.courseRemovalNotice button { min-height:44px; padding:8px 12px; border:1px solid var(--line); border-radius:6px; background:var(--surface); color:var(--accent-hover); cursor:pointer; }
+@media (any-pointer:coarse), (max-width:700px) {
+  .longPressHint { display:block; }
+  [data-long-press-remove] { -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; }
+}
 .electiveSelectionActions { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px; margin-bottom:12px; font-size:12px; color:var(--muted); }
 .electiveSelectionActions button { min-height:44px; padding:8px 12px; border:1px solid var(--line); border-radius:6px; background:var(--surface); color:var(--ink); font:inherit; cursor:pointer; }
 .electiveSelectionActions button:disabled { opacity:.45; cursor:default; }
