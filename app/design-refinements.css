@@ -1,5 +1,19 @@
 /* Keep the timetable's established palette and density; make its controls easier to read. */
 .desktopNavLinks { display:contents; }
+.courseBlock { position:relative; }
+.courseDetailsHitArea { position:absolute; inset:0; z-index:1; width:100%; height:100%; padding:0; border:0; background:transparent; cursor:pointer; border-radius:inherit; }
+.courseDetailsHitArea:focus-visible { outline:2px solid var(--focus); outline-offset:-3px; }
+.courseHoverRemove { display:none; }
+@media (hover:hover) and (pointer:fine) {
+  .courseBlock[data-long-press-remove]>strong { padding-right:52px; }
+  .courseHoverRemove { display:block; position:absolute; z-index:2; top:3px; right:3px; min-height:30px; padding:3px 7px; border:1px solid var(--line); border-radius:6px; background:var(--surface); color:var(--ink); font-size:12px; cursor:pointer; opacity:0; pointer-events:none; box-shadow:0 2px 6px #253b4920; }
+  .courseBlock:hover .courseHoverRemove,.courseBlock:focus-within .courseHoverRemove { opacity:1; pointer-events:auto; }
+  .courseHoverRemove:hover { color:var(--accent-hover); border-color:var(--accent); }
+  .courseHoverRemove:focus-visible { outline:2px solid var(--focus); outline-offset:-2px; }
+}
+.exportLayout .courseDetailsHitArea,.exportLayout .courseHoverRemove { display:none; }
+.exportLayout .courseBlock[data-long-press-remove]>strong { padding-right:0; }
+@media print { .courseDetailsHitArea,.courseHoverRemove { display:none!important; } .courseBlock[data-long-press-remove]>strong { padding-right:0; } }
 .longPressHint { display:none; margin:8px 0; color:var(--muted); font-size:12px; line-height:1.6; }
 .courseRemovalNotice { position:fixed; z-index:60; left:50%; bottom:max(16px,env(safe-area-inset-bottom)); transform:translateX(-50%); width:min(480px,calc(100vw - 24px)); display:flex; align-items:center; flex-wrap:wrap; gap:8px; padding:8px 12px; border:1px solid var(--accent-line); border-radius:8px; background:var(--accent-soft); color:var(--ink); font-size:13px; box-shadow:0 4px 20px #253b4926; }
 .courseRemovalNotice>span { flex:1; min-width:0; overflow-wrap:anywhere; }

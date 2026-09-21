@@ -403,14 +403,18 @@ function Home(){
     setElectiveSelections(current=>({...current,[profile]:[]}));
     setPreviewElectiveKeys([]);
   }
-  function courseLongPress(event:DisplayEvent){
-    const option=event.displaySource==='base'&&isElective(event)
+  function removableElective(event:DisplayEvent){
+    return event.displaySource==='base'&&isElective(event)
       ?electiveChoices.find(choice=>selectedElectiveKeys.includes(choice.key)&&choice.events.some(item=>item.id===event.id)):undefined;
-    return longPress(option?()=>{
-      setElectiveSelections(current=>({...current,[profile]:(current[profile]||[]).filter(key=>key!==option.key)}));
-      setPreviewElectiveKeys(current=>current.filter(key=>key!==option.key));
-      setRemovedElective({profile,option});
-    }:undefined);
+  }
+  function removeElective(option:ElectiveOption){
+    setElectiveSelections(current=>({...current,[profile]:(current[profile]||[]).filter(key=>key!==option.key)}));
+    setPreviewElectiveKeys(current=>current.filter(key=>key!==option.key));
+    setRemovedElective({profile,option});
+  }
+  function courseLongPress(event:DisplayEvent){
+    const option=removableElective(event);
+    return longPress(option?()=>removeElective(option):undefined);
   }
   function electiveConflicts(option:ElectiveOption){
     const alternativeIds=new Set(electiveChoices.filter(item=>item.courseKey===option.courseKey).flatMap(item=>item.events.map(event=>event.id)));
@@ -653,7 +657,8 @@ function Home(){
         {times.map((_,row)=>displayedDays.map((day,index)=><div className={`gridCell ${row===4?'break':''}`} style={{gridColumn:index+2,gridRow:row+2}} key={`${day}-${row}`}/>))}
         {displayedEvents.map((event)=>{
           const hasHard=hardConflictEventIds.has(event.id); const hasPartial=!hasHard&&partialConflictEventIds.has(event.id);
-          return <article {...courseLongPress(event)} className={`courseBlock ${event.shortTitle?'abbreviatedModule':''} ${event.shortTitle&&event.span===1?'shortModuleSession':''} category-${courseCategory(event)} ${event.displaySource==='retake'?'retakeBlock':''} ${event.displaySource==='preview'?'previewBlock':''} ${hasHard?'conflictBlock':hasPartial?'partialConflictBlock':''}`} style={{gridColumn:displayedDays.indexOf(event.day)+2,gridRow:`${event.start+2} / span ${event.span}`,width:`calc((100% - 6px) / ${event.laneCount})`,marginLeft:`calc(${event.lane} * (100% / ${event.laneCount}) + 3px)`}} key={`${event.displaySource}-${event.id}`} data-event-id={event.id} title="查看课程详情" role="button" tabIndex={0} onClick={()=>openCourseDetails(event)} onKeyDown={(key)=>{if(key.key==='Enter'||key.key===' '){key.preventDefault();openCourseDetails(event)}}}><strong>{courseHeading(event)}</strong>{courseSubtitle(event)&&<small className="courseEnglish">{courseSubtitle(event)}</small>}<small className="courseRoom">教室：{roomForMajor(event,major)}</small><small className="courseWeeks"><span className="factLabel">周次：</span><WeekText value={event.weeks||'按学期安排'}/></small>{event.teacher&&<small className="courseTeacher">教师：{event.teacher}</small>}<span className="courseTag">{event.displaySource==='retake'?'重修 · ':event.displaySource==='preview'?'课程预览 · ':isElective(event)?'选修 · ':''}<span className="categoryHint">{categoryLabels[courseCategory(event)]}</span>{event.note&&` · ${event.note}`}</span></article>;
+          const removable=removableElective(event);
+          return <article {...courseLongPress(event)} className={`courseBlock ${event.shortTitle?'abbreviatedModule':''} ${event.shortTitle&&event.span===1?'shortModuleSession':''} category-${courseCategory(event)} ${event.displaySource==='retake'?'retakeBlock':''} ${event.displaySource==='preview'?'previewBlock':''} ${hasHard?'conflictBlock':hasPartial?'partialConflictBlock':''}`} style={{gridColumn:displayedDays.indexOf(event.day)+2,gridRow:`${event.start+2} / span ${event.span}`,width:`calc((100% - 6px) / ${event.laneCount})`,marginLeft:`calc(${event.lane} * (100% / ${event.laneCount}) + 3px)`}} key={`${event.displaySource}-${event.id}`} data-event-id={event.id} ><strong>{courseHeading(event)}</strong>{courseSubtitle(event)&&<small className="courseEnglish">{courseSubtitle(event)}</small>}<small className="courseRoom">教室：{roomForMajor(event,major)}</small><small className="courseWeeks"><span className="factLabel">周次：</span><WeekText value={event.weeks||'按学期安排'}/></small>{event.teacher&&<small className="courseTeacher">教师：{event.teacher}</small>}<span className="courseTag">{event.displaySource==='retake'?'重修 · ':event.displaySource==='preview'?'课程预览 · ':isElective(event)?'选修 · ':''}<span className="categoryHint">{categoryLabels[courseCategory(event)]}</span>{event.note&&` · ${event.note}`}</span><button type="button" className="courseDetailsHitArea" aria-label={`查看${courseHeading(event)}详情`} title="查看课程详情" onClick={()=>openCourseDetails(event)} data-export-exclude/>{removable&&<button type="button" className="courseHoverRemove" aria-label={`移除${courseHeading(event)}`} title="移除整门课程" onPointerDown={pointer=>pointer.stopPropagation()} onClick={()=>removeElective(removable)} data-export-exclude><span aria-hidden="true">×</span> 移除</button>}</article>;
         })}
       </div></ScheduleViewport>}
       {displayedEvents.length===0&&renderEmpty(selectedDay==='all'?undefined:selectedDay)}</div></div></div>
