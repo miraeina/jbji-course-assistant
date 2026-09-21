@@ -635,7 +635,7 @@ footer{padding-top:14px;padding-bottom:20px;justify-content:space-between;font-s
 .scheduleZoomControls button[aria-pressed=true]{background:var(--accent-soft);color:var(--accent-hover);border-color:var(--accent-line)}
 .scheduleZoomControls button:disabled{opacity:.4;cursor:default}
 .scheduleZoomControls button:focus-visible,.scheduleZoomViewport:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
-.scheduleZoomStage{position:relative;overflow:hidden}
+.scheduleZoomStage{position:relative;overflow:hidden;margin-inline:auto}
 .scheduleZoomCanvas{position:absolute;top:0;left:0;transform-origin:top left}
 .exportLayout .scheduleZoomStage{width:auto!important;height:auto!important;overflow:visible}
 .exportLayout .scheduleZoomCanvas{position:static;width:auto!important;transform:none!important}

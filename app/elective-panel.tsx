@@ -4,9 +4,9 @@ import type { ConflictDetail } from './schedule-logic';
 import { times, type TimetableEvent } from './timetable-data';
 
 const days=['周一','周二','周三','周四','周五'];
-export default function ElectivePanel({options,selected,previewed,year,issuesFor,onToggle,onPreview,onDetails}:{
+export default function ElectivePanel({options,selected,previewed,year,issuesFor,onToggle,onPreview,onDetails,onClear}:{
   options:ElectiveOption[];selected:string[];previewed:string[];year:number;issuesFor:(option:ElectiveOption)=>ConflictDetail[];
-  onToggle:(option:ElectiveOption)=>void;onPreview:(option:ElectiveOption)=>void;onDetails:(event:TimetableEvent)=>void;
+  onToggle:(option:ElectiveOption)=>void;onPreview:(option:ElectiveOption)=>void;onDetails:(event:TimetableEvent)=>void;onClear:()=>void;
 }){
   const [query,setQuery]=useState('');
   const [filter,setFilter]=useState<'all'|'selected'|'safe'>('all');
@@ -16,6 +16,7 @@ export default function ElectivePanel({options,selected,previewed,year,issuesFor
     return option.events.some(event=>`${event.title} ${event.english||''} ${event.teacher||''} ${event.note||''}`.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()));
   });
   return <>
+    <div className="electiveSelectionActions"><span>当前身份 · 已选 {selected.length} 门</span><button type="button" disabled={!selected.length} onClick={onClear}>清空已选</button></div>
     <div className="retakeIntro"><strong>{year===2?'选择英语课程与教学班':'选择本学期选修课'} · 已选 {selected.length} 门</strong><p>添加到课表后，仍需在学校系统选课。</p>{year===2&&<p>2025级需选 1 门英语模块。同一课程更换班次后，原班次自动移除。</p>}</div>
     <label className="courseSearch"><span>搜索选修课</span><input type="search" value={query} onChange={event=>setQuery(event.target.value)} placeholder="课程名、教师或教学班"/></label>
     <div className="filterPills">{(['all','selected','safe'] as const).map((value,index)=><button key={value} aria-pressed={filter===value} className={filter===value?'active':''} onClick={()=>setFilter(value)}>{['全部','已选','无冲突'][index]}</button>)}</div>

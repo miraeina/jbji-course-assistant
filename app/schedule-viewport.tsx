@@ -26,15 +26,17 @@ export default function ScheduleViewport({ children, minWidth }: { children: Rea
   useLayoutEffect(() => {
     if (!anchor.current || !viewport.current) return;
     const scroll = viewport.current;
-    scroll.scrollLeft = anchor.current.x * scale - scroll.clientWidth / 2;
+    const inset = Math.max(0, (scroll.clientWidth - baseWidth * scale) / 2);
+    scroll.scrollLeft = anchor.current.x * scale + inset - scroll.clientWidth / 2;
     scroll.scrollTop = anchor.current.y * scale - scroll.clientHeight / 2;
     anchor.current = null;
-  }, [scale]);
+  }, [scale, baseWidth]);
 
   function changeZoom(next: number | 'fit') {
     const scroll = viewport.current!;
+    const inset = Math.max(0, (scroll.clientWidth - baseWidth * scale) / 2);
     anchor.current = {
-      x: (scroll.scrollLeft + scroll.clientWidth / 2) / scale,
+      x: (scroll.scrollLeft + scroll.clientWidth / 2 - inset) / scale,
       y: (scroll.scrollTop + scroll.clientHeight / 2) / scale,
     };
     setZoom(next === 'fit' ? next : Math.max(.25, Math.min(2, Math.round(next * 100) / 100)));

@@ -1,5 +1,10 @@
 /* Keep the timetable's established palette and density; make its controls easier to read. */
 .desktopNavLinks { display:contents; }
+.electiveSelectionActions { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px; margin-bottom:12px; font-size:12px; color:var(--muted); }
+.electiveSelectionActions button { min-height:44px; padding:8px 12px; border:1px solid var(--line); border-radius:6px; background:var(--surface); color:var(--ink); font:inherit; cursor:pointer; }
+.electiveSelectionActions button:disabled { opacity:.45; cursor:default; }
+.electiveSelectionActions button:hover:not(:disabled) { border-color:var(--accent); color:var(--accent-hover); }
+.electiveSelectionActions button:focus-visible { outline:2px solid var(--focus); outline-offset:2px; }
 .compactNav { display:none; }
 .activeScheduleFilters {
   display:flex; flex-wrap:wrap; align-items:center; gap:8px;
