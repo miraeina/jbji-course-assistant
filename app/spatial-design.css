@@ -170,7 +170,12 @@ body { background:var(--paper); }
 .fifthYearWelcome .welcomeCopy h3 { font-size:clamp(24px,3vw,32px); }
 .fifthYearWelcome .welcomeDescription { margin-top:8px; }
 .fifthYearWelcome .welcomeAction { margin-top:0; }
-.catalogFilters { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:8px 0; }
+.catalogFilters { display:grid; gap:8px; margin:8px 0; }
+.catalogYearTabs { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:4px; }
+.catalogYearTabs button { display:grid; place-items:center; gap:2px; min-width:0; min-height:48px; padding:5px 2px; border:1px solid var(--line); border-radius:7px; background:var(--surface); color:var(--muted); font:inherit; font-size:13px; cursor:pointer; }
+.catalogYearTabs button small { font-size:10px; }
+.catalogYearTabs button[aria-pressed="true"] { background:var(--accent-soft); border-color:var(--accent); color:var(--accent-hover); font-weight:650; }
+.catalogYearTabs button:focus-visible { outline:2px solid var(--focus); outline-offset:1px; }
 .catalogFilters label { display:grid; gap:4px; color:var(--muted); font-size:12px; min-width:0; }
 .catalogFilters select { min-width:0; width:100%; min-height:40px; border:1px solid var(--line); border-radius:7px; padding:6px 8px; font:inherit; color:var(--ink); background:var(--surface); }
 @media(max-width:700px) {

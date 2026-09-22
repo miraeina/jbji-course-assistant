@@ -10,7 +10,7 @@ export default function ElectivePanel({options,selected,previewed,year,major,iss
 }){
   const [query,setQuery]=useState('');
   const [filter,setFilter]=useState<'all'|'selected'|'safe'>('all');
-  const [sourceYear,setSourceYear]=useState<number|'all'>('all');
+  const [sourceYear,setSourceYear]=useState<number|'all'>(year===5?1:'all');
   const [category,setCategory]=useState<CatalogCategory|'all'>('all');
   const rows=options.map(option=>({option,issues:issuesFor(option)})).filter(({option,issues})=>{
     if(filter==='selected'&&!selected.includes(option.key))return false;
@@ -24,7 +24,11 @@ export default function ElectivePanel({options,selected,previewed,year,major,iss
     <div className="retakeIntro"><strong>{year===2?'选择英语课程与教学班':year===5?'添加本学期课程':'选择本学期选修课'} · 已选 {selected.length} 门</strong><p>添加到课表后，仍需在学校系统选课。</p>{year===2&&<p>2025级需选 1 门英语模块。同一课程更换班次后，原班次自动移除。</p>}</div>
     <label className="courseSearch"><span>{year===5?'搜索课程':'搜索选修课'}</span><input type="search" value={query} onChange={event=>setQuery(event.target.value)} placeholder="课程名、教师或教学班"/></label>
     {year===5&&<div className="catalogFilters">
-      <label>课程年级<select aria-label="课程年级" value={sourceYear} onChange={event=>setSourceYear(event.target.value==='all'?'all':Number(event.target.value))}><option value="all">全部年级</option>{[1,2,3,4].map(value=><option value={value} key={value}>大{['一','二','三','四'][value-1]}</option>)}</select></label>
+      <div className="catalogYearTabs" role="group" aria-label="按课程年级筛选">{(['all',1,2,3,4] as const).map(value=>{
+        const label=value==='all'?'全部':`大${['一','二','三','四'][value-1]}`;
+        const count=options.filter(option=>value==='all'||option.events[0].year===value).length;
+        return <button type="button" key={value} aria-pressed={sourceYear===value} aria-label={`${label}年级，${count} 个课程选项`} onClick={()=>setSourceYear(value)}><span>{label}</span><small>{count}</small></button>;
+      })}</div>
       <label>课程类别<select aria-label="课程类别" value={category} onChange={event=>setCategory(event.target.value as CatalogCategory|'all')}><option value="all">全部类别</option>{(Object.keys(catalogCategoryLabels) as CatalogCategory[]).map(value=><option value={value} key={value}>{catalogCategoryLabels[value]}</option>)}</select></label>
     </div>}
     <div className="filterPills">{(['all','selected','safe'] as const).map((value,index)=><button key={value} aria-pressed={filter===value} className={filter===value?'active':''} onClick={()=>setFilter(value)}>{['全部','已选','无冲突'][index]}</button>)}</div>
