@@ -1,0 +1,159 @@
+/* Surface hierarchy: quiet controls, a paper-like timetable, raised overlays.
+   Keep time geometry, course category colors and mascot composition intact. */
+body { background:var(--paper); }
+.scheduleHeader.topbar {
+  background:var(--surface);
+  border-bottom:1px solid var(--line);
+  box-shadow:0 3px 18px #253b4905;
+}
+.filterPanel {
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:14px 16px;
+  background:var(--surface-soft);
+  box-shadow:inset 0 1px 0 var(--surface);
+}
+.filterGroup>span { color:var(--muted); font-size:11px; letter-spacing:.04em; }
+.filterPanel .segmented button { background:transparent; border-color:transparent; border-radius:8px; }
+.filterPanel .segmented button.active {
+  background:var(--surface); color:var(--accent-hover); border-color:var(--accent-line);
+  box-shadow:0 2px 5px #253b4909,inset 0 -2px 0 var(--accent);
+}
+.filterPanel .segmented button:hover:not(.active) { background:var(--accent-soft); border-color:var(--accent-line); }
+.timetablePanel {
+  border:1px solid var(--line); border-radius:16px; padding:20px;
+  background:var(--surface);
+  box-shadow:0 2px 3px #253b4903,0 12px 36px #253b4908;
+}
+.timetablePanel>.sectionHead { gap:12px; margin-bottom:16px; }
+.timetablePanel>.sectionHead h2 { color:var(--ink); font-size:22px; letter-spacing:-.04em; }
+.scheduleIdentity { margin-top:5px; }
+.panelActions .electivePrimary {
+  background:var(--accent); border-color:var(--accent); color:#fff;
+  box-shadow:0 2px 4px #253b4912;
+}
+.panelActions .electivePrimary:hover { background:var(--accent-hover); border-color:var(--accent-hover); color:#fff; }
+.exportMenu>summary { background:var(--surface); color:var(--ink); border-color:var(--line); }
+.exportMenu>summary:hover { color:var(--accent-hover); background:var(--accent-soft); border-color:var(--accent-line); }
+.scheduleCommandDeck {
+  border:1px solid var(--line); border-radius:10px;
+  padding:10px 12px; margin-bottom:10px; background:var(--surface-soft);
+}
+.scheduleCommandDeck>.calendarPanel {
+  display:flex; align-items:center; justify-content:space-between;
+  width:100%; margin:0; padding:0; border:0; gap:12px;
+  background:transparent; box-shadow:none;
+}
+.scheduleCommandDeck .calendarStatus strong { font-size:13px; font-weight:600; color:var(--ink); }
+.scheduleCommandDeck .calendarControls { align-items:center; gap:6px; }
+.scheduleCommandDeck .calendarControls button.primary { background:var(--surface); color:var(--accent-hover); border-color:var(--accent-line); }
+.scheduleCommandDeck .scheduleMeta { margin:6px 0 0; gap:4px 16px; }
+.scheduleCommandDeck .scheduleMeta .todayPanel summary { min-height:28px; line-height:28px; }
+.scheduleCommandDeck .legend { font-size:11px; gap:12px; }
+.scheduleCommandDeck .activeScheduleFilters { margin:8px 0 0; }
+.scheduleGuidance { display:flex; flex-wrap:wrap; gap:4px 20px; margin:0 0 8px; }
+.scheduleGuidance:empty { display:none; }
+.scheduleGuidance .electiveHint,.scheduleGuidance .semesterHint { margin:0; font-size:12px; line-height:1.6; }
+.scheduleZoomControls { gap:4px; margin:0 0 8px; }
+.scheduleZoomControls button { min-height:32px; background:var(--surface-soft); border-color:transparent; }
+.scheduleZoomControls button:hover:not(:disabled) { border-color:var(--accent-line); color:var(--accent-hover); }
+.tableScroll { border-radius:10px; }
+.timetable .dayHead,.timetable .corner { background:var(--table-head); color:var(--ink); }
+.courseBlock { transition:filter .14s ease,outline-color .14s ease; }
+/* A fine edge supplies depth without tilting the timetable or moving its cells. */
+.courseBlock:hover { outline:1px solid var(--course-color); outline-offset:-1px; }
+.exportMenu>div,.themeOptions { box-shadow:0 8px 24px #253b491a,0 1px 3px #253b490d; }
+.detailDialog { box-shadow:0 24px 72px #253b4933,0 4px 12px #253b4914; }
+
+@media(min-width:701px) {
+  .scheduleSection { margin-top:16px; }
+  .scheduleCommandDeck .calendarControls select { min-width:190px; }
+}
+@media(max-width:900px) and (min-width:701px) {
+  .scheduleCommandDeck>.calendarPanel { flex-wrap:wrap; }
+}
+@media(max-width:700px) {
+  .filterPanel { padding:12px; border-radius:12px; }
+  .timetablePanel { padding:12px; border-radius:12px; box-shadow:0 4px 16px #253b4906; }
+  .timetablePanel>.sectionHead { margin-bottom:10px; gap:8px; }
+  .timetablePanel>.sectionHead h2 { font-size:19px; }
+  .scheduleCommandDeck { padding:8px; margin-bottom:8px; }
+  .scheduleCommandDeck>.calendarPanel { flex-wrap:wrap; gap:6px; }
+  .scheduleCommandDeck .calendarStatus { flex-basis:100%; }
+  .scheduleCommandDeck .calendarControls { width:100%; min-width:0; gap:4px; }
+  .scheduleCommandDeck .calendarControls label { flex:1; min-width:0; }
+  .scheduleCommandDeck .calendarControls select { width:100%; min-width:0; padding-right:18px; }
+  .scheduleCommandDeck .calendarControls button { min-width:36px; padding-inline:8px; }
+  .scheduleCommandDeck .calendarControls button,.scheduleCommandDeck .calendarControls select { min-height:44px; }
+  .scheduleCommandDeck .scheduleMeta { margin-top:4px; }
+  .scheduleCommandDeck .scheduleMeta .todayPanel summary { min-height:36px; line-height:36px; }
+  .scheduleGuidance { gap:4px; margin-bottom:6px; }
+  .scheduleZoomControls button { min-height:44px; }
+}
+@media(prefers-reduced-motion:reduce) { .courseBlock { transition:none; } }
+/* Screen-only chrome must not appear in timetable exports. */
+.exportLayout .scheduleCommandDeck { border:0; padding:0; margin:0; background:none; }
+.exportLayout .timetablePanel { box-shadow:none; }
+@media print {
+  .scheduleCommandDeck { border:0; padding:0; background:none; }
+  .timetablePanel,.filterPanel { box-shadow:none; }
+}
+
+/* A single welcome scene replaces both day/week empties before any selection.
+   Previewing or adding a course restores the normal scheduling controls. */
+.isCourseWelcome>.scheduleCommandDeck,
+.isCourseWelcome>.mobileNavigation,
+.isCourseWelcome>.scheduleGuidance,
+.isCourseWelcome>.sectionHead .exportActions,
+.isCourseWelcome>.sectionHead .electivePrimary { display:none; }
+.isCourseWelcome>.sectionHead { margin-bottom:0; }
+.courseWelcome {
+  display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  grid-template-areas:"copy art" "action art"; grid-template-rows:auto auto;
+  align-content:center; align-items:center; column-gap:32px;
+  max-width:960px; margin:0 auto; padding:16px 32px 24px;
+  min-height:0;
+}
+.welcomeCopy { grid-area:copy; align-self:end; }
+.welcomeEyebrow { color:var(--accent-hover); font-size:12px; letter-spacing:.08em; margin:0 0 14px; }
+.welcomeCopy h3 { color:var(--ink); font-size:clamp(26px,3vw,40px); line-height:1.4; letter-spacing:-.04em; margin:0; font-weight:650; }
+.welcomeDescription { font-size:14px; line-height:1.7; color:var(--muted); margin:16px 0 0; }
+.welcomeArt { grid-area:art; display:grid; place-items:center; position:relative; isolation:isolate; }
+.welcomeArt::before {
+  content:""; position:absolute; z-index:-1; width:86%; height:78%; border-radius:50%;
+  background:radial-gradient(ellipse,var(--accent-soft),transparent 70%);
+}
+.welcomeArt img {
+  display:block; width:100%; max-width:360px;
+  height:clamp(200px,calc(100svh - 420px),420px); object-fit:contain;
+  mix-blend-mode:multiply;
+}
+.welcomeAction { grid-area:action; align-self:start; margin-top:26px; }
+.welcomeAction button {
+  display:inline-flex; align-items:center; justify-content:space-between; gap:32px;
+  min-height:48px; padding:12px 22px; border:1px solid var(--accent); border-radius:10px;
+  background:var(--accent); color:#fff; font-size:15px; font-weight:600; cursor:pointer;
+  box-shadow:0 3px 8px #253b4912;
+}
+.welcomeAction button:hover { background:var(--accent-hover); border-color:var(--accent-hover); }
+.welcomeAction button:focus-visible { outline:2px solid var(--focus); outline-offset:4px; }
+.welcomeAction button span { font-size:20px; font-weight:400; line-height:1; }
+.welcomeAction p { color:var(--muted); font-size:12px; line-height:1.6; margin:10px 0 0; }
+@media(min-width:1101px) { .welcomeArt img { height:clamp(240px,calc(100svh - 340px),420px); } }
+@media(max-width:700px) {
+  .isCourseWelcome>.sectionHead { flex-wrap:nowrap; }
+  .isCourseWelcome>.sectionHead .sectionTools { flex-basis:auto; margin-left:auto; width:auto; }
+  .courseWelcome {
+    grid-template-columns:minmax(0,1fr); grid-template-areas:"copy" "art" "action";
+    grid-template-rows:auto auto auto; gap:8px; min-height:0; padding:14px 4px 10px; text-align:center;
+  }
+  .welcomeEyebrow { display:none; }
+  .welcomeCopy h3 { font-size:25px; line-height:1.35; }
+  .welcomeCopy h3 br { display:none; }
+  .welcomeDescription { margin:6px 0 0; font-size:12px; }
+  .welcomeArt img { width:100%; max-width:320px; height:clamp(140px,calc(100svh - 355px),370px); }
+  .welcomeAction { margin-top:0; }
+  .welcomeAction button { width:min(260px,100%); }
+  .welcomeAction p { margin-top:7px; font-size:11px; }
+}
+@media(max-width:359px) { .welcomeCopy h3 { font-size:22px; } }
