@@ -9,10 +9,11 @@ export default function ConflictMascot({conflicts,previewIds}:{conflicts:Conflic
   const previous=useRef(fingerprint);
   const [notice,setNotice]=useState<{preview:boolean;stamp:number}|null>(null);
   useEffect(()=>{
-    const before=new Set((JSON.parse(previous.current) as {key:string}[]).map(item=>item.key));
+    const before=new Map((JSON.parse(previous.current) as {key:string;preview:boolean}[]).map(item=>[item.key,item.preview]));
     const current=JSON.parse(fingerprint) as {key:string;preview:boolean}[];
     previous.current=fingerprint;
-    const added=current.filter(item=>!before.has(item.key));
+    // Confirming a preview must warn again, even when the conflicting pair is unchanged.
+    const added=current.filter(item=>!before.has(item.key)||(before.get(item.key)&&!item.preview));
     if(!current.length)setNotice(null);
     else if(added.length)setNotice({preview:added.every(item=>item.preview),stamp:Date.now()});
   },[fingerprint]);
