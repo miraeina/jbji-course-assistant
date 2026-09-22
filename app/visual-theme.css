@@ -610,6 +610,8 @@ footer{padding-top:14px;padding-bottom:20px;justify-content:space-between;font-s
 @keyframes conflict-peek{from{opacity:0;transform:translateY(65px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:700px){
  .conflictMascotToast{width:180px;right:10px;bottom:12px}
+ .conflictMascotClose{top:-36px;right:0;width:28px;height:28px;padding:0;border-radius:50%;font-size:20px;line-height:1;display:grid;place-items:center;box-shadow:0 1px 5px #0002}
+ .conflictMascotClose::after{content:"";position:absolute;inset:-8px}
  .conflictMascotToast strong{font-size:14px}
  .conflictSummaryLead{gap:10px}
  .conflictSummaryLead .conflictMascotInline{width:80px}
