@@ -21,7 +21,8 @@ export function electiveOptions(events:TimetableEvent[]):ElectiveOption[]{
     if(!grouped.has(key))grouped.set(key,{key,courseKey:event.courseKey||key,events:[]});
     grouped.get(key)!.events.push(event);
   });
-  return [...grouped.values()];
+  return [...grouped.values()].sort((a,b)=>
+    Number(b.events.some(event=>event.id==='y4-macro'))-Number(a.events.some(event=>event.id==='y4-macro')));
 }
 export function toggleElective(keys:string[],option:ElectiveOption,options:ElectiveOption[]){
   if(keys.includes(option.key))return keys.filter(key=>key!==option.key);
