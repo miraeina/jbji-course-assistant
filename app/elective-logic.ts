@@ -4,6 +4,18 @@ export type ElectiveOption={key:string;courseKey:string;events:TimetableEvent[]}
 export type ElectiveSelections=Record<string,string[]>;
 export const electiveStorageKey='jbji-electives-v1';
 export function isElective(event:TimetableEvent){return event.year===4||(event.year===2&&event.kind==='optional')}
+function selectionKey(event:TimetableEvent,manual:boolean){
+  if(!manual||isElective(event))return event.selectionKey||event.id;
+  return JSON.stringify([event.year,event.track||'jnu',event.title,event.groups?.slice().sort()||[]]);
+}
+export const catalogCategoryLabels={jnu:'暨大课程',general:'通识课程',english:'英语课程',single:'单学位课程'};
+export type CatalogCategory=keyof typeof catalogCategoryLabels;
+export function catalogCategory(event:TimetableEvent):CatalogCategory{
+  if(event.track==='single')return 'single';
+  if((event.year===2&&isElective(event))||/英语|雅思|英美历史|english|ielts|history and culture of uk/i.test(`${event.title} ${event.english||''}`))return 'english';
+  if(/思想道德|中国近代史|马克思主义|体育|军事理论|心理健康|艺术体验/.test(event.title))return 'general';
+  return 'jnu';
+}
 export function electiveProfile(track:DegreeTrack,year:number,major:Major,classNo:number){
   return `2026-27-1:${track}:${year}:${major}:${year<=2?classNo:0}`;
 }
@@ -14,11 +26,12 @@ export function parseElectiveSelections(raw:string|null):ElectiveSelections{
     return Object.fromEntries(Object.entries(value).filter(([,ids])=>Array.isArray(ids)).map(([key,ids])=>[key,[...new Set((ids as unknown[]).filter((id):id is string=>typeof id==='string'))]]));
   } catch {return {}}
 }
-export function electiveOptions(events:TimetableEvent[]):ElectiveOption[]{
+export function electiveOptions(events:TimetableEvent[],manual=false):ElectiveOption[]{
   const grouped=new Map<string,ElectiveOption>();
-  events.filter(isElective).forEach(event=>{
-    const key=event.selectionKey||event.id;
-    if(!grouped.has(key))grouped.set(key,{key,courseKey:event.courseKey||key,events:[]});
+  events.filter(event=>manual||isElective(event)).forEach(event=>{
+    const key=selectionKey(event,manual);
+    const courseKey=manual&&!isElective(event)?JSON.stringify([event.year,event.track||'jnu',event.title]):event.courseKey||key;
+    if(!grouped.has(key))grouped.set(key,{key,courseKey,events:[]});
     grouped.get(key)!.events.push(event);
   });
   return [...grouped.values()].sort((a,b)=>
@@ -29,6 +42,6 @@ export function toggleElective(keys:string[],option:ElectiveOption,options:Elect
   const alternatives=new Set(options.filter(item=>item.courseKey===option.courseKey).map(item=>item.key));
   return [...keys.filter(key=>!alternatives.has(key)),option.key];
 }
-export function selectedSchedule(events:TimetableEvent[],keys:string[]){
-  return events.filter(event=>!event.listedOnly&&(!isElective(event)||keys.includes(event.selectionKey||event.id)));
+export function selectedSchedule(events:TimetableEvent[],keys:string[],manual=false){
+  return events.filter(event=>!event.listedOnly&&((!manual&&!isElective(event))||keys.includes(selectionKey(event,manual))));
 }

@@ -157,3 +157,23 @@ body { background:var(--paper); }
   .welcomeAction p { margin-top:7px; font-size:11px; }
 }
 @media(max-width:359px) { .welcomeCopy h3 { font-size:22px; } }
+
+.filterPanel .segmented .fifthYearOption:not(.active) { opacity:.65; }
+.filterPanel .segmented .fifthYearOption:hover,
+.filterPanel .segmented .fifthYearOption:focus-visible { opacity:1; }
+.fifthYearWelcome {
+  grid-template-columns:minmax(0,1fr); grid-template-areas:"art" "copy" "action";
+  gap:18px; text-align:center; max-width:800px; padding:18px 16px 28px;
+}
+.fifthYearWelcome .welcomeArt::before { display:none; }
+.fifthYearWelcome .welcomeArt img { max-width:100%; height:auto; mix-blend-mode:normal; border-radius:12px; }
+.fifthYearWelcome .welcomeCopy h3 { font-size:clamp(24px,3vw,32px); }
+.fifthYearWelcome .welcomeDescription { margin-top:8px; }
+.fifthYearWelcome .welcomeAction { margin-top:0; }
+.catalogFilters { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:8px 0; }
+.catalogFilters label { display:grid; gap:4px; color:var(--muted); font-size:12px; min-width:0; }
+.catalogFilters select { min-width:0; width:100%; min-height:40px; border:1px solid var(--line); border-radius:7px; padding:6px 8px; font:inherit; color:var(--ink); background:var(--surface); }
+@media(max-width:700px) {
+  .fifthYearWelcome { padding:12px 0; gap:14px; }
+  .fifthYearWelcome .welcomeArt img { border-radius:8px; }
+}

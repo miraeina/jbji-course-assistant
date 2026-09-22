@@ -4,6 +4,10 @@ export function roomForMajor(event:TimetableEvent,major:Major){
   return event.roomsByMajor?.[major]||event.room||'教室待通知';
 }
 export function coursesForProfile(events:TimetableEvent[],track:DegreeTrack,year:number,major:Major,classNo:number){
+  // The fifth-year planner offers every teaching group for the selected major,
+  // including single-degree modules regardless of the student's degree track.
+  if(year===5)return events.filter(event=>event.year>=1&&event.year<=4&&event.track!=='dual'&&
+    (event.majors==='all'||event.majors.includes(major)));
   return events.filter(event=>!event.retakeOnly&&event.year===year&&(!event.track||event.track===track)&&
     (event.majors==='all'||event.majors.includes(major))&&(!event.groups||event.groups.includes(`${major}${classNo}`)));
 }
