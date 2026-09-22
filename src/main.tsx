@@ -6,6 +6,7 @@ import '../app/visual-theme.css';
 import '../app/design-refinements.css';
 import '../app/readability.css';
 import '../app/spatial-design.css';
+import '../app/mobile-selection.css';
 import { initializeTheme, ThemeProvider } from '../app/theme';
 
 initializeTheme();

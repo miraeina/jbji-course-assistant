@@ -1,0 +1,53 @@
+.mobileSelectionPreview { display:none; }
+@media(max-width:700px) {
+  /* Inline conflicts remain visible in both panes; a toast would cover actions. */
+  .mobileSelectionActive .conflictMascotToast { display:none; }
+  .mobileSelectionMode:has(.courseSearch input:focus) .selectionMiniScroll { height:100px; }
+  .courseSidebar.mobileSelectionMode:not([hidden]) {
+    display:flex; flex-direction:column; position:fixed; inset:0;
+    height:100dvh; max-height:100dvh; width:100%; max-width:none;
+    border:0; border-radius:0; overflow:hidden; padding:0 0 env(safe-area-inset-bottom);
+  }
+  .mobileSelectionMode>.sheetClose { display:none; }
+  .mobileSelectionMode .mobileSelectionPreview { display:flex; flex-direction:column; flex:none; min-height:0; background:var(--surface); }
+  .mobileSelectionPreview header { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:6px 12px; min-height:52px; border-bottom:1px solid var(--line); }
+  .mobileSelectionPreview header strong { font-size:15px; }
+  .mobileSelectionPreview header span { font-size:11px; color:var(--muted); margin-left:10px; }
+  .mobileSelectionPreview button { font:inherit; cursor:pointer; }
+  .mobileSelectionPreview .mobilePlannerDone { min-height:44px; padding:8px 14px; border:0; border-radius:8px; background:var(--accent); color:#fff; font-size:13px; }
+  .selectionMiniScroll { height:clamp(120px,28dvh,280px); overflow:auto; overscroll-behavior:contain; position:relative; }
+  .selectionMiniGrid { display:grid; grid-template-columns:42px repeat(5,minmax(0,1fr)); grid-template-rows:28px repeat(12,30px); position:relative; min-width:310px; }
+  .miniCorner,.miniDay { position:sticky; top:0; z-index:2; grid-row:1; background:var(--table-head); color:var(--ink); font-size:12px; display:grid; place-items:center; border-bottom:1px solid var(--line); }
+  .miniCorner { grid-column:1; }
+  .miniTime { grid-column:1; font-size:10px; padding-top:4px; text-align:center; color:var(--muted); background:var(--table-time); }
+  .miniCell { border-left:1px solid var(--line); border-bottom:1px solid var(--line); }
+  .miniBreak { background:var(--table-break); }
+  .selectionMiniGrid .miniCourse { align-self:stretch; min-height:0; margin-block:2px; padding:3px; text-align:left; border:1px solid var(--accent-line); border-left:2px solid var(--accent); border-radius:4px; background:var(--accent-soft); color:var(--ink); overflow:hidden; font-size:11px; line-height:1.35; }
+  .miniCourse>span { display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; overflow-wrap:anywhere; }
+  .miniCourse small { display:block; font-size:9px; }
+  .selectionMiniGrid .miniPreview { border:2px dashed var(--accent); background:var(--surface); }
+  .selectionMiniGrid .miniConflict { border-color:#b82f35; background:#fff0ef; color:#82272b; }
+  .selectionMiniGrid .miniFocused { font-weight:700; }
+  .selectionMiniGrid .miniFocused:not(.miniConflict) { background:var(--accent-soft); }
+  .selectionSplitBar { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:4px 12px; min-height:48px; background:var(--surface-soft); border-block:1px solid var(--line); }
+  .selectionSplitBar>span { font-size:10px; color:var(--muted); }
+  .selectionSplitBar button { min-height:40px; flex-shrink:0; padding:7px 10px; border:1px solid var(--accent-line); border-radius:7px; background:var(--surface); color:var(--accent-hover); font-size:12px; }
+  .mobileSelectionMode>.sidebarHead { flex:none; min-height:40px; }
+  .mobileSelectionMode>.sidebarPanel { flex:1; min-height:0; overflow-y:auto; overscroll-behavior:contain; padding:10px 12px; overflow-anchor:none; }
+  .mobileSelectionMode .electiveCourseList { overflow:visible; max-height:none; margin-top:8px; padding:0; }
+  .mobileSelectionMode .electiveSelectionActions { margin-bottom:4px; }
+  .mobileSelectionMode .retakeIntro { padding:0; margin:0 0 6px; border:0; background:none; }
+  .mobileSelectionMode .retakeIntro strong { display:none; }
+  .mobileSelectionMode .retakeIntro p { margin:0; font-size:11px; }
+  .mobileSelectionMode .courseSearch { margin-bottom:6px; }
+  .mobileSelectionMode .courseSearch input { min-height:40px; }
+  .mobileSelectionMode .electiveSession { font-size:12px; line-height:1.5; }
+  .mobileSelectionMode .retakeCourseCard { padding:10px; }
+  .mobileSelectionMode.plannerExpanded>.mobileSelectionPreview { flex:1; }
+  .mobileSelectionMode.plannerExpanded .selectionMiniScroll { flex:1; height:auto; }
+  .mobileSelectionMode.plannerExpanded .selectionMiniGrid { height:100%; min-height:388px; grid-template-rows:28px repeat(12,minmax(30px,1fr)); }
+  .mobileSelectionMode.plannerExpanded .miniCourse { font-size:12px; }
+  .mobileSelectionMode.plannerExpanded>.sidebarHead,.mobileSelectionMode.plannerExpanded>.sidebarPanel { display:none; }
+  .mobileSelectionPreview button:focus-visible { outline:2px solid var(--focus); outline-offset:-2px; }
+  @media(max-height:500px) { .selectionMiniScroll { height:100px; } }
+}
