@@ -171,6 +171,8 @@ body { background:var(--paper); }
 .fifthYearWelcome .welcomeDescription { margin-top:8px; }
 .fifthYearWelcome .welcomeAction { margin-top:0; }
 .catalogFilters { display:grid; gap:8px; margin:8px 0; }
+.catalogCategoryTabs { display:flex; flex-wrap:wrap; gap:5px; }
+.catalogCategoryTabs button { min-height:40px; }
 .catalogYearTabs { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:4px; }
 .catalogYearTabs button { display:grid; place-items:center; gap:2px; min-width:0; min-height:48px; padding:5px 2px; border:1px solid var(--line); border-radius:7px; background:var(--surface); color:var(--muted); font:inherit; font-size:13px; cursor:pointer; }
 .catalogYearTabs button small { font-size:10px; }
