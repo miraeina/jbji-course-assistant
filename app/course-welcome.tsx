@@ -2,7 +2,7 @@ export default function CourseWelcome({onChoose,fifthYear=false}:{onChoose:()=>v
   return <section className={`courseWelcome ${fifthYear?'fifthYearWelcome':''}`} aria-labelledby="course-welcome-title">
     <div className="welcomeCopy">
       {!fifthYear&&<p className="welcomeEyebrow">新学期，慢慢安排</p>}
-      <h3 id="course-welcome-title">{fifthYear?'下一程，自己安排。':<>这学期，<br/>从第一门课开始。</>}</h3>
+      <h3 id="course-welcome-title">{fifthYear?'自由的龙儿是关不住的':<>这学期，<br/>从第一门课开始。</>}</h3>
       <p className="welcomeDescription">{fifthYear?'从各年级课程中，选出这学期要上的课。':'课表 empty，奶龙 ready'}</p>
     </div>
     <div className="welcomeArt" aria-hidden="true">
