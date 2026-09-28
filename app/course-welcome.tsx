@@ -6,7 +6,7 @@ export default function CourseWelcome({onChoose,fifthYear=false}:{onChoose:()=>v
       <p className="welcomeDescription">{fifthYear?'从各年级课程中，选出这学期要上的课。':'课表 empty，奶龙 ready'}</p>
     </div>
     <div className="welcomeArt" aria-hidden="true">
-      {fifthYear?<img src="./jbji-nailong-next-chapter.png" width="1672" height="941" fetchPriority="high" loading="eager" alt=""/>:<img src="./jbji-nailong-guardian.webp" width="840" height="1060" fetchPriority="high" loading="eager" alt=""/>}
+      {fifthYear?<picture><source media="(max-width:700px)" srcSet="./jbji-nailong-next-chapter.png"/><img src="./jbji-nailong-rain-banner.png" width="2172" height="724" fetchPriority="high" loading="eager" alt=""/></picture>:<img src="./jbji-nailong-guardian.webp" width="840" height="1060" fetchPriority="high" loading="eager" alt=""/>}
     </div>
     <div className="welcomeAction">
       <button type="button" onClick={onChoose}>{fifthYear?'添加课程':'选择课程'} <span aria-hidden="true">＋</span></button>
