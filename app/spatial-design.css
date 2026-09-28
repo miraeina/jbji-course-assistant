@@ -162,11 +162,13 @@ body { background:var(--paper); }
 .filterPanel .segmented .fifthYearOption:hover,
 .filterPanel .segmented .fifthYearOption:focus-visible { opacity:1; }
 .fifthYearWelcome {
+  --welcome-panel-inset:20px;
   grid-template-columns:minmax(0,1fr); grid-template-areas:"art" "copy" "action";
-  gap:18px; text-align:center; max-width:800px; padding:18px 16px 28px;
+  gap:18px; text-align:center; width:100%; max-width:none; padding:18px 0 28px;
 }
+.fifthYearWelcome .welcomeArt { width:calc(100% + 2 * var(--welcome-panel-inset)); margin-inline:calc(-1 * var(--welcome-panel-inset)); }
 .fifthYearWelcome .welcomeArt::before { display:none; }
-.fifthYearWelcome .welcomeArt img { max-width:100%; height:auto; mix-blend-mode:normal; border-radius:12px; }
+.fifthYearWelcome .welcomeArt img { width:100%; max-width:none; height:auto; mix-blend-mode:normal; border-radius:0; }
 .fifthYearWelcome .welcomeCopy h3 { font-size:clamp(24px,3vw,32px); }
 .fifthYearWelcome .welcomeDescription { margin-top:8px; }
 .fifthYearWelcome .welcomeAction { margin-top:0; }
@@ -181,6 +183,5 @@ body { background:var(--paper); }
 .catalogFilters label { display:grid; gap:4px; color:var(--muted); font-size:12px; min-width:0; }
 .catalogFilters select { min-width:0; width:100%; min-height:40px; border:1px solid var(--line); border-radius:7px; padding:6px 8px; font:inherit; color:var(--ink); background:var(--surface); }
 @media(max-width:700px) {
-  .fifthYearWelcome { padding:12px 0; gap:14px; }
-  .fifthYearWelcome .welcomeArt img { border-radius:8px; }
+  .fifthYearWelcome { --welcome-panel-inset:12px; padding:12px 0; gap:14px; }
 }
