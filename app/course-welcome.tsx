@@ -10,7 +10,6 @@ export default function CourseWelcome({onChoose,fifthYear=false}:{onChoose:()=>v
   return <section className={`courseWelcome ${fifthYear?'fifthYearWelcome':''}`} aria-labelledby={fifthYear?'course-welcome-title':undefined} aria-label={fifthYear?undefined:'选择本学期课程'}>
     {fifthYear&&<div className="welcomeCopy">
       <h3 id="course-welcome-title">自由的龙儿是关不住的</h3>
-      <p className="welcomeDescription">可根据自身情况选择课程</p>
       {failed&&<button className="welcomeImageRetry" type="button" onClick={()=>{setFailed(false);setLoaded(false);setAttempt(value=>value+1)}}>雨景高清图加载失败，点此重试</button>}
     </div>}
     <div className="welcomeArt" aria-hidden="true">
@@ -21,6 +20,7 @@ export default function CourseWelcome({onChoose,fifthYear=false}:{onChoose:()=>v
     </div>
     <div className="welcomeAction">
       <button type="button" onClick={onChoose}>{fifthYear?'添加课程':'选择课程'} <span aria-hidden="true">＋</span></button>
+      {fifthYear&&<p className="welcomeDescription">可根据自身情况选择课程</p>}
       <p>添加后即可查看安排与课程冲突</p>
     </div>
   </section>;
