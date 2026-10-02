@@ -1,6 +1,10 @@
 /* Surface hierarchy: quiet controls, a paper-like timetable, raised overlays.
    Keep time geometry, course category colors and mascot composition intact. */
 body { background:var(--paper); }
+.selectionAddedNotice { position:fixed; left:50%; bottom:24px; transform:translateX(-50%); z-index:90; width:max-content; max-width:calc(100vw - 32px); padding:12px 18px; border:1px solid var(--accent-line); border-radius:12px; background:var(--surface); color:var(--ink); box-shadow:0 5px 24px #253b4926; font-size:14px; line-height:1.6; pointer-events:none; }
+.courseJustLocated { animation:courseLocated 1.8s ease-out; }
+@keyframes courseLocated { from { box-shadow:inset 0 0 0 3px var(--accent); } to { box-shadow:inset 0 0 0 0 transparent; } }
+@media(prefers-reduced-motion:reduce) { .courseJustLocated { animation:none; } }
 .scheduleHeader.topbar {
   background:var(--surface);
   border-bottom:1px solid var(--line);

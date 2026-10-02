@@ -184,6 +184,12 @@ function Home(){
   const [sidebarOpen,setSidebarOpen]=useState(false);
   const [plannerExpanded,setPlannerExpanded]=useState(false);
   const [plannerFocus,setPlannerFocus]=useState<{id:string;stamp:number}|null>(null);
+  const [selectionNotice,setSelectionNotice]=useState<{text:string;stamp:number}|null>(null);
+  useEffect(()=>{
+    if(!selectionNotice)return;
+    const timer=window.setTimeout(()=>setSelectionNotice(null),4500);
+    return ()=>window.clearTimeout(timer);
+  },[selectionNotice]);
   const [identityOpen,setIdentityOpen]=useState(()=>{try{return !window.localStorage.getItem(preferencesKey)}catch{return true}});
   const [mobileViewChoice,setMobileView]=useState<'day'|'week'|null>(null);
   const [now,setNow]=useState(()=>new Date());
@@ -404,7 +410,12 @@ function Home(){
   }
 
   function chooseElective(option:ElectiveOption){
-    focusElective(option);
+    const adding=!selectedElectiveKeys.includes(option.key);
+    if(adding){
+      focusElective(option);
+      const event=option.events.find(event=>!event.listedOnly);
+      setSelectionNotice({text:`已加入：${option.events[0].title}${event?` · ${weekdayNames[event.day]} ${sessionTimeLabel(event,times)}`:' · 上课时间待通知'}`,stamp:Date.now()});
+    }else setSelectionNotice(null);
     setRemovedElective(null);
     setPreviewElectiveKeys(current=>current.filter(key=>key!==option.key));
     setElectiveSelections(current=>({...current,[profile]:toggleElective(current[profile]||[],option,electiveChoices)}));
@@ -680,7 +691,7 @@ function Home(){
         {displayedEvents.filter(event=>event.day===mobileDay&&event.displaySource!=='preview').sort((a,b)=>a.start-b.start).map(event=><button key={`${event.displaySource}-${event.id}`} {...courseLongPress(event)} className={`agendaCard category-${courseCategory(event)} ${hardConflictEventIds.has(event.id)?'agendaConflict':partialConflictEventIds.has(event.id)?'agendaPartial':''}`} onClick={()=>openCourseDetails(event)}><span className="agendaTime">{times[event.start]?.[1]}<small>{times[event.start+event.span-1]?.[2]||'结束时间待确认'}</small></span><span><strong>{courseHeading(event)}</strong>{event.shortTitle&&<small>{courseSubtitle(event)}</small>}<small className="agendaRoom">教室：{roomForMajor(event,major)}</small><small className="agendaWeeks"><span className="factLabel">周次：</span><WeekText value={event.weeks||'按学期安排'}/></small>{event.teacher&&<small className="agendaTeacher">教师：{event.teacher}</small>}<small>{event.displaySource==='retake'?'重修 · ':isElective(event)&&year!==5?'选修 · ':''}{hardConflictEventIds.has(event.id)?'课程冲突':partialConflictEventIds.has(event.id)?'部分冲突':categoryLabels[courseCategory(event)]}</small></span></button>)}
         {!displayedEvents.some(event=>event.day===mobileDay&&event.displaySource!=='preview')&&renderEmpty(mobileDay)}
       </div>
-      <div className="scheduleContent">{displayedEvents.length>0&&<ScheduleViewport minWidth={displayedDays.length===1?360:900}><div className="timetable" style={{gridTemplateColumns:displayedDays.length===1?'72px minmax(0,1fr)':'72px repeat(5,minmax(0,1fr))',minWidth:displayedDays.length===1?'360px':'900px'}}><div className="corner">节次</div>{displayedDays.map((day,index)=><div className="dayHead" style={{gridColumn:index+2}} key={day}>{weekdayNames[day]}<small>{selectedWeek==='all'?weekdayShort[day]:formatShortDate(dateForWeekDay(selectedWeek,day))}</small></div>)}
+      <div className="scheduleContent">{displayedEvents.length>0&&<ScheduleViewport obscured={sidebarOpen} focus={plannerFocus&&displayedEvents.some(event=>event.id===plannerFocus.id)?plannerFocus:year===4&&displayedEvents.length?{id:displayedEvents[0].id,stamp:0}:null} minWidth={displayedDays.length===1?360:900}><div className="timetable" style={{gridTemplateColumns:displayedDays.length===1?'72px minmax(0,1fr)':'72px repeat(5,minmax(0,1fr))',minWidth:displayedDays.length===1?'360px':'900px'}}><div className="corner">节次</div>{displayedDays.map((day,index)=><div className="dayHead" style={{gridColumn:index+2}} key={day}>{weekdayNames[day]}<small>{selectedWeek==='all'?weekdayShort[day]:formatShortDate(dateForWeekDay(selectedWeek,day))}</small></div>)}
         {times.map(([session,from,to],index)=><div className={`timeCell ${session==='5'?'break':''}`} style={{gridRow:index+2}} key={session}><strong>{session}</strong><span>{from}</span>{to&&<small>{to}</small>}</div>)}
         {times.map((_,row)=>displayedDays.map((day,index)=><div className={`gridCell ${row===4?'break':''}`} style={{gridColumn:index+2,gridRow:row+2}} key={`${day}-${row}`}/>))}
         {displayedEvents.map((event)=>{
@@ -705,6 +716,7 @@ function Home(){
     <details className="notice" id="help"><summary>使用帮助</summary><div className="helpContent"><p>选好学位、年级、专业和班级，即可查看课表。点击课程可看详情；手机长按已选选修课约 0.6 秒可移除整门课程，移除后可撤销。</p><p>切换周次查看当周安排；“整学期”显示所有课程。英语选课和重修课程需手动添加，选择仅保存在当前浏览器，不代替学校选课。</p><p>在“导出课表”中选择“编辑后导出”，可临时修改名称、教室、教师和备注。修改只用于个人副本，退出后不保存。</p><p>课表与教学周来自学院课表、单学位授课安排和学校校历。临时调课请以学院通知为准。</p><p>发现课程信息有误或遗漏？<a href={feedbackUrl()} target="_blank" rel="noreferrer">提交课表纠错 ↗</a>（需登录 GitHub）。请补充正确信息及学院通知链接或截图，由维护者核实后更新。</p><a href="#materials">查看原始课表与校历 ↗</a></div></details>
     <footer><span>JBJI 课表助手 · 学生自制</span><a className="feedbackLink" href={feedbackUrl()} target="_blank" rel="noreferrer" title="在 GitHub 提交课表纠错，需要登录">课表纠错（GitHub）↗</a><a href="https://birmingham.jnu.edu.cn/" target="_blank" rel="noreferrer">学院官网 ↗</a></footer>
     {exportDraft&&<ExportEditor {...exportDraft} busy={exporting!==null} status={exportMessage} onClose={()=>{setExportDraft(null);setExportMessage('')}} onExport={(format,source)=>exportSchedule(format,source,true)}/>}
+    {selectionNotice&&<div className="selectionAddedNotice" role="status" data-export-exclude key={selectionNotice.stamp}>{selectionNotice.text}</div>}
     {detailCourse&&<div className="detailOverlay" onMouseDown={()=>setDetailCourse(null)}>
       <section ref={detailDialogRef} className="detailDialog" role="dialog" aria-modal="true" aria-labelledby="course-detail-title" onMouseDown={(event)=>event.stopPropagation()}>
         <header><div><p>课程详情</p><h2 id="course-detail-title">{courseHeading(detailCourse)}</h2>{courseSubtitle(detailCourse)&&<small>{courseSubtitle(detailCourse)}</small>}</div><button ref={detailCloseRef} type="button" aria-label="关闭课程详情" onClick={()=>setDetailCourse(null)}>×</button></header>

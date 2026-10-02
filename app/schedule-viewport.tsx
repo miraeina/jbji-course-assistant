@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 
-export default function ScheduleViewport({ children, minWidth }: { children: ReactNode; minWidth: number }) {
+export default function ScheduleViewport({ children, minWidth, focus, obscured=false }: { children: ReactNode; minWidth: number; focus?:{id:string;stamp:number}|null; obscured?:boolean }) {
   const viewport = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(minWidth);
@@ -9,6 +9,17 @@ export default function ScheduleViewport({ children, minWidth }: { children: Rea
   const anchor = useRef<{ x: number; y: number } | null>(null);
   const baseWidth = Math.max(minWidth, width);
   const scale = zoom === 'fit' ? Math.min(1, width / baseWidth) : zoom;
+
+  useLayoutEffect(() => {
+    if (!focus || !height || (obscured && window.matchMedia('(max-width:1319px)').matches)) return;
+    const frame = requestAnimationFrame(() => {
+      const target = Array.from(canvas.current?.querySelectorAll<HTMLElement>('[data-event-id]') || []).find(element => element.dataset.eventId === focus.id);
+      if (!target?.getClientRects().length || !target.getBoundingClientRect().height) return;
+      target.scrollIntoView({ block:'center', inline:'nearest', behavior:'instant' });
+      target.classList.add('courseJustLocated');
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [focus?.id, focus?.stamp, height, obscured]);
 
   useLayoutEffect(() => {
     const scroll = viewport.current!, content = canvas.current!;
