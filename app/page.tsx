@@ -207,7 +207,7 @@ function Home(){
   const [removedElective,setRemovedElective]=useState<{profile:string;option:ElectiveOption}|null>(null);
   useEffect(()=>{
     if(!removedElective)return;
-    const timer=window.setTimeout(()=>setRemovedElective(null),3000);
+    const timer=window.setTimeout(()=>setRemovedElective(null),5000);
     return ()=>window.clearTimeout(timer);
   },[removedElective]);
   useEffect(()=>{try{localStorage.setItem(electiveStorageKey,JSON.stringify(electiveSelections))}catch{/* Keep session selections when storage is unavailable. */}},[electiveSelections]);
@@ -273,7 +273,7 @@ function Home(){
   const [exporting,setExporting]=useState<'png'|'pdf'|null>(null);
   const [exportMessage,setExportMessage]=useState('');
   const [exportDraft,setExportDraft]=useState<{lessons:ExportLesson[];days:{day:number;label:string;date:string}[];context:string;fileName:string}|null>(null);
-  const [detailCourse,setDetailCourse]=useState<TimetableEvent|null>(null);
+  const [detailCourse,setDetailCourse]=useState<DisplayEvent|null>(null);
   const detailCloseRef=useRef<HTMLButtonElement>(null);
   const detailDialogRef=useRef<HTMLElement>(null);
   const detailTriggerRef=useRef<HTMLElement|null>(null);
@@ -426,10 +426,11 @@ function Home(){
     setPreviewElectiveKeys([]);
   }
   function removableElective(event:DisplayEvent){
-    return event.displaySource==='base'&&(year===5||isElective(event))
+    return event.displaySource!=='retake'&&event.displaySource!=='preview'&&(year===5||isElective(event))
       ?electiveChoices.find(choice=>selectedElectiveKeys.includes(choice.key)&&choice.events.some(item=>item.id===event.id)):undefined;
   }
   function removeElective(option:ElectiveOption){
+    setSelectionNotice(null);
     setElectiveSelections(current=>({...current,[profile]:(current[profile]||[]).filter(key=>key!==option.key)}));
     setPreviewElectiveKeys(current=>current.filter(key=>key!==option.key));
     setRemovedElective({profile,option});
@@ -575,7 +576,7 @@ function Home(){
     return timetableFeedbackUrl({profile:`${degreeLabels[track]} · 大${['一','二','三','四','五+'][year-1]} · ${selectedMajor.name}${classCount?' '+classNo+' 班':''}`,week:selectedWeek==='all'?'整学期':`第 ${selectedWeek} 周`,major,course});
   }
 
-  function openCourseDetails(course:TimetableEvent){
+  function openCourseDetails(course:DisplayEvent){
     detailTriggerRef.current=document.activeElement instanceof HTMLElement?document.activeElement:null;
     setDetailCourse(course);
   }
@@ -593,6 +594,8 @@ function Home(){
     };
     return <div className="emptyState"><img src="./jbji-nailong-guardian.webp" fetchPriority="high" loading="eager" alt=""/><strong>{info.title}</strong><p>{info.detail}</p><button onClick={activate}>{info.action==='start'?`查看第 ${info.firstWeek} 周`:info.action==='semester'?'查看整学期':info.action==='week'?'查看本周':'清除筛选'}</button></div>;
   }
+
+  const detailRemovable=detailCourse?removableElective(detailCourse):undefined;
 
   return <main className={`mobileView-${mobileView} ${sidebarOpen&&sidebarMode==='elective'?'mobileSelectionActive':''}`}>
     <ConflictMascot key={profile} conflicts={allConflicts} previewIds={previewIds}/>
@@ -680,10 +683,10 @@ function Home(){
         {electivePreviews.map(option=><div className="electivePreviewNotice" key={option.key}><span>{option.events[0].title}<small>{option.events[0].note}{selectedWeek!=='all'&&!option.events.some(event=>weekNumbers(event.weeks).has(selectedWeek))?' · 本周无课，可查看整学期。':''}</small></span><button onClick={()=>chooseElective(option)}>加入课表</button><button aria-label={`取消预览${option.events[0].title}`} onClick={()=>setPreviewElectiveKeys(current=>current.filter(key=>key!==option.key))}>取消预览</button></div>)}
       </div>}
       <div hidden={!conflicts.length} className={`conflictSummary ${conflicts.length?'hasConflicts':'clear'}`} data-export-exclude>
-        <div className="conflictSummaryLead"><img className="conflictMascotInline" src="./conflict-nailong.webp" alt="奶龙：惊鸿一瞥"/><div><strong>发现 {conflicts.length} 处课程冲突</strong><p>{conflicts.some(previewConflict)?'包含预览课程冲突，预览尚未加入课表。':'已加入的课程存在时间重叠。'}</p><span>点击下方条目查看对应上课日和重叠周次。</span></div></div>
+        <div className="conflictSummaryLead"><img className="conflictMascotInline" src={year===3?"./conflict-birmingham-gangster.webp":"./conflict-campus-patrol.webp"} width="336" height="336" alt={year===3?"伯大奶察（剃刀党风格）":"暨伯奶察"}/><div><strong>发现 {conflicts.length} 处课程冲突</strong><p>{conflicts.some(previewConflict)?'包含预览课程冲突，预览尚未加入课表。':'已加入的课程存在时间重叠。'}</p><span>点击下方条目查看对应上课日和重叠周次。</span></div></div>
         {conflicts.length>0&&<div className="conflictList">{conflicts.map((conflict)=><button key={conflict.key} className={conflict.severity} onClick={()=>{setSelectedDay(conflict.day);setMobileDay(conflict.day)}}><b>{previewConflict(conflict)?'【预览冲突】':'【已加入冲突】'}{courseHeading(conflict.first)} × {courseHeading(conflict.second)}</b><span>{weekdayNames[conflict.day]} · 第{conflict.firstSession}{conflict.lastSession>conflict.firstSession?`–${conflict.lastSession}`:''}节 · {formatWeekList(conflict.weeks)}</span></button>)}</div>}
       </div>
-      {selectedElectiveKeys.length>0&&<p className="longPressHint" data-export-exclude>轻点课程查看详情，长按已选课程可移除。</p>}
+      {selectedElectiveKeys.length>0&&<p className="longPressHint" data-export-exclude>轻点课程可在详情中移除，也可长按已选课程移除。</p>}
       {removedElective?.profile===profile&&<div className="courseRemovalNotice" data-export-exclude><span role="status">已移除：{removedElective.option.events[0].title}</span><button onClick={()=>chooseElective(removedElective.option)}>撤销</button><button aria-label="关闭移除提示" onClick={()=>setRemovedElective(null)}>×</button></div>}
       {showCourseWelcome?<CourseWelcome onChoose={openElectives} fifthYear={year===5}/>:<>
       <div className="dayAgenda mobileOnly" data-export-exclude>
@@ -713,7 +716,7 @@ function Home(){
         </article>;
       })}</div>
     </details>
-    <details className="notice" id="help"><summary>使用帮助</summary><div className="helpContent"><p>选好学位、年级、专业和班级，即可查看课表。点击课程可看详情；手机长按已选选修课约 0.6 秒可移除整门课程，移除后可撤销。</p><p>切换周次查看当周安排；“整学期”显示所有课程。英语选课和重修课程需手动添加，选择仅保存在当前浏览器，不代替学校选课。</p><p>在“导出课表”中选择“编辑后导出”，可临时修改名称、教室、教师和备注。修改只用于个人副本，退出后不保存。</p><p>课表与教学周来自学院课表、单学位授课安排和学校校历。临时调课请以学院通知为准。</p><p>发现课程信息有误或遗漏？<a href={feedbackUrl()} target="_blank" rel="noreferrer">提交课表纠错 ↗</a>（需登录 GitHub）。请补充正确信息及学院通知链接或截图，由维护者核实后更新。</p><a href="#materials">查看原始课表与校历 ↗</a></div></details>
+    <details className="notice" id="help"><summary>使用帮助</summary><div className="helpContent"><p>选好学位、年级、专业和班级，即可查看课表。点击课程可看详情，已加入的选修课和大五＋自选课程可在详情中移除；手机也可长按约 0.6 秒移除整门课程，移除后可在 5 秒内撤销。</p><p>切换周次查看当周安排；“整学期”显示所有课程。英语选课和重修课程需手动添加，选择仅保存在当前浏览器，不代替学校选课。</p><p>在“导出课表”中选择“编辑后导出”，可临时修改名称、教室、教师和备注。修改只用于个人副本，退出后不保存。</p><p>课表与教学周来自学院课表、单学位授课安排和学校校历。临时调课请以学院通知为准。</p><p>发现课程信息有误或遗漏？<a href={feedbackUrl()} target="_blank" rel="noreferrer">提交课表纠错 ↗</a>（需登录 GitHub）。请补充正确信息及学院通知链接或截图，由维护者核实后更新。</p><a href="#materials">查看原始课表与校历 ↗</a></div></details>
     <footer><span>JBJI 课表助手 · 学生自制</span><a className="feedbackLink" href={feedbackUrl()} target="_blank" rel="noreferrer" title="在 GitHub 提交课表纠错，需要登录">课表纠错（GitHub）↗</a><a href="https://birmingham.jnu.edu.cn/" target="_blank" rel="noreferrer">学院官网 ↗</a></footer>
     {exportDraft&&<ExportEditor {...exportDraft} busy={exporting!==null} status={exportMessage} onClose={()=>{setExportDraft(null);setExportMessage('')}} onExport={(format,source)=>exportSchedule(format,source,true)}/>}
     {selectionNotice&&<div className="selectionAddedNotice" role="status" data-export-exclude key={selectionNotice.stamp}>{selectionNotice.text}</div>}
@@ -721,7 +724,7 @@ function Home(){
       <section ref={detailDialogRef} className="detailDialog" role="dialog" aria-modal="true" aria-labelledby="course-detail-title" onMouseDown={(event)=>event.stopPropagation()}>
         <header><div><p>课程详情</p><h2 id="course-detail-title">{courseHeading(detailCourse)}</h2>{courseSubtitle(detailCourse)&&<small>{courseSubtitle(detailCourse)}</small>}</div><button ref={detailCloseRef} type="button" aria-label="关闭课程详情" onClick={()=>setDetailCourse(null)}>×</button></header>
         <dl className="detailFacts"><div><dt>上课时间</dt><dd>{`${weekdayNames[detailCourse.day]} · ${sessionTimeLabel(detailCourse,times)}`}{times[detailCourse.start+detailCourse.span-1]?.[2]&&` · 第 ${detailCourse.start+1}–${detailCourse.start+detailCourse.span} 节`}</dd></div><div><dt>教室</dt><dd>{roomForMajor(detailCourse,major)}</dd></div>{detailCourse.roomsByMajor&&detailCourse.room&&<div><dt>完整分组安排</dt><dd>{detailCourse.room}</dd></div>}<div><dt>教师</dt><dd>{detailCourse.teacher||'原始资料未注明'}</dd></div><div><dt>周次</dt><dd>{detailCourse.weeks||'原始资料未注明'}</dd></div>{detailCourse.sourceNote&&<div><dt>资料说明</dt><dd>{detailCourse.sourceNote}</dd></div>}{detailCourse.note&&<div><dt>备注</dt><dd>{detailCourse.note}</dd></div>}</dl><div className="detailFeedback"><a href={feedbackUrl(detailCourse)} target="_blank" rel="noreferrer">反馈这门课的信息 ↗</a><small>需登录 GitHub，已带上课程和班级信息；请补充通知依据。</small></div>
-
+        {detailRemovable&&<div className="detailActions"><p>将移除这门课的全部上课安排，可在 5 秒内撤销。</p><button type="button" onClick={()=>{removeElective(detailRemovable);setDetailCourse(null)}}>移除课程</button></div>}
       </section>
     </div>}
   </main>;
