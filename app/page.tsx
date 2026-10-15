@@ -182,6 +182,15 @@ function Home(){
   const [track,setTrack]=useState<DegreeTrack>(savedPreferences.track); const [year,setYear]=useState(savedPreferences.year); const [major,setMajor]=useState<Major>(savedPreferences.major); const [classNo,setClassNo]=useState(savedPreferences.classNo);
   const categoryLabels=year===5?{...defaultCategoryLabels,uob:'（单学位课程）'}:defaultCategoryLabels;
   const [sidebarOpen,setSidebarOpen]=useState(false);
+  const [wideLayout,setWideLayout]=useState(()=>window.matchMedia('(min-width:1101px)').matches);
+  const persistentCoursePanel=(year===4||year===5)&&wideLayout;
+  const sidebarVisible=sidebarOpen||persistentCoursePanel;
+  useEffect(()=>{
+    const media=window.matchMedia('(min-width:1101px)');
+    const update=()=>setWideLayout(media.matches);
+    media.addEventListener('change',update);
+    return ()=>media.removeEventListener('change',update);
+  },[]);
   const [plannerExpanded,setPlannerExpanded]=useState(false);
   const [plannerFocus,setPlannerFocus]=useState<{id:string;stamp:number}|null>(null);
   const [selectionNotice,setSelectionNotice]=useState<{text:string;stamp:number}|null>(null);
@@ -196,7 +205,7 @@ function Home(){
   const academicState=useMemo(()=>getAcademicState(now),[now]);
   const todayIndex=(academicState.today.getUTCDay()+6)%7;
   const [mobileDay,setMobileDay]=useState(todayIndex);
-  const [sidebarMode,setSidebarMode]=useState<SidebarMode>('current');
+  const [sidebarMode,setSidebarMode]=useState<SidebarMode>(()=>[2,4,5].includes(savedPreferences.year)?'elective':'current');
   const [selectedRetakeKeys,setSelectedRetakeKeys]=useState<string[]>(loadRetakes);
   const [previewRetakeKey,setPreviewRetakeKey]=useState<string|null>(null);
   const [electiveSelections,setElectiveSelections]=useState(()=>{try{return parseElectiveSelections(localStorage.getItem(electiveStorageKey))}catch{return {}}});
@@ -295,7 +304,7 @@ function Home(){
     };
   },[]);
   useEffect(()=>{
-    if(!sidebarOpen||detailCourse)return;
+    if(!sidebarVisible||persistentCoursePanel||detailCourse)return;
     const drawerMedia=window.matchMedia('(max-width:1319px)');
     const panel=document.getElementById('course-panel');
     const previousFocus=document.activeElement as HTMLElement|null;
@@ -325,7 +334,7 @@ function Home(){
       window.removeEventListener('keydown',handleKey);
       previousFocus?.focus();
     };
-  },[sidebarOpen,detailCourse,sidebarMode]);
+  },[sidebarVisible,persistentCoursePanel,detailCourse,sidebarMode]);
   useEffect(()=>{
     if(!detailCourse)return;
     detailCloseRef.current?.focus();
@@ -597,7 +606,7 @@ function Home(){
 
   const detailRemovable=detailCourse?removableElective(detailCourse):undefined;
 
-  return <main className={`mobileView-${mobileView} ${sidebarOpen&&sidebarMode==='elective'?'mobileSelectionActive':''}`}>
+  return <main className={`mobileView-${mobileView} ${sidebarVisible&&sidebarMode==='elective'?'mobileSelectionActive':''}`}>
     <ConflictMascot key={profile} conflicts={allConflicts} previewIds={previewIds}/>
     <SiteHeader/>
     <button className="identityToggle mobileOnly" aria-expanded={identityOpen} aria-controls="identity-filters" onClick={()=>setIdentityOpen(!identityOpen)}>{degreeLabels[track]} · 大{['一','二','三','四','五+'][year-1]} · {groupLabel}<span>{identityOpen?'收起':'切换'}⌄</span></button>
@@ -608,10 +617,10 @@ function Home(){
       {classCount>0&&<div className="filterGroup classGroup"><span>班级</span><div className="segmented">{Array.from({length:classCount},(_,i)=>i+1).map((item)=><button key={item} className={classNo===item?'active':''} aria-pressed={classNo===item} onClick={()=>setClassNo(item)}>{item} 班</button>)}</div></div>}
       <button className="identityDone mobileOnly" onClick={()=>setIdentityOpen(false)}>查看课表</button>
     </section>
-    {sidebarOpen&&<button className="sheetBackdrop mobileOnly" aria-label="关闭课程面板" onClick={()=>setSidebarOpen(false)}/>}
-    <section className="scheduleSection" ref={scheduleRef}><p className="exportContext" data-export-only>{academicCalendar.academicYear} 学年第一学期 · {degreeLabels[track]} · 大{['一','二','三','四','五+'][year-1]} · {selectedMajor.name}{classCount?` · ${classNo} 班`:''}<br/>{selectedWeek==='all'?'整学期':`第 ${selectedWeek} 周 · ${weekDateRange(selectedWeek)}`}{selectedDay!=='all'?` · ${weekdayNames[selectedDay]}`:''}{courseQuery||selectedCategory!=='all'?' · 已应用课程筛选':''}{hasElectives?` · 已选 ${selectedElectiveKeys.length} 门${year===5?'课程':'选修'}`:''}</p><div className={`scheduleBody ${sidebarOpen?"sidebarOpen":"sidebarClosed"}`}>
-      <aside hidden={!sidebarOpen} id="course-panel" className={`courseSidebar ${sidebarMode==='elective'?'mobileSelectionMode':''} ${plannerExpanded?'plannerExpanded':''} ${sidebarMode==='elective'&&year===2?'englishElectivePanel':''}`} aria-label="浏览和筛选课程" data-export-exclude>
-        {sidebarMode==='elective'&&sidebarOpen&&<MobileSelectionPreview
+    {sidebarOpen&&!persistentCoursePanel&&<button className="sheetBackdrop mobileOnly" aria-label="关闭课程面板" onClick={()=>setSidebarOpen(false)}/>}
+    <section className="scheduleSection" ref={scheduleRef}><p className="exportContext" data-export-only>{academicCalendar.academicYear} 学年第一学期 · {degreeLabels[track]} · 大{['一','二','三','四','五+'][year-1]} · {selectedMajor.name}{classCount?` · ${classNo} 班`:''}<br/>{selectedWeek==='all'?'整学期':`第 ${selectedWeek} 周 · ${weekDateRange(selectedWeek)}`}{selectedDay!=='all'?` · ${weekdayNames[selectedDay]}`:''}{courseQuery||selectedCategory!=='all'?' · 已应用课程筛选':''}{hasElectives?` · 已选 ${selectedElectiveKeys.length} 门${year===5?'课程':'选修'}`:''}</p><div className={`scheduleBody ${sidebarVisible?"sidebarOpen":"sidebarClosed"} ${persistentCoursePanel?"persistentCoursePanel":""}`}>
+      <aside hidden={!sidebarVisible} id="course-panel" className={`courseSidebar ${sidebarMode==='elective'?'mobileSelectionMode':''} ${plannerExpanded?'plannerExpanded':''} ${sidebarMode==='elective'&&year===2?'englishElectivePanel':''}`} aria-label="浏览和筛选课程" data-export-exclude>
+        {sidebarMode==='elective'&&sidebarVisible&&<MobileSelectionPreview
           events={arrange([...scheduled,...selectedRetakeEvents,...electivePreviewEvents.filter(event=>!event.listedOnly)])}
           previewIds={previewIds} conflictIds={new Set(allConflicts.flatMap(issue=>[issue.first.id,issue.second.id]))}
           focus={plannerFocus} expanded={plannerExpanded} count={selectedElectiveKeys.length}
@@ -646,7 +655,7 @@ function Home(){
           </>}
         </div>
       </aside>
-      <div className={`timetablePanel ${showCourseWelcome?'isCourseWelcome':''}`}><div className="sectionHead"><div><h2>我的课表</h2><p className="scheduleIdentity">大{['一','二','三','四','五+'][year-1]} · {selectedMajor.name}{classCount?` ${classNo} 班`:''} · {degreeLabels[track]}</p></div><div className="sectionTools"><div className="panelActions" data-export-exclude>{hasElectives&&<button className="electivePrimary" aria-controls="course-panel" onClick={openElectives}>{year===2?'英语选课':year===5?'添加课程':'选择课程'} · {selectedElectiveKeys.length}</button>}<button aria-expanded={sidebarOpen} aria-controls="course-panel" onClick={()=>{setSidebarOpen(!sidebarOpen);changeSidebarMode('current')}}>{sidebarOpen?'收起':'查课'}</button>{year>1&&year!==5&&<button onClick={()=>{setSidebarOpen(true);changeSidebarMode('retake')}}>重修{activeSelectedOptions.length?` · ${activeSelectedOptions.length}`:''}</button>}</div><div className="exportActions" data-export-exclude><details ref={exportMenuRef} className="exportMenu" onBlur={event=>{if(!event.currentTarget.contains(event.relatedTarget as Node|null))event.currentTarget.open=false}}><summary>导出课表</summary><div><p className="exportScope"><strong>{activeScheduleFilters.length?'当前筛选结果':'导出范围'}</strong><span>{exportScopeLabel}</span><small>{exportableEvents.length?`${exportableEvents.length} 个上课安排 · 不含预览课程`:'当前范围暂无可导出的课程'}</small></p><button disabled={exporting!==null||!exportableEvents.length} onClick={()=>exportSchedule('png')}>{exporting==='png'?'生成中…':'导出图片'}</button><button disabled={exporting!==null||!exportableEvents.length} onClick={()=>exportSchedule('pdf')}>{exporting==='pdf'?'生成中…':'导出 PDF'}</button><button disabled={exporting!==null||!exportableEvents.length} onClick={event=>{event.currentTarget.closest('details')?.removeAttribute('open');openExportEditor()}}>编辑后导出</button></div></details><span className="exportStatus" role="status" aria-live="polite">{exportMessage}</span></div></div></div>
+      <div className={`timetablePanel ${showCourseWelcome?'isCourseWelcome':''}`}><div className="sectionHead"><div><h2>我的课表</h2><p className="scheduleIdentity">大{['一','二','三','四','五+'][year-1]} · {selectedMajor.name}{classCount?` ${classNo} 班`:''} · {degreeLabels[track]}</p></div><div className="sectionTools"><div className="panelActions" data-export-exclude>{hasElectives&&<button className="electivePrimary" aria-controls="course-panel" onClick={openElectives}>{year===2?'英语选课':year===5?'添加课程':'选择课程'} · {selectedElectiveKeys.length}</button>}<button aria-expanded={sidebarVisible} aria-controls="course-panel" onClick={()=>{if(persistentCoursePanel){changeSidebarMode(sidebarMode==='current'?'elective':'current')}else{setSidebarOpen(!sidebarOpen);changeSidebarMode('current')}}}>{persistentCoursePanel?(sidebarMode==='current'?'选课':'查课'):sidebarOpen?'收起':'查课'}</button>{year>1&&year!==5&&<button onClick={()=>{setSidebarOpen(true);changeSidebarMode('retake')}}>重修{activeSelectedOptions.length?` · ${activeSelectedOptions.length}`:''}</button>}</div><div className="exportActions" data-export-exclude><details ref={exportMenuRef} className="exportMenu" onBlur={event=>{if(!event.currentTarget.contains(event.relatedTarget as Node|null))event.currentTarget.open=false}}><summary>导出课表</summary><div><p className="exportScope"><strong>{activeScheduleFilters.length?'当前筛选结果':'导出范围'}</strong><span>{exportScopeLabel}</span><small>{exportableEvents.length?`${exportableEvents.length} 个上课安排 · 不含预览课程`:'当前范围暂无可导出的课程'}</small></p><button disabled={exporting!==null||!exportableEvents.length} onClick={()=>exportSchedule('png')}>{exporting==='png'?'生成中…':'导出图片'}</button><button disabled={exporting!==null||!exportableEvents.length} onClick={()=>exportSchedule('pdf')}>{exporting==='pdf'?'生成中…':'导出 PDF'}</button><button disabled={exporting!==null||!exportableEvents.length} onClick={event=>{event.currentTarget.closest('details')?.removeAttribute('open');openExportEditor()}}>编辑后导出</button></div></details><span className="exportStatus" role="status" aria-live="polite">{exportMessage}</span></div></div></div>
     <div className="scheduleCommandDeck">
     <section className="calendarPanel" aria-label="校历与教学周" data-export-exclude>
       <div className="calendarStatus"><strong>{calendarStatus}</strong>{selectedWeekIsReview&&<small>所选周为复习考试周</small>}</div>
@@ -688,13 +697,13 @@ function Home(){
       </div>
       {selectedElectiveKeys.length>0&&<p className="longPressHint" data-export-exclude>轻点课程可在详情中移除，也可长按已选课程移除。</p>}
       {removedElective?.profile===profile&&<div className="courseRemovalNotice" data-export-exclude><span role="status">已移除：{removedElective.option.events[0].title}</span><button onClick={()=>chooseElective(removedElective.option)}>撤销</button><button aria-label="关闭移除提示" onClick={()=>setRemovedElective(null)}>×</button></div>}
-      {showCourseWelcome?<CourseWelcome onChoose={openElectives} fifthYear={year===5}/>:<>
+      {showCourseWelcome?<CourseWelcome key={year} onChoose={openElectives} fifthYear={year===5}/>:<>
       <div className="dayAgenda mobileOnly" data-export-exclude>
         <h3>{selectedWeek==='all'?'整学期':`第 ${selectedWeek} 周`} · 周{['一','二','三','四','五','六','日'][mobileDay]}</h3>
         {displayedEvents.filter(event=>event.day===mobileDay&&event.displaySource!=='preview').sort((a,b)=>a.start-b.start).map(event=><button key={`${event.displaySource}-${event.id}`} {...courseLongPress(event)} className={`agendaCard category-${courseCategory(event)} ${hardConflictEventIds.has(event.id)?'agendaConflict':partialConflictEventIds.has(event.id)?'agendaPartial':''}`} onClick={()=>openCourseDetails(event)}><span className="agendaTime">{times[event.start]?.[1]}<small>{times[event.start+event.span-1]?.[2]||'结束时间待确认'}</small></span><span><strong>{courseHeading(event)}</strong>{event.shortTitle&&<small>{courseSubtitle(event)}</small>}<small className="agendaRoom">教室：{roomForMajor(event,major)}</small><small className="agendaWeeks"><span className="factLabel">周次：</span><WeekText value={event.weeks||'按学期安排'}/></small>{event.teacher&&<small className="agendaTeacher">教师：{event.teacher}</small>}<small>{event.displaySource==='retake'?'重修 · ':isElective(event)&&year!==5?'选修 · ':''}{hardConflictEventIds.has(event.id)?'课程冲突':partialConflictEventIds.has(event.id)?'部分冲突':categoryLabels[courseCategory(event)]}</small></span></button>)}
         {!displayedEvents.some(event=>event.day===mobileDay&&event.displaySource!=='preview')&&renderEmpty(mobileDay)}
       </div>
-      <div className="scheduleContent">{displayedEvents.length>0&&<ScheduleViewport obscured={sidebarOpen} focus={plannerFocus&&displayedEvents.some(event=>event.id===plannerFocus.id)?plannerFocus:year===4&&displayedEvents.length?{id:displayedEvents[0].id,stamp:0}:null} minWidth={displayedDays.length===1?360:900}><div className="timetable" style={{gridTemplateColumns:displayedDays.length===1?'72px minmax(0,1fr)':'72px repeat(5,minmax(0,1fr))',minWidth:displayedDays.length===1?'360px':'900px'}}><div className="corner">节次</div>{displayedDays.map((day,index)=><div className="dayHead" style={{gridColumn:index+2}} key={day}>{weekdayNames[day]}<small>{selectedWeek==='all'?weekdayShort[day]:formatShortDate(dateForWeekDay(selectedWeek,day))}</small></div>)}
+      <div className="scheduleContent">{displayedEvents.length>0&&<ScheduleViewport obscured={sidebarVisible&&!persistentCoursePanel} focus={plannerFocus&&displayedEvents.some(event=>event.id===plannerFocus.id)?plannerFocus:year===4&&displayedEvents.length?{id:displayedEvents[0].id,stamp:0}:null} minWidth={displayedDays.length===1?360:900}><div className="timetable" style={{gridTemplateColumns:displayedDays.length===1?'72px minmax(0,1fr)':'72px repeat(5,minmax(0,1fr))',minWidth:displayedDays.length===1?'360px':'900px'}}><div className="corner">节次</div>{displayedDays.map((day,index)=><div className="dayHead" style={{gridColumn:index+2}} key={day}>{weekdayNames[day]}<small>{selectedWeek==='all'?weekdayShort[day]:formatShortDate(dateForWeekDay(selectedWeek,day))}</small></div>)}
         {times.map(([session,from,to],index)=><div className={`timeCell ${session==='5'?'break':''}`} style={{gridRow:index+2}} key={session}><strong>{session}</strong><span>{from}</span>{to&&<small>{to}</small>}</div>)}
         {times.map((_,row)=>displayedDays.map((day,index)=><div className={`gridCell ${row===4?'break':''}`} style={{gridColumn:index+2,gridRow:row+2}} key={`${day}-${row}`}/>))}
         {displayedEvents.map((event)=>{
