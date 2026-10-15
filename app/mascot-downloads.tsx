@@ -34,7 +34,7 @@ export default function MascotDownloads() {
   return <details className="mascotDownloadMenu" ref={menu} onBlur={event=>{
     if(!event.currentTarget.contains(event.relatedTarget as Node|null))event.currentTarget.open=false;
   }}>
-    <summary className="mascotDownload">根本就没有这样的生物！ <DownloadIcon/><span aria-hidden="true">⌄</span></summary>
+    <summary className="mascotDownload">根本没有这样的生物 <DownloadIcon/><span aria-hidden="true">⌄</span></summary>
     <div className="mascotDownloadOptions">
       <p>选择图片下载 <small>PNG 原图</small></p>
       {pictures.map(picture=><a key={picture.file} href={`${import.meta.env.BASE_URL}${picture.file}`} download={`${picture.name}.png`} aria-label={`下载${picture.name}图片`}>
