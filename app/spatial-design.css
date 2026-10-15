@@ -117,8 +117,8 @@ body { background:var(--paper); }
   .persistentCoursePanel>.courseSidebar>.sheetClose { display:none; }
 }
 @media screen and (min-width:1101px) {
-  .scheduleBody.selectionWorkspace { height:clamp(640px,calc(100dvh - 220px),860px); grid-template-columns:300px minmax(0,1fr); grid-template-rows:minmax(0,1fr); align-items:stretch; }
-  .selectionWorkspace>.courseSidebar { display:flex; flex-direction:column; position:static; inset:auto; width:auto; max-width:none; height:100%; min-height:0; max-height:none; z-index:auto; overflow:hidden; border-radius:12px; }
+  .scheduleBody.selectionWorkspace { grid-template-columns:300px minmax(0,1fr); align-items:stretch; }
+  .selectionWorkspace>.courseSidebar { display:flex; flex-direction:column; position:static; inset:auto; width:auto; max-width:none; min-height:0; max-height:none; z-index:auto; overflow:hidden; border-radius:12px; contain:size; }
   .selectionWorkspace>.courseSidebar>.sheetClose { display:none; }
   .selectionWorkspace .sidebarHead { flex-shrink:0; }
   .selectionWorkspace .sidebarPanel { display:flex; flex-direction:column; flex:1; min-height:0; overflow:hidden; }
@@ -126,15 +126,10 @@ body { background:var(--paper); }
   .selectionWorkspace .sidebarCourseList { flex:1; min-height:0; max-height:none; align-content:start; overflow:auto; overscroll-behavior:contain; scrollbar-gutter:stable; }
   .selectionWorkspace .electiveSelectionActions { margin-bottom:8px; }
   .selectionWorkspace .retakeIntro { margin-bottom:8px; padding:8px 10px; }
-  .selectionWorkspace>.timetablePanel { display:flex; flex-direction:column; height:100%; min-height:0; overflow:hidden; }
-  .selectionWorkspace .timetablePanel>.sectionHead,.selectionWorkspace .scheduleCommandDeck,.selectionWorkspace .scheduleGuidance,.selectionWorkspace .scheduleZoomControls { flex-shrink:0; }
-  .selectionWorkspace .timetablePanel>.conflictSummary { flex-shrink:0; max-height:144px; overflow:auto; }
-  .selectionWorkspace .electivePreviewManager { flex-shrink:0; max-height:120px; overflow:auto; }
-  .selectionWorkspace .scheduleContent { display:flex; flex-direction:column; flex:1; min-height:0; }
-  .selectionWorkspace .scheduleZoomViewport { flex:1; min-height:160px; max-height:none; overscroll-behavior:contain; scrollbar-gutter:stable; }
-  .selectionWorkspace .courseWelcome { flex:1; min-height:0; overflow:auto; align-content:center; }
+  .selectionWorkspace>.timetablePanel { min-height:0; }
+  .selectionWorkspace .scheduleZoomViewport { max-height:none; }
+  .selectionWorkspace .courseWelcome { min-height:520px; align-content:center; }
   .selectionWorkspace .courseWelcome:not(.fifthYearWelcome) .welcomeArt img { height:clamp(220px,36dvh,380px); }
-  .selectionWorkspace .scheduleContent>.emptyState { margin:auto; }
 }
 .courseWelcome {
   display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr);

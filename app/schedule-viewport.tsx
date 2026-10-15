@@ -15,14 +15,7 @@ export default function ScheduleViewport({ children, minWidth, focus, onFocusHan
     const frame = requestAnimationFrame(() => {
       const target = Array.from(canvas.current?.querySelectorAll<HTMLElement>('[data-event-id]') || []).find(element => element.dataset.eventId === focus.id);
       if (!target?.getClientRects().length || !target.getBoundingClientRect().height) return;
-      const scroll=viewport.current;
-      if(scroll?.closest('.selectionWorkspace')){
-        const card=target.getBoundingClientRect(),bounds=scroll.getBoundingClientRect();
-        scroll.scrollTop+=card.top-bounds.top-scroll.clientTop-(scroll.clientHeight-card.height)/2;
-        if(card.left<bounds.left+scroll.clientLeft||card.right>bounds.left+scroll.clientLeft+scroll.clientWidth){
-          scroll.scrollLeft+=card.left-bounds.left-scroll.clientLeft-(scroll.clientWidth-card.width)/2;
-        }
-      }else target.scrollIntoView({ block:'center', inline:'nearest', behavior:'instant' });
+      target.scrollIntoView({ block:'center', inline:'nearest', behavior:'instant' });
       target.classList.add('courseJustLocated');
       onFocusHandled?.(focus);
     });
