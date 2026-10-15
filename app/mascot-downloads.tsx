@@ -5,7 +5,7 @@ const pictures = [
   {name:'奶蛙 · 惊鸿一瞥',file:'conflict-nailong.png',preview:'conflict-nailong.webp'},
   {name:'暨伯奶察',file:'jbji-nailong-campus-patrol.png',preview:'conflict-campus-patrol.webp'},
   {name:'伯大奶察 · 剃刀党风格',file:'jbji-nailong-birmingham-gangster.png',preview:'conflict-birmingham-gangster.webp'},
-  {name:'雨中奶龙',file:'jbji-nailong-rain-banner.png',preview:'jbji-rain-desktop-900.webp'},
+  {name:'雨中奶龙',file:'jbji-nailong-next-chapter.png',preview:'jbji-nailong-rain-original.webp'},
 ];
 
 function DownloadIcon() {
@@ -37,9 +37,9 @@ export default function MascotDownloads() {
     <summary className="mascotDownload">根本就没有这样的生物！ <DownloadIcon/><span aria-hidden="true">⌄</span></summary>
     <div className="mascotDownloadOptions">
       <p>选择图片下载 <small>PNG 原图</small></p>
-      {pictures.map(picture=><a key={picture.file} href={`${import.meta.env.BASE_URL}${picture.file}`} download={`${picture.name}.png`}>
-        <img src={`${import.meta.env.BASE_URL}${picture.preview}`} alt="" width="48" height="48" loading="lazy"/>
-        <span>{picture.name}</span><DownloadIcon/>
+      {pictures.map(picture=><a key={picture.file} href={`${import.meta.env.BASE_URL}${picture.file}`} download={`${picture.name}.png`} aria-label={`下载${picture.name}图片`}>
+        <img src={`${import.meta.env.BASE_URL}${picture.preview}`} alt="" width="112" height="80" loading="lazy"/>
+        <DownloadIcon/>
       </a>)}
     </div>
   </details>;
