@@ -1,5 +1,17 @@
 /* Keep the timetable's established palette and density; make its controls easier to read. */
 .desktopNavLinks { display:contents; }
+.mascotDownloadMenu { position:relative; }
+.mascotDownloadMenu>summary { list-style:none; cursor:pointer; }
+.mascotDownloadMenu>summary::-webkit-details-marker { display:none; }
+.mascotDownloadMenu[open]>summary { border-color:var(--accent); }
+.mascotDownloadOptions { position:absolute; top:calc(100% + 8px); right:0; z-index:30; width:320px; max-width:calc(100vw - 24px); max-height:calc(100dvh - 120px); overflow:auto; overscroll-behavior:contain; padding:8px; border:1px solid var(--line); border-radius:12px; background:var(--surface); box-shadow:0 10px 28px #253b491f; }
+.mascotDownloadOptions>p { display:flex; align-items:center; justify-content:space-between; gap:12px; margin:0; padding:8px; color:var(--ink); font-size:13px; }
+.mascotDownloadOptions>p small { color:var(--muted); font-size:11px; }
+.mascotDownloadMenu .mascotDownloadOptions a { display:flex; align-items:center; gap:10px; min-height:64px; padding:8px; border-radius:8px; color:var(--ink); text-decoration:none; font-size:13px; }
+.mascotDownloadMenu .mascotDownloadOptions a:hover { background:var(--surface-soft); }
+.mascotDownloadOptions a>img { width:48px; height:48px; flex-shrink:0; object-fit:contain; border-radius:6px; background:#fff; }
+.mascotDownloadOptions a>span { flex:1; min-width:0; overflow-wrap:anywhere; }
+.mascotDownloadOptions a>.downloadIcon { width:18px; height:18px; flex-shrink:0; color:var(--accent); }
 .courseBlock { position:relative; }
 .courseDetailsHitArea { position:absolute; inset:0; z-index:1; width:100%; height:100%; padding:0; border:0; background:transparent; cursor:pointer; border-radius:inherit; }
 .courseDetailsHitArea:focus-visible { outline:2px solid var(--focus); outline-offset:-3px; }
@@ -90,6 +102,10 @@
   .compactNavPanel a { display:flex; align-items:center; min-height:44px; padding:8px; border-radius:6px; font-size:13px; }
   .compactNavPanel a:hover { background:var(--surface-soft); }
   .scheduleHeader .compactNavPanel .mascotDownload { justify-content:space-between; padding:10px; min-height:44px; font-size:12px; }
+  .compactNavPanel .mascotDownloadMenu>summary { display:flex; width:100%; text-align:left; }
+  .compactNavPanel .mascotDownloadOptions { position:static; width:100%; max-width:none; max-height:none; margin-top:8px; padding:0; border:0; box-shadow:none; }
+  .headerActions .mascotDownloadMenu>summary { width:100%; }
+  .headerActions .mascotDownloadMenu { min-width:0; }
   .activeScheduleFilters { padding:8px 10px; gap:6px; }
   .activeScheduleFilters button { min-height:44px; font-size:13px; }
 }
