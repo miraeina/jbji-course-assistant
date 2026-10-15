@@ -20,8 +20,8 @@ export default function ElectivePanel({options,selected,previewed,year,major,iss
     return matchesCourseQuery(option,query);
   });
   return <>
-    <div className="electiveSelectionActions"><span>{year!==5&&'当前身份 · '}已选 {selected.length} 门</span><button type="button" disabled={!selected.length} onClick={onClear}>清空已选</button></div>
-    <div className="retakeIntro"><strong>{year===2?'选择英语课程与教学班':year===5?'添加本学期课程':'选择本学期选修课'} · 已选 {selected.length} 门</strong><p>添加到课表后，仍需在学校系统选课。</p>{year===2&&<p>2025级需选 1 门英语模块。同一课程更换班次后，原班次自动移除。</p>}</div>
+    <div className="electiveSelectionActions"><span>已选 {selected.length} 门</span><button type="button" disabled={!selected.length} onClick={onClear}>清空已选</button></div>
+    <div className="retakeIntro"><strong>{year===2?'选择英语课程与教学班':year===5?'添加本学期课程':'选择本学期选修课'}</strong><p>添加到课表后，仍需在学校系统选课。</p>{year===2&&<p>2025级需选 1 门英语模块。同一课程更换班次后，原班次自动移除。</p>}</div>
     <label className="courseSearch"><span>{year===5?'搜索课程':'搜索选修课'}</span><input type="search" value={query} onChange={event=>setQuery(event.target.value)} placeholder="课程名、课程类别、教师或教学班"/></label>
     {year===5&&<div className="catalogFilters">
       <div className="catalogYearTabs" role="group" aria-label="按课程年级筛选">{(['all',1,2,3,4] as const).map(value=>{
