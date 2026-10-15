@@ -174,7 +174,7 @@ body { background:var(--paper); }
 }
 .fifthYearWelcome .welcomeArt { width:calc(100% + 2 * var(--welcome-panel-inset)); margin-inline:calc(-1 * var(--welcome-panel-inset)); }
 .fifthYearWelcome .welcomeArt::before { display:none; }
-.fifthYearWelcome .welcomeArt picture { display:block; width:100%; height:clamp(280px,23vw,320px); overflow:hidden; background:#334455 var(--rain-preview) center/cover no-repeat; }
+.fifthYearWelcome .welcomeArt picture { display:block; width:100%; height:clamp(280px,23vw,320px); overflow:hidden; background:linear-gradient(180deg,#334455,#243342); }
 .fifthYearWelcome .welcomeArt img { width:100%; max-width:none; height:100%; object-fit:cover; object-position:center; mix-blend-mode:normal; border-radius:0; }
 .fifthYearWelcome .welcomeCopy h3 { font-size:clamp(24px,3vw,32px); }
 .fifthYearWelcome .welcomeDescription { margin-top:4px; }
@@ -182,6 +182,7 @@ body { background:var(--paper); }
 .fifthYearWelcome .welcomeAction p { margin-top:6px; }
 .fifthYearWelcome .welcomeArt picture img { opacity:0; transition:opacity .2s ease; }
 .fifthYearWelcome .welcomeArt picture.rainLoaded img { opacity:1; }
+.welcomeImageStatus { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; padding:20px; color:#e3edf5; font-size:13px; line-height:1.6; pointer-events:none; }
 .welcomeImageRetry { margin-top:6px; padding:8px 12px; min-height:44px; border:0; border-radius:8px; background:var(--surface-soft); color:var(--muted); font:inherit; font-size:12px; cursor:pointer; }
 @media(prefers-reduced-motion:reduce) { .fifthYearWelcome .welcomeArt picture img { transition:none; } }
 .catalogFilters { display:grid; gap:8px; margin:8px 0; }
@@ -196,5 +197,5 @@ body { background:var(--paper); }
 .catalogFilters select { min-width:0; width:100%; min-height:40px; border:1px solid var(--line); border-radius:7px; padding:6px 8px; font:inherit; color:var(--ink); background:var(--surface); }
 @media(max-width:700px) {
   .fifthYearWelcome { --welcome-panel-inset:12px; padding:10px 0; gap:10px; }
-  .fifthYearWelcome .welcomeArt picture { height:clamp(190px,54vw,220px); background-image:var(--rain-preview-mobile); }
+  .fifthYearWelcome .welcomeArt picture { height:clamp(190px,54vw,220px); }
 }
