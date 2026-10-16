@@ -1,5 +1,6 @@
 'use client';
 
+import { siteArtwork } from './site-artwork';
 import WeekText from './week-text';
 import ScheduleViewport from './schedule-viewport';
 import useCourseLongPress from './use-course-long-press';
@@ -597,7 +598,7 @@ function Home(){
   const showCourseWelcome=(year===4||year===5)&&!selectedElectiveKeys.length&&!selectedRetakeEvents.length&&!previewOption&&!electivePreviews.length;
 
   function renderEmpty(day?:number){
-    if((year===4||year===5)&&!selectedElectiveKeys.length&&!selectedRetakeEvents.length)return <div className="emptyState"><img src={year===5?"./jbji-nailong-next-chapter.png":"./jbji-nailong-guardian.webp"} fetchPriority="high" loading="eager" alt=""/><strong>{year===5?'尚未添加课程':'尚未添加选修课'}</strong><p>点击下方按钮，添加本学期课程。</p><button onClick={openElectives}>{year===5?"添加课程":"选择课程"}</button></div>;
+    if((year===4||year===5)&&!selectedElectiveKeys.length&&!selectedRetakeEvents.length)return <div className="emptyState"><img src={year===5?siteArtwork.rainEmpty:siteArtwork.guardian} fetchPriority="high" loading="eager" alt=""/><strong>{year===5?'尚未添加课程':'尚未添加选修课'}</strong><p>点击下方按钮，添加本学期课程。</p><button onClick={openElectives}>{year===5?"添加课程":"选择课程"}</button></div>;
     const info=emptyScheduleMessage([...scheduled,...selectedRetakeEvents],selectedWeek,day);
     const activate=()=>{
       setSelectedDay('all');setSelectedCategory('all');setCourseQuery('');
@@ -605,7 +606,7 @@ function Home(){
       if(info.action==='semester')setSelectedWeek('all');
       if(info.action==='week')setMobileView('week');
     };
-    return <div className="emptyState"><img src="./jbji-nailong-guardian.webp" fetchPriority="high" loading="eager" alt=""/><strong>{info.title}</strong><p>{info.detail}</p><button onClick={activate}>{info.action==='start'?`查看第 ${info.firstWeek} 周`:info.action==='semester'?'查看整学期':info.action==='week'?'查看本周':'清除筛选'}</button></div>;
+    return <div className="emptyState"><img src={siteArtwork.guardian} fetchPriority="high" loading="eager" alt=""/><strong>{info.title}</strong><p>{info.detail}</p><button onClick={activate}>{info.action==='start'?`查看第 ${info.firstWeek} 周`:info.action==='semester'?'查看整学期':info.action==='week'?'查看本周':'清除筛选'}</button></div>;
   }
 
   const detailRemovable=detailCourse?removableElective(detailCourse):undefined;
@@ -695,7 +696,7 @@ function Home(){
         {electivePreviews.map(option=><div className="electivePreviewNotice" key={option.key}><span>{option.events[0].title}<small>{option.events[0].note}{selectedWeek!=='all'&&!option.events.some(event=>weekNumbers(event.weeks).has(selectedWeek))?' · 本周无课，可查看整学期。':''}</small></span><button onClick={()=>chooseElective(option)}>加入课表</button><button aria-label={`取消预览${option.events[0].title}`} onClick={()=>setPreviewElectiveKeys(current=>current.filter(key=>key!==option.key))}>取消预览</button></div>)}
       </div>}
       <div hidden={!conflicts.length} className={`conflictSummary ${conflicts.length?'hasConflicts':'clear'}`} data-export-exclude>
-        <div className="conflictSummaryLead"><img className="conflictMascotInline" src={year===2?"./conflict-birmingham-gangster.webp":"./conflict-campus-patrol.webp"} width="336" height="336" alt={year===2?"伯大奶察（剃刀党风格）":"暨伯奶察"}/><div><strong>发现 {conflicts.length} 处课程冲突</strong><p>{conflicts.some(previewConflict)?'包含预览课程冲突，预览尚未加入课表。':'已加入的课程存在时间重叠。'}</p><span>点击下方条目查看对应上课日和重叠周次。</span></div></div>
+        <div className="conflictSummaryLead"><img className="conflictMascotInline" src={year===2?siteArtwork.birminghamPolice:siteArtwork.campusPolice} width="336" height="336" alt={year===2?"伯大奶察（剃刀党风格）":"暨伯奶察"}/><div><strong>发现 {conflicts.length} 处课程冲突</strong><p>{conflicts.some(previewConflict)?'包含预览课程冲突，预览尚未加入课表。':'已加入的课程存在时间重叠。'}</p><span>点击下方条目查看对应上课日和重叠周次。</span></div></div>
         {conflicts.length>0&&<div className="conflictList">{conflicts.map((conflict)=><button key={conflict.key} className={conflict.severity} onClick={()=>{setSelectedDay(conflict.day);setMobileDay(conflict.day)}}><b>{previewConflict(conflict)?'【预览冲突】':'【已加入冲突】'}{courseHeading(conflict.first)} × {courseHeading(conflict.second)}</b><span>{weekdayNames[conflict.day]} · 第{conflict.firstSession}{conflict.lastSession>conflict.firstSession?`–${conflict.lastSession}`:''}节 · {formatWeekList(conflict.weeks)}</span></button>)}</div>}
       </div>
       {selectedElectiveKeys.length>0&&<p className="longPressHint" data-export-exclude>轻点课程可在详情中移除，也可长按已选课程移除。</p>}

@@ -1,3 +1,4 @@
+import { siteArtwork } from './site-artwork';
 import { useEffect, useState } from 'react';
 import { ThemePicker } from './theme';
 import MascotDownloads from './mascot-downloads';
@@ -21,7 +22,7 @@ export default function Materials(){
     return ()=>{query.removeEventListener('change',update);document.title=previousTitle};
   },[]);
   return <main className="materialsPage">
-    <header className="topbar"><a className="brand" href="#top"><span className="brandMark"><img className="brandLogo" src="./jbji-logo.webp" fetchPriority="high" loading="eager" alt="暨南大学与伯明翰大学院徽"/></span><span className="brandCopy"><strong>JBJI 课表助手</strong><small>原始资料</small></span></a><div className="headerActions"><ThemePicker/><a className="backToSchedule" href="#top">返回课表</a><MascotDownloads/></div></header>
+    <header className="topbar"><a className="brand" href="#top"><span className="brandMark"><img className="brandLogo" src={siteArtwork.logo} fetchPriority="high" loading="eager" alt="暨南大学与伯明翰大学院徽"/></span><span className="brandCopy"><strong>JBJI 课表助手</strong><small>原始资料</small></span></a><div className="headerActions"><ThemePicker/><a className="backToSchedule" href="#top">返回课表</a><MascotDownloads/></div></header>
     <section className="materialsIntro"><h1>原始课表与校历</h1><p>网站使用的三份原始文件，可预览或下载。</p><p className="materialsSource">临时调课请以学院最新通知为准。</p></section>
     <div className="materialsLayout">
       <section className="documentList" aria-label="选择原始资料">{documents.map(item=><article key={item.id} className={`documentCard ${desktop&&selected.id===item.id?'selected':''}`}>

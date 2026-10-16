@@ -1,12 +1,12 @@
 import { useEffect, useRef } from 'react';
-import { mascotThumbnails } from './mascot-thumbnails';
+import { siteArtwork } from './site-artwork';
 
 const pictures = [
-  {name:'JBJI奶龙',file:'jbji-nailong-guardian.png',preview:'jbji-nailong-guardian.webp'},
-  {name:'奶蛙 · 惊鸿一瞥',file:'conflict-nailong.png',preview:'conflict-nailong.webp'},
-  {name:'暨伯奶察',file:'jbji-nailong-campus-patrol.png',preview:'conflict-campus-patrol.webp'},
-  {name:'伯大奶察 · 剃刀党风格',file:'jbji-nailong-birmingham-gangster.png',preview:'conflict-birmingham-gangster.webp'},
-  {name:'雨中奶龙',file:'jbji-nailong-next-chapter.png',preview:'jbji-nailong-rain-original.webp'},
+  {name:'JBJI奶龙',file:'jbji-nailong-guardian.png',preview:siteArtwork.guardian},
+  {name:'奶蛙 · 惊鸿一瞥',file:'conflict-nailong.png',preview:siteArtwork.conflict},
+  {name:'暨伯奶察',file:'jbji-nailong-campus-patrol.png',preview:siteArtwork.campusPolice},
+  {name:'伯大奶察 · 剃刀党风格',file:'jbji-nailong-birmingham-gangster.png',preview:siteArtwork.birminghamPolice},
+  {name:'雨中奶龙',file:'jbji-nailong-next-chapter.png',preview:siteArtwork.rainEmpty},
 ];
 
 function DownloadIcon() {
@@ -39,7 +39,7 @@ export default function MascotDownloads() {
     <div className="mascotDownloadOptions">
       <p>选择图片下载 <small>PNG 原图</small></p>
       {pictures.map(picture=><a key={picture.file} href={`${import.meta.env.BASE_URL}${picture.file}`} download={`${picture.name}.png`} aria-label={`下载${picture.name}图片`}>
-        <img src={mascotThumbnails[picture.preview]} alt="" width="112" height="80"/>
+        <img src={picture.preview} alt="" width="112" height="80"/>
         <DownloadIcon/>
       </a>)}
     </div>

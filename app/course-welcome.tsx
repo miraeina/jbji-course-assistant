@@ -1,3 +1,4 @@
+import { siteArtwork } from './site-artwork';
 import { useState } from 'react';
 import { welcomeRainArtwork } from './welcome-rain-artwork';
 
@@ -28,7 +29,7 @@ export default function CourseWelcome({onChoose,fifthYear=false}:{onChoose:()=>v
         </>}
         <source media="(max-width:700px)" srcSet={`./jbji-rain-mobile-480.webp${retrySuffix} 480w, ./jbji-rain-mobile-800.webp${retrySuffix} 800w`} sizes="calc(100vw - 24px)"/>
         <img key={attempt} src={`./jbji-rain-desktop-1400.webp${retrySuffix}`} srcSet={`./jbji-rain-desktop-900.webp${retrySuffix} 900w, ./jbji-rain-desktop-1400.webp${retrySuffix} 1400w`} sizes="(min-width:1320px) 1400px, calc(100vw - 48px)" width="1400" height="467" fetchPriority="high" loading="eager" decoding="async" onLoad={event=>{void showRainImage(event.currentTarget)}} onError={()=>{setLoaded(false);setFailed(true)}} alt=""/>
-      </picture>{!loaded&&<span className="welcomeImageStatus" role="status">{failed?'雨景图片暂时无法显示':'雨景加载中…'}</span>}</>:<img src="./jbji-nailong-guardian.webp" width="840" height="1060" fetchPriority="high" loading="eager" alt=""/>}
+      </picture>{!loaded&&<span className="welcomeImageStatus" role="status">{failed?'雨景图片暂时无法显示':'雨景加载中…'}</span>}</>:<img src={siteArtwork.guardian} width="840" height="1060" fetchPriority="high" loading="eager" alt=""/>}
     </div>
     <div className="welcomeAction">
       <button type="button" onClick={onChoose}>{fifthYear?'添加课程':'选择课程'} <span aria-hidden="true">＋</span></button>
