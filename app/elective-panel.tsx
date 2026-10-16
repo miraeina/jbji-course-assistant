@@ -20,9 +20,9 @@ export default function ElectivePanel({options,selected,previewed,year,major,iss
     return matchesCourseQuery(option,query);
   });
   return <>
-    <div className="electiveSelectionActions"><span>已选 {selected.length} 门</span><button type="button" disabled={!selected.length} onClick={onClear}>清空已选</button></div>
-    <div className="retakeIntro"><strong>{year===2?'选择英语课程与教学班':year===5?'添加本学期课程':'选择本学期选修课'}</strong><p>添加到课表后，仍需在学校系统选课。</p>{year===2&&<p>2025级需选 1 门英语模块。同一课程更换班次后，原班次自动移除。</p>}</div>
-    <label className="courseSearch"><span>{year===5?'搜索课程':'搜索选修课'}</span><input type="search" value={query} onChange={event=>setQuery(event.target.value)} placeholder="课程名、课程类别、教师或教学班"/></label>
+
+
+    <label className="courseSearch electiveCourseSearch"><input type="search" aria-label={year===5?'搜索课程':'搜索选修课'} value={query} onChange={event=>setQuery(event.target.value)} placeholder="搜索课程、教师或教学班"/></label>
     {year===5&&<div className="catalogFilters">
       <div className="catalogYearTabs" role="group" aria-label="按课程年级筛选">{(['all',1,2,3,4] as const).map(value=>{
         const label=value==='all'?'全部':`大${['一','二','三','四'][value-1]}`;
@@ -31,7 +31,8 @@ export default function ElectivePanel({options,selected,previewed,year,major,iss
       })}</div>
       <div className="filterPills catalogCategoryTabs" role="group" aria-label="按课程类别筛选">{(['all','jnu','english','general','single'] as const).map(value=><button type="button" key={value} aria-pressed={category===value} className={category===value?'active':''} onClick={()=>setCategory(value)}>{value==='all'?'全部类别':value==='general'?'通识课':catalogCategoryLabels[value]}</button>)}</div>
     </div>}
-    <div className="filterPills">{(['all','selected','safe'] as const).map((value,index)=><button key={value} aria-pressed={filter===value} className={filter===value?'active':''} onClick={()=>setFilter(value)}>{['全部','已选','无冲突'][index]}</button>)}</div>
+    <div className="electiveFilterBar"><div className="filterPills">{(['all','selected','safe'] as const).map((value,index)=><button key={value} aria-pressed={filter===value} className={filter===value?'active':''} onClick={()=>setFilter(value)}>{['全部','已选','无冲突'][index]}</button>)}</div><span className="electiveCount">已选 {selected.length} 门</span></div>
+    {year===2&&<p className="electiveRequirement">2025级需选 1 门英语模块，同一课程更换班次后，原班次自动移除。</p>}
     <div className="sidebarCourseList electiveCourseList">{rows.map(({option,issues})=>{
       const event=option.events[0];const chosen=selected.includes(option.key);
       const severity=issues.some(issue=>issue.severity==='hard')?'hard':issues.length?'partial':'safe';
@@ -45,5 +46,6 @@ export default function ElectivePanel({options,selected,previewed,year,major,iss
         <div className="retakeCardFooter"><span className={`conflictStatus ${severity}`}>{severity==='safe'?'无冲突':severity==='hard'?'课程冲突':'部分冲突'}</span><button aria-label={`${chosen?'移除':replaces?'换为':'加入'}${event.title}${event.note?` · ${event.note}`:''}`} onClick={()=>onToggle(option)}>{chosen?'移除':replaces?'换到此班':'加入课表'}</button></div>
       </article>;
     })}{!rows.length&&<p className="sidebarEmpty">{filter==='selected'?'没有符合筛选条件的已选课程':'没有符合条件的课程'}</p>}</div>
+    <div className="electivePanelFooter"><p>添加到课表后，仍需在学校教务系统正式选课。</p><button type="button" disabled={!selected.length} onClick={onClear}>清空已选</button></div>
   </>;
 }

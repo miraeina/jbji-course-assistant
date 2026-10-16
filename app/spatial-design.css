@@ -2,6 +2,18 @@
    Keep time geometry, course category colors and mascot composition intact. */
 body { background:var(--paper); }
 .selectionAddedNotice { position:fixed; left:50%; bottom:24px; transform:translateX(-50%); z-index:90; width:max-content; max-width:calc(100vw - 32px); padding:12px 18px; border:1px solid var(--accent-line); border-radius:12px; background:var(--surface); color:var(--ink); box-shadow:0 5px 24px #253b4926; font-size:14px; line-height:1.6; pointer-events:none; }
+.electiveCourseSearch { display:block; margin:0 0 8px; }
+.electiveCourseSearch input { min-height:40px; padding:9px 10px; }
+.electiveFilterBar { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.electiveFilterBar .filterPills { flex-wrap:wrap; min-width:0; }
+.electiveCount { flex-shrink:0; color:var(--muted); font-size:11px; white-space:nowrap; }
+.electiveRequirement { margin:8px 0 0; color:var(--muted); font-size:11px; line-height:1.6; }
+.electivePanelFooter { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:10px; margin-top:12px; padding-top:10px; border-top:1px solid var(--line); }
+.electivePanelFooter p { margin:0; color:var(--muted); font-size:11px; line-height:1.6; }
+.electivePanelFooter button { min-height:44px; padding:8px 10px; border:1px solid var(--line); border-radius:6px; background:var(--surface); color:var(--ink); font:inherit; font-size:12px; cursor:pointer; }
+.electivePanelFooter button:disabled { opacity:.45; cursor:default; }
+.electivePanelFooter button:hover:not(:disabled) { border-color:var(--accent); color:var(--accent-hover); }
+.electivePanelFooter button:focus-visible { outline:2px solid var(--focus); outline-offset:2px; }
 .scheduleNotifications { position:fixed; left:12px; right:12px; bottom:calc(12px + env(safe-area-inset-bottom)); z-index:90; display:flex; flex-direction:column; align-items:flex-end; gap:12px; pointer-events:none; }
 .scheduleNotifications .conflictMascotToast { position:relative; right:auto; bottom:auto; flex-shrink:0; max-width:100%; animation:noticeAppear .2s ease-out; }
 .scheduleNotifications .selectionAddedNotice { position:relative; left:auto; bottom:auto; transform:none; align-self:center; max-width:100%; }
