@@ -1,7 +1,5 @@
 .mobileSelectionPreview { display:none; }
 @media(max-width:700px) {
-  /* Keep conflict feedback above the planner; the toast lets taps pass through. */
-  .mobileSelectionActive .conflictMascotToast { bottom:max(12px,env(safe-area-inset-bottom)); }
   .mobileSelectionMode:has(.courseSearch input:focus) .selectionMiniScroll { height:100px; }
   .courseSidebar.mobileSelectionMode:not([hidden]) {
     display:flex; flex-direction:column; position:fixed; inset:0;

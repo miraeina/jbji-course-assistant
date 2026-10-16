@@ -611,7 +611,6 @@ function Home(){
   const detailRemovable=detailCourse?removableElective(detailCourse):undefined;
 
   return <main className={`mobileView-${mobileView} ${sidebarVisible&&sidebarMode==='elective'?'mobileSelectionActive':''}`}>
-    <ConflictMascot key={profile} conflicts={allConflicts} previewIds={previewIds}/>
     <SiteHeader/>
     <button className="identityToggle mobileOnly" aria-expanded={identityOpen} aria-controls="identity-filters" onClick={()=>setIdentityOpen(!identityOpen)}>{degreeLabels[track]} · 大{['一','二','三','四','五+'][year-1]} · {groupLabel}<span>{identityOpen?'收起':'切换'}⌄</span></button>
     <section id="identity-filters" className={`filterPanel ${identityOpen?'identityOpen':'identityClosed'}`} aria-label="课表筛选">
@@ -732,7 +731,10 @@ function Home(){
     <details className="notice" id="help"><summary>使用帮助</summary><div className="helpContent"><p>选好学位、年级、专业和班级，即可查看课表。点击课程可看详情，已加入的选修课和大五＋自选课程可在详情中移除；手机也可长按约 0.6 秒移除整门课程，移除后可在 5 秒内撤销。</p><p>切换周次查看当周安排；“整学期”显示所有课程。英语选课和重修课程需手动添加，选择仅保存在当前浏览器，不代替学校选课。</p><p>在“导出课表”中选择“编辑后导出”，可临时修改名称、教室、教师和备注。修改只用于个人副本，退出后不保存。</p><p>课表与教学周来自学院课表、单学位授课安排和学校校历。临时调课请以学院通知为准。</p><p>发现课程信息有误或遗漏？<a href={feedbackUrl()} target="_blank" rel="noreferrer">提交课表纠错 ↗</a>（需登录 GitHub）。请补充正确信息及学院通知链接或截图，由维护者核实后更新。</p><a href="#materials">查看原始课表与校历 ↗</a></div></details>
     <footer><span>JBJI 课表助手</span><a className="feedbackLink" href={feedbackUrl()} target="_blank" rel="noreferrer" title="在 GitHub 提交课表纠错，需要登录">课表纠错（GitHub）↗</a></footer>
     {exportDraft&&<ExportEditor {...exportDraft} busy={exporting!==null} status={exportMessage} onClose={()=>{setExportDraft(null);setExportMessage('')}} onExport={(format,source)=>exportSchedule(format,source,true)}/>}
+    <div className="scheduleNotifications" data-export-exclude>
+    <ConflictMascot key={profile} conflicts={allConflicts} previewIds={previewIds}/>
     {selectionNotice&&<div className="selectionAddedNotice" role="status" data-export-exclude key={selectionNotice.stamp}>{selectionNotice.text}</div>}
+    </div>
     {detailCourse&&<div className="detailOverlay" onMouseDown={()=>setDetailCourse(null)}>
       <section ref={detailDialogRef} className="detailDialog" role="dialog" aria-modal="true" aria-labelledby="course-detail-title" onMouseDown={(event)=>event.stopPropagation()}>
         <header><div><p>课程详情</p><h2 id="course-detail-title">{courseHeading(detailCourse)}</h2>{courseSubtitle(detailCourse)&&<small>{courseSubtitle(detailCourse)}</small>}</div><button ref={detailCloseRef} type="button" aria-label="关闭课程详情" onClick={()=>setDetailCourse(null)}>×</button></header>
