@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { mascotThumbnails } from './mascot-thumbnails';
 
 const pictures = [
   {name:'JBJI奶龙',file:'jbji-nailong-guardian.png',preview:'jbji-nailong-guardian.webp'},
@@ -38,7 +39,7 @@ export default function MascotDownloads() {
     <div className="mascotDownloadOptions">
       <p>选择图片下载 <small>PNG 原图</small></p>
       {pictures.map(picture=><a key={picture.file} href={`${import.meta.env.BASE_URL}${picture.file}`} download={`${picture.name}.png`} aria-label={`下载${picture.name}图片`}>
-        <img src={`${import.meta.env.BASE_URL}${picture.preview}`} alt="" width="112" height="80" loading="lazy"/>
+        <img src={mascotThumbnails[picture.preview]} alt="" width="112" height="80"/>
         <DownloadIcon/>
       </a>)}
     </div>
