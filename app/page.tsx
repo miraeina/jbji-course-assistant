@@ -184,7 +184,7 @@ function Home(){
   const categoryLabels=year===5?{...defaultCategoryLabels,uob:'（单学位课程）'}:defaultCategoryLabels;
   const [sidebarOpen,setSidebarOpen]=useState(false);
   const [wideLayout,setWideLayout]=useState(()=>window.matchMedia('(min-width:1101px)').matches);
-  const persistentCoursePanel=(year===4||year===5)&&wideLayout;
+  const persistentCoursePanel=[2,4,5].includes(year)&&wideLayout;
   const sidebarVisible=sidebarOpen||persistentCoursePanel;
   const selectionWorkspace=[2,4,5].includes(year)&&wideLayout&&sidebarVisible;
   useEffect(()=>{

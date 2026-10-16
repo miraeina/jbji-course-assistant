@@ -143,6 +143,7 @@ body { background:var(--paper); }
   .selectionWorkspace .sidebarCourseList { flex:1; min-height:0; max-height:none; align-content:start; overflow:auto; overscroll-behavior:contain; scrollbar-gutter:stable; }
   .selectionWorkspace .electiveSelectionActions { margin-bottom:8px; }
   .selectionWorkspace .retakeIntro { margin-bottom:8px; padding:8px 10px; }
+  .selectionWorkspace>.courseSidebar,.selectionWorkspace>.timetablePanel { align-self:stretch; margin-bottom:0; }
   .selectionWorkspace>.timetablePanel { min-height:0; }
   .selectionWorkspace .scheduleZoomViewport { max-height:none; }
   .selectionWorkspace .courseWelcome { min-height:520px; align-content:center; }
