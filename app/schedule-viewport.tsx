@@ -5,7 +5,7 @@ export default function ScheduleViewport({ children, minWidth, focus, onFocusHan
   const canvas = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(minWidth);
   const [height, setHeight] = useState(0);
-  const [zoom, setZoom] = useState<number | 'fit'>(1);
+  const [zoom, setZoom] = useState<number | 'fit'>(() => window.matchMedia('(max-width:700px)').matches ? 'fit' : 1);
   const anchor = useRef<{ x: number; y: number } | null>(null);
   const baseWidth = Math.max(minWidth, width);
   const scale = zoom === 'fit' ? Math.min(1, width / baseWidth) : zoom;
