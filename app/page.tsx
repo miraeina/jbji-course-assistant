@@ -186,7 +186,7 @@ function Home(){
   const [wideLayout,setWideLayout]=useState(()=>window.matchMedia('(min-width:1101px)').matches);
   const persistentCoursePanel=[2,4,5].includes(year)&&wideLayout;
   const sidebarVisible=sidebarOpen||persistentCoursePanel;
-  const selectionWorkspace=[2,4,5].includes(year)&&wideLayout&&sidebarVisible;
+  const selectionWorkspace=wideLayout&&sidebarVisible;
   useEffect(()=>{
     const media=window.matchMedia('(min-width:1101px)');
     const update=()=>setWideLayout(media.matches);
