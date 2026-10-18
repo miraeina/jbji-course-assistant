@@ -39,7 +39,12 @@
   .mobileSelectionMode .retakeIntro p { margin:0; font-size:11px; }
   .mobileSelectionMode .courseSearch { margin-bottom:6px; }
   .mobileSelectionMode .courseSearch input { min-height:40px; }
-  .mobileSelectionMode .electiveSession { font-size:12px; line-height:1.5; }
+  .mobileSelectionMode .electiveSession { display:flex; flex-wrap:wrap; gap:2px 12px; margin:6px 0; font-size:12px; line-height:1.5; }
+  .mobileSelectionMode .electiveSessionTime,.mobileSelectionMode .electiveSession>b { flex-basis:100%; }
+  .mobileSelectionMode .electiveCardActions { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:0 10px; border-top:1px solid var(--line); margin-top:6px; }
+  .mobileSelectionMode .electiveCardActions .retakeCardFooter { flex:1; min-width:150px; margin:0; padding:0; border:0; }
+  .mobileSelectionMode .electiveCardActions button { min-height:44px; }
+  .mobileSelectionMode .electiveCourseList { gap:8px; }
   .mobileSelectionMode .retakeCourseCard { padding:10px; }
   .mobileSelectionMode.plannerExpanded>.mobileSelectionPreview { flex:1; }
   .mobileSelectionMode.plannerExpanded .selectionMiniScroll { flex:1; height:auto; }

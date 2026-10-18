@@ -1,11 +1,12 @@
-import { useLayoutEffect, useRef } from 'react';
+import { useLayoutEffect, useRef, type HTMLAttributes } from 'react';
 import { times, type TimetableEvent } from './timetable-data';
 
 type PreviewEvent=TimetableEvent&{lane:number;laneCount:number};
-export default function MobileSelectionPreview({events,previewIds,conflictIds,focus,expanded,count,onExpand,onClose,onDetails}:{
+export default function MobileSelectionPreview({events,previewIds,conflictIds,focus,expanded,count,onExpand,onClose,onDetails,courseLongPress}:{
   events:PreviewEvent[];previewIds:Set<string>;conflictIds:Set<string>;
   focus:{id:string;stamp:number}|null;expanded:boolean;count:number;
   onExpand:()=>void;onClose:()=>void;onDetails:(event:TimetableEvent)=>void;
+  courseLongPress:(event:TimetableEvent)=>HTMLAttributes<HTMLElement>;
 }) {
   const viewport=useRef<HTMLDivElement>(null);
   const target=useRef<HTMLButtonElement>(null);
@@ -21,7 +22,7 @@ export default function MobileSelectionPreview({events,previewIds,conflictIds,fo
         <div className="miniCorner">时间</div>{['一','二','三','四','五'].map((day,index)=><div className="miniDay" style={{gridColumn:index+2}} key={day}>周{day}</div>)}
         {times.map(([,from],row)=><div className="miniTime" style={{gridRow:row+2}} key={row}>{from}</div>)}
         {times.flatMap((_,row)=>[0,1,2,3,4].map(day=><div className={`miniCell ${row===4?'miniBreak':''}`} style={{gridRow:row+2,gridColumn:day+2}} key={`${day}-${row}`}/>))}
-        {events.map(event=><button key={event.id} ref={event.id===focus?.id?target:undefined}
+        {events.map(event=><button {...courseLongPress(event)} key={event.id} ref={event.id===focus?.id?target:undefined}
           className={`miniCourse ${previewIds.has(event.id)?'miniPreview':''} ${conflictIds.has(event.id)?'miniConflict':''} ${event.id===focus?.id?'miniFocused':''}`}
           style={{gridColumn:event.day+2,gridRow:`${event.start+2} / span ${event.span}`,width:`calc((100% - 4px) / ${event.laneCount})`,marginLeft:`calc(${event.lane} * (100% / ${event.laneCount}) + 2px)`}}
           aria-label={`${previewIds.has(event.id)?'预览：':''}${event.title}，周${['一','二','三','四','五'][event.day]}，${event.weeks}${conflictIds.has(event.id)?'，存在冲突':''}，查看详情`}

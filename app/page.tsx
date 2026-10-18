@@ -451,7 +451,8 @@ function Home(){
   }
   function courseLongPress(event:DisplayEvent){
     const option=removableElective(event);
-    return longPress(option?()=>removeElective(option):undefined);
+    const retake=event.displaySource==='retake'?activeSelectedOptions.find(option=>option.key===event.retakeKey):undefined;
+    return longPress(option?()=>removeElective(option):retake?()=>toggleRetake(retake):undefined);
   }
   function electiveConflicts(option:ElectiveOption){
     const alternativeIds=new Set(electiveChoices.filter(item=>item.courseKey===option.courseKey).flatMap(item=>item.events.map(event=>event.id)));
@@ -628,7 +629,7 @@ function Home(){
           events={arrange([...scheduled,...selectedRetakeEvents,...electivePreviewEvents.filter(event=>!event.listedOnly)])}
           previewIds={previewIds} conflictIds={new Set(allConflicts.flatMap(issue=>[issue.first.id,issue.second.id]))}
           focus={plannerFocus} expanded={plannerExpanded} count={selectedElectiveKeys.length}
-          onExpand={()=>setPlannerExpanded(value=>!value)} onClose={()=>setSidebarOpen(false)} onDetails={openCourseDetails}/>}
+          onExpand={()=>setPlannerExpanded(value=>!value)} onClose={()=>setSidebarOpen(false)} onDetails={openCourseDetails} courseLongPress={courseLongPress}/>}
         <button className="sheetClose mobileOnly" onClick={()=>setSidebarOpen(false)}>完成</button>
         <div className="sidebarHead sidebarTabs" role="group" aria-label="课程面板">
           {hasElectives&&<button aria-pressed={sidebarMode==='elective'} className={sidebarMode==='elective'?'active':''} onClick={()=>changeSidebarMode('elective')}>{year===5?'添加课程':'选修课'}</button>}

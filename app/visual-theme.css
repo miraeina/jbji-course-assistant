@@ -290,6 +290,7 @@ button:focus-visible,a:focus-visible,summary:focus-visible,select:focus-visible 
 .electiveSummary small,.electivePreviewNotice small { display:block; color:var(--muted); margin-top:5px; line-height:1.7; }
 .electiveSummary button,.electivePreviewNotice button { border:1px solid var(--accent-line); background:var(--accent-soft); color:var(--accent-hover); border-radius:7px; padding:9px; cursor:pointer; font-size:12px; }
 .electiveSession { margin:8px 0; font-size:12px; line-height:1.7; color:var(--muted); }
+.electiveSession>span,.electiveSession>b { display:block; }
 .electiveLinks { display:flex; gap:14px; }
 .electiveLinks button { padding:4px 0; background:none; border:0; color:var(--accent); font-size:12px; cursor:pointer; }
 .electiveIssues { color:#a44321; font-size:11px; line-height:1.7; margin:8px 0; }
